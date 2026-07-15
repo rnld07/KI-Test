@@ -244,6 +244,78 @@ canvas.chart{width:100%;height:240px;display:block}
 .ovl-card p{color:var(--hero-dim);margin-top:10px;font-size:14.5px;position:relative}
 .ovl-card .btn{margin-top:18px;position:relative}
 
+/* ---------- Subnavigation ---------- */
+.subnav{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+.subnav::-webkit-scrollbar{display:none}
+.sub-chip{--sc:var(--accent);font-weight:600;font-size:13.5px;padding:7px 15px;border-radius:99px;background:var(--surface);border:1px solid var(--line-soft);color:var(--ink-dim);white-space:nowrap;transition:all .15s}
+.sub-chip:hover{color:var(--ink)}
+.sub-chip.on{background:color-mix(in srgb,var(--sc) 15%,transparent);border-color:color-mix(in srgb,var(--sc) 35%,transparent);color:var(--sc)}
+.subview{display:none}
+.subview.on{display:block;animation:fadein .25s ease}
+
+/* ---------- Fortschrittsringe ---------- */
+.rings{display:flex;gap:6px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.ring-item{text-align:center;flex:1;min-width:60px}
+.ring-item span{display:block;font-weight:600;font-size:11px;color:var(--ink-dim);margin-top:5px}
+.ring-t{font:700 12px 'Outfit',sans-serif;fill:var(--ink);font-variant-numeric:tabular-nums}
+.ring circle{transition:stroke-dashoffset .6s ease}
+
+/* ---------- Heatmap ---------- */
+.heat-wrap{overflow-x:auto;margin-top:14px}
+.heatmap{display:grid;grid-template-rows:repeat(7,18px);grid-auto-flow:column;grid-auto-columns:18px;gap:4px;width:max-content}
+.hcell{width:18px;height:18px;border-radius:5px;background:var(--surface2)}
+.hcell.h1{background:color-mix(in srgb,var(--g1) 30%,var(--surface2))}
+.hcell.h2{background:color-mix(in srgb,var(--g1) 60%,var(--surface2))}
+.hcell.h3{background:var(--g1)}
+.hcell.hz{box-shadow:inset 0 0 0 1.5px var(--g2)}
+
+/* ---------- Ziele ---------- */
+.goal{--area:var(--accent)}
+.goal-head{display:flex;gap:16px;align-items:center}
+.goal-head .gh-txt{flex:1;min-width:0}
+.goal-head h3{margin-bottom:2px}
+.goal-d{font-size:13.5px;color:var(--ink-dim)}
+.ms-list{margin-top:14px;border-top:1px solid var(--line-soft)}
+.ms-row{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--line-soft);width:100%;text-align:left}
+.ms-row:last-child{border-bottom:none}
+.ms-check{flex-shrink:0;width:22px;height:22px;border-radius:7px;border:2px solid color-mix(in srgb,var(--area) 50%,transparent);margin-top:1px;position:relative;transition:all .15s;background:color-mix(in srgb,var(--area) 6%,transparent)}
+.ms-row.done .ms-check{background:var(--area);border-color:var(--area)}
+.ms-row.done .ms-check::after{content:"";position:absolute;left:6.5px;top:2.5px;width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(43deg)}
+.ms-t{flex:1;font-size:14px;line-height:1.4}
+.ms-row.done .ms-t{color:var(--ink-faint)}
+.ms-auto{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint);flex-shrink:0;margin-top:3px}
+.ms-row[data-ms]{cursor:pointer}
+.ms-row[data-ms]:hover .ms-check{border-color:var(--area)}
+
+/* ---------- Bucketlisten ---------- */
+.bucket-add{display:flex;gap:8px}
+.bucket-add input{flex:1;font:inherit;font-size:14px;color:var(--ink);background:var(--surface2);border:1.5px solid transparent;border-radius:12px;padding:10px 14px}
+.bucket-add input:focus{outline:none;border-color:var(--area)}
+.bucket-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--line-soft)}
+.bucket-row:last-child{border-bottom:none}
+.bucket-row .ms-check{cursor:pointer}
+.bucket-t{flex:1;font-size:14.5px;font-weight:500}
+.bucket-row.done .bucket-t{color:var(--ink-faint);text-decoration:line-through}
+.bucket-x{color:var(--ink-faint);font-size:17px;padding:2px 7px;border-radius:8px;flex-shrink:0}
+.bucket-x:hover{color:var(--danger);background:var(--danger-soft)}
+.sugg-wrap{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.sugg{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:99px;border:1.5px dashed color-mix(in srgb,var(--area) 40%,transparent);color:var(--area);transition:background .15s}
+.sugg:hover{background:color-mix(in srgb,var(--area) 10%,transparent)}
+.sugg-lbl{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint);margin-top:16px}
+
+/* ---------- Lernhub ---------- */
+.hub-form input{width:100%;font:inherit;font-size:15px;color:var(--ink);background:var(--surface2);border:1.5px solid transparent;border-radius:13px;padding:12px 15px}
+.hub-form input:focus{outline:none;border-color:var(--area)}
+.hub-types{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+.hub-type{font-size:13px;font-weight:600;padding:8px 14px;border-radius:12px;background:var(--surface2);color:var(--ink-dim);text-align:left;transition:all .15s}
+.hub-type.on{background:color-mix(in srgb,var(--area) 14%,transparent);color:var(--area)}
+.hub-type small{display:block;font-weight:400;font-size:11.5px;opacity:.8}
+.hub-head{display:flex;gap:14px;align-items:center;margin-bottom:6px}
+.hub-head .gh-txt{flex:1;min-width:0}
+.hub-del{color:var(--ink-faint);font-size:12.5px;font-weight:600}
+.hub-del:hover{color:var(--danger)}
+.hub-phase{font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--area);margin:14px 0 2px}
+
 footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);font-size:12px;text-align:center}
 </style>
 </head>
@@ -258,12 +330,12 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
     </div>
     <div class="board-stats">
       <div class="bstat"><b class="num" id="stStreak">0</b><span>Serie</span></div>
-      <div class="bstat"><b class="num" id="stParaden">0</b><span>Gesamt erledigt</span></div>
+      <div class="bstat"><b class="num" id="stParaden">0</b><span>Erledigt</span></div>
       <div class="bstat"><b class="num" id="stToday">0/0</b><span>Heute</span></div>
     </div>
     <div class="season">
       <div class="season-bar"><div class="season-fill" id="seasonFill"></div></div>
-      <div class="season-lbl"><span>Countdown bis Studienende</span><span id="seasonPct" class="num"></span></div>
+      <div class="season-lbl"><span>Bis Studienende</span><span id="seasonPct" class="num"></span></div>
     </div>
   </div>
 </header>
@@ -271,12 +343,12 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
 <nav class="tabs" aria-label="Bereiche">
   <div class="tabs-in">
     <button class="tab on" data-tab="heute">Heute</button>
-    <button class="tab" data-tab="ru">Russisch</button>
-    <button class="tab" data-tab="hist">Geschichte</button>
-    <button class="tab" data-tab="it">Informatik</button>
-    <button class="tab" data-tab="fin">Finanzen</button>
+    <button class="tab" data-tab="ziele">Ziele</button>
+    <button class="tab" data-tab="lernen">Lernen</button>
     <button class="tab" data-tab="tt">TikTok</button>
+    <button class="tab" data-tab="fin">Geld</button>
     <button class="tab" data-tab="body">Körper</button>
+    <button class="tab" data-tab="leben">Leben</button>
   </div>
 </nav>
 
@@ -286,61 +358,128 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
     <div id="zunullBanner"></div>
     <div class="card">
       <div class="eyebrow">Tag <span id="matchdayNo" class="num"></span></div>
-      <h2>Deine Missionen heute</h2>
-      <div class="mode-row mt" id="modeRow">
+      <h2>Deine Missionen</h2>
+      <div class="mode-row" id="modeRow">
         <button class="mode-btn" data-mode="kurz">Kurz · ~10 Min</button>
         <button class="mode-btn" data-mode="normal">Normal · ~30 Min</button>
         <button class="mode-btn" data-mode="vollgas">Vollgas · 45+ Min</button>
       </div>
       <div id="missionList"></div>
     </div>
+    <div class="card">
+      <div class="eyebrow">Fortschritt</div>
+      <h3>Deine Kurse</h3>
+      <div class="rings" id="ringsRow"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Konstanz</div>
+      <h3>Die letzten 8 Wochen</h3>
+      <div class="heat-wrap"><div class="heatmap" id="heatmap"></div></div>
+      <p class="sub">Jede Zelle ist ein Tag — je kräftiger, desto mehr Missionen erledigt.</p>
+    </div>
   </section>
 
-  <!-- ================= RUSSISCH ================= -->
-  <section class="panel" id="panel-ru">
+  <!-- ================= ZIELE ================= -->
+  <section class="panel" id="panel-ziele">
+    <div class="card">
+      <div class="eyebrow">1–5 Jahre</div>
+      <h2>Wo das alles hinführt</h2>
+      <p class="sub">Sieben Ziele. Jede Tagesmission zahlt auf eines davon ein. Meilensteine mit ⚙ werden automatisch aus deinem Fortschritt berechnet — den Rest hakst du ab, wenn es so weit ist.</p>
+    </div>
+    <div id="goalList"></div>
+  </section>
+
+  <!-- ================= LERNEN ================= -->
+  <section class="panel" id="panel-lernen">
+    <div class="subnav" id="lernNav">
+      <button class="sub-chip on" data-sub="ru" style="--sc:var(--c-ru)">Russisch</button>
+      <button class="sub-chip" data-sub="hist" style="--sc:var(--c-hi)">Geschichte</button>
+      <button class="sub-chip" data-sub="it" style="--sc:var(--c-it)">Informatik</button>
+      <button class="sub-chip" data-sub="hub" style="--sc:var(--c-it)">Lernhub</button>
+    </div>
+
+    <div class="subview on" id="sub-ru" style="--area:var(--c-ru)">
+      <div class="card">
+        <div class="lesson-nav">
+          <span class="prog-lbl num" id="ruProgLbl"></span>
+          <div class="prog"><i id="ruProgBar"></i></div>
+          <button class="btn ghost small" id="ruPrev">‹</button>
+          <button class="btn ghost small" id="ruNext">›</button>
+        </div>
+        <div id="ruLesson"></div>
+      </div>
+      <div class="card">
+        <h3>Blitz-Wiederholung</h3>
+        <p class="sub">5 zufällige Fragen aus allem, was du schon geschafft hast. Sprachen bleiben nur durch Wiederholen.</p>
+        <div id="ruReview" class="mt"><button class="btn" id="ruRevStart">Start</button></div>
+      </div>
+    </div>
+
+    <div class="subview" id="sub-hist" style="--area:var(--c-hi)">
+      <div class="card">
+        <div class="lesson-nav">
+          <span class="prog-lbl num" id="hiProgLbl"></span>
+          <div class="prog"><i id="hiProgBar"></i></div>
+          <button class="btn ghost small" id="hiPrev">‹</button>
+          <button class="btn ghost small" id="hiNext">›</button>
+        </div>
+        <div id="hiLesson"></div>
+      </div>
+    </div>
+
+    <div class="subview" id="sub-it" style="--area:var(--c-it)">
+      <div class="card">
+        <div class="lesson-nav">
+          <span class="prog-lbl num" id="itProgLbl"></span>
+          <div class="prog"><i id="itProgBar"></i></div>
+          <button class="btn ghost small" id="itPrev">‹</button>
+          <button class="btn ghost small" id="itNext">›</button>
+        </div>
+        <div id="itLesson"></div>
+      </div>
+    </div>
+
+    <div class="subview" id="sub-hub" style="--area:var(--c-it)">
+      <div class="card">
+        <div class="eyebrow">Lernhub</div>
+        <h2>Bring dir alles selbst bei</h2>
+        <p class="sub">Gib ein Thema ein — der Lernhub baut dir einen praxisnahen 4-Wochen-Plan nach bewährter Lernmethodik: erst Landkarte, dann Grundlagen, dann echte Praxis, dann festigen.</p>
+        <div class="hub-form mt">
+          <input id="hubTopic" placeholder="z. B. Physiotherapie, Fotografie, SQL …" maxlength="40">
+          <div class="hub-types" id="hubTypes"></div>
+          <button class="btn mt" id="hubCreate">Plan erstellen</button>
+        </div>
+      </div>
+      <div id="hubPlans"></div>
+    </div>
+  </section>
+
+  <!-- ================= TIKTOK ================= -->
+  <section class="panel" id="panel-tt">
+    <div class="card" id="nicheCard">
+      <h3 id="nicheHead">Schritt 0: Deine Nische</h3>
+      <p class="sub" id="nicheSub"></p>
+      <div class="mt" id="nicheList"></div>
+    </div>
+    <div class="card" id="briefCard" style="display:none">
+      <h3>Dein Nischen-Briefing</h3>
+      <div id="nicheBrief"></div>
+    </div>
     <div class="card">
       <div class="lesson-nav">
-        <span class="prog-lbl num" id="ruProgLbl"></span>
-        <div class="prog"><i id="ruProgBar"></i></div>
-        <button class="btn ghost small" id="ruPrev">‹</button>
-        <button class="btn ghost small" id="ruNext">›</button>
+        <span class="prog-lbl num" id="ttProgLbl"></span>
+        <div class="prog"><i id="ttProgBar"></i></div>
       </div>
-      <div id="ruLesson"></div>
+      <div id="ttDays"></div>
     </div>
     <div class="card">
-      <h3>Blitz-Wiederholung</h3>
-      <p class="sub">5 zufällige Fragen aus allen Lektionen, die du schon geschafft hast. Sprachen bleiben nur durch Wiederholen — mach das täglich.</p>
-      <div id="ruReview" class="mt"><button class="btn" id="ruRevStart">Start</button></div>
+      <h3>Hook-Bibliothek</h3>
+      <p class="sub">Die ersten 1,5 Sekunden entscheiden. Sätze zum Anpassen an deine Nische:</p>
+      <div class="mt" id="hookList"></div>
     </div>
   </section>
 
-  <!-- ================= GESCHICHTE ================= -->
-  <section class="panel" id="panel-hist">
-    <div class="card">
-      <div class="lesson-nav">
-        <span class="prog-lbl num" id="hiProgLbl"></span>
-        <div class="prog"><i id="hiProgBar"></i></div>
-        <button class="btn ghost small" id="hiPrev">‹</button>
-        <button class="btn ghost small" id="hiNext">›</button>
-      </div>
-      <div id="hiLesson"></div>
-    </div>
-  </section>
-
-  <!-- ================= INFORMATIK ================= -->
-  <section class="panel" id="panel-it">
-    <div class="card">
-      <div class="lesson-nav">
-        <span class="prog-lbl num" id="itProgLbl"></span>
-        <div class="prog"><i id="itProgBar"></i></div>
-        <button class="btn ghost small" id="itPrev">‹</button>
-        <button class="btn ghost small" id="itNext">›</button>
-      </div>
-      <div id="itLesson"></div>
-    </div>
-  </section>
-
-  <!-- ================= FINANZEN ================= -->
+  <!-- ================= GELD ================= -->
   <section class="panel" id="panel-fin">
     <div class="card">
       <div class="eyebrow">Dein Plan</div>
@@ -367,50 +506,50 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
     </div>
   </section>
 
-  <!-- ================= TIKTOK ================= -->
-  <section class="panel" id="panel-tt">
-    <div class="card" id="nicheCard">
-      <h3 id="nicheHead">Schritt 0: Deine Nische</h3>
-      <p class="sub" id="nicheSub">Einmal wählen, dann 30 Tage nicht mehr diskutieren. Alle vier passen zu dem, was du eh schon kannst oder lernst:</p>
-      <div class="mt" id="nicheList"></div>
-    </div>
-    <div class="card" id="briefCard" style="display:none">
-      <h3>Dein Nischen-Briefing</h3>
-      <div id="nicheBrief"></div>
-    </div>
-    <div class="card">
-      <div class="lesson-nav">
-        <span class="prog-lbl num" id="ttProgLbl"></span>
-        <div class="prog"><i id="ttProgBar"></i></div>
-      </div>
-      <div id="ttDays"></div>
-    </div>
-    <div class="card">
-      <h3>Hook-Bibliothek</h3>
-      <p class="sub">Die ersten 1,5 Sekunden entscheiden. Sätze zum Anpassen an deine Nische:</p>
-      <div class="mt" id="hookList"></div>
-    </div>
-  </section>
-
   <!-- ================= KÖRPER ================= -->
   <section class="panel" id="panel-body">
     <div class="card">
       <div class="eyebrow">Dein Wochenplan</div>
       <h2>Trainingswoche</h2>
-      <p class="sub">Trag ein, was DU an welchem Tag machst — deine Heute-Mission zeigt automatisch den Eintrag des Tages. Änderungen werden gespeichert.</p>
+      <p class="sub">Trag ein, was DU an welchem Tag machst — deine Heute-Mission zeigt automatisch den Eintrag des Tages.</p>
       <div class="mt" id="planList"></div>
     </div>
-    <div class="card">
-      <h3>Belastung</h3>
-      <div class="mt" id="knowBel"></div>
+    <div class="card"><h3>Belastung</h3><div class="mt" id="knowBel"></div></div>
+    <div class="card"><h3>Erholung</h3><div class="mt" id="knowErh"></div></div>
+    <div class="card"><h3>Ernährung</h3><div class="mt" id="knowErn"></div></div>
+  </section>
+
+  <!-- ================= LEBEN ================= -->
+  <section class="panel" id="panel-leben">
+    <div class="subnav" id="lebenNav">
+      <button class="sub-chip on" data-sub="travel" style="--sc:#14B8A6">Reisen</button>
+      <button class="sub-chip" data-sub="exp" style="--sc:#E8853D">Erfahrungen</button>
     </div>
-    <div class="card">
-      <h3>Erholung</h3>
-      <div class="mt" id="knowErh"></div>
+
+    <div class="subview on" id="sub-travel" style="--area:#14B8A6">
+      <div class="card">
+        <div class="eyebrow">Bucketlist</div>
+        <h2>Wohin es gehen soll</h2>
+        <p class="sub">Sammle Ziele, hake ab, was du erlebt hast. Eine gebuchte Reise pro Jahr ist das Minimum — Vorfreude ist der halbe Urlaub.</p>
+        <div class="bucket-add mt"><input id="travelInput" placeholder="Eigenes Reiseziel hinzufügen …" maxlength="60"><button class="btn small" id="travelAdd">+</button></div>
+        <div class="mt" id="travelList"></div>
+        <div id="travelSugg"></div>
+      </div>
+      <div class="card">
+        <h3>Die Reise-Formel</h3>
+        <p class="sub mt">Leg im Geld-Tab gedanklich 50–100 € pro Monat als Reisetopf zurück — dann ist jede Reise schon bezahlt, bevor du buchst. Und buch die nächste Reise, solange du noch von der letzten erzählst: Menschen mit konkretem Reisedatum im Kalender sind messbar zufriedener.</p>
+      </div>
     </div>
-    <div class="card">
-      <h3>Ernährung</h3>
-      <div class="mt" id="knowErn"></div>
+
+    <div class="subview" id="sub-exp" style="--area:#E8853D">
+      <div class="card">
+        <div class="eyebrow">Sammlung</div>
+        <h2>Neue Erfahrungen</h2>
+        <p class="sub">Die Regel ist einfach: eine neue Erfahrung pro Monat. Klein zählt auch — Hauptsache, du hast es vorher noch nie gemacht.</p>
+        <div class="bucket-add mt"><input id="expInput" placeholder="Eigene Erfahrung hinzufügen …" maxlength="60"><button class="btn small" id="expAdd">+</button></div>
+        <div class="mt" id="expList"></div>
+        <div id="expSugg"></div>
+      </div>
     </div>
   </section>
 </main>
@@ -908,6 +1047,113 @@ const KNOW_ERN=[
 </script>
 
 <script>
+/* ============ ZIELE: 7 Langzeitziele (1–5 Jahre) ============ */
+/* auto-Meilensteine werden live aus deinem Fortschritt berechnet */
+const GOALS=[
+{id:'gh',c:'var(--c-body)',t:'Optimale Gesundheit',h:'laufend',
+ d:'Kraft, Schlaf, Ernährung, Vorsorge — ein Körper, der Jahrzehnte halten soll.',
+ ms:[{t:'Wochenplan 12 Wochen am Stück durchgezogen'},
+ {t:'Einen Monat lang ø 7,5+ Stunden Schlaf'},
+ {t:'Protein-Ziel 30 Tage in Folge getroffen'},
+ {t:'Check-up + großes Blutbild beim Arzt gemacht'},
+ {t:'Alle Körper-Wissenskarten verinnerlicht',auto:()=>['bel','erh','ern'].every((k,ki)=>[KNOW_BEL,KNOW_ERH,KNOW_ERN][ki].every((_,i)=>S.known[k+i]))}]},
+{id:'gr',c:'var(--c-ru)',t:'Russisch fließend',h:'1–3 Jahre',
+ d:'Vom Verstehen zum echten Sprechen — mit Familie, im Urlaub, am Telefon.',
+ ms:[{t:'10 Lektionen abgeschlossen',auto:()=>S.ru.cur>=10},
+ {t:'Alle 30 Lektionen abgeschlossen',auto:()=>S.ru.cur>=30},
+ {t:'5-Minuten-Gespräch mit den Eltern geführt'},
+ {t:'Ein Telefonat mit Verwandten komplett auf Russisch'},
+ {t:'Einen Film/Serie auf Russisch verstanden'},
+ {t:'Im Urlaub selbstständig Russisch gesprochen'}]},
+{id:'gt',c:'var(--c-tt)',t:'TikTok als Einnahmequelle',h:'1–2 Jahre',
+ d:'Von null auf ein Konto, das jeden Monat Geld überweist.',
+ ms:[{t:'Nische gewählt und Account aufgebaut',auto:()=>S.tt.niche!==null},
+ {t:'30-Tage-Playbook komplett durchgezogen',auto:()=>S.tt.done.length>=30},
+ {t:'1.000 Follower erreicht'},
+ {t:'Ersten Euro verdient (Affiliate oder Creator-Programm)'},
+ {t:'10.000 Follower — Creator-Programm freigeschaltet'},
+ {t:'500 € in einem Monat verdient'}]},
+{id:'gf',c:'var(--c-fin)',t:'Stabile Finanzen',h:'1–5 Jahre',
+ d:'Notgroschen, Auto bar bezahlt, eigene Wohnung, wachsendes Depot.',
+ ms:[{t:'Alle 12 Finanz-Lektionen durchgearbeitet',auto:()=>S.fin.done.length>=12},
+ {t:'Notgroschen (5.000 €) liegt separat auf Tagesgeld'},
+ {t:'Depot eröffnet, ETF-Sparplan läuft automatisch'},
+ {t:'Auto bar gekauft — ohne Kredit'},
+ {t:'Eigene Wohnung bezogen, Budget hält'},
+ {t:'25.000 € Nettovermögen erreicht'}]},
+{id:'gv',c:'#14B8A6',t:'Schöne Reisen',h:'jedes Jahr',
+ d:'Mindestens eine Reise pro Jahr, die du nie vergisst — geplant statt verschoben.',
+ ms:[{t:'Bucketlist mit 10 Zielen gefüllt',auto:()=>S.travel.length>=10},
+ {t:'Nächste Reise konkret gebucht'},
+ {t:'3 neue Länder besucht',auto:()=>S.travel.filter(x=>x.done).length>=3},
+ {t:'Heimatreise: Kasachstan mit der Familie'},
+ {t:'Die eine große Traumreise gemacht'}]},
+{id:'gw',c:'var(--c-hi)',t:'Umfassendes Wissen',h:'laufend',
+ d:'Geschichte, Informatik, Bücher, Lernhub — jeden Tag ein Stück klüger.',
+ ms:[{t:'Weltgeschichte: alle 48 Kapitel',auto:()=>S.hi.cur>=48},
+ {t:'Informatik: alle 24 Lektionen',auto:()=>S.it.cur>=24},
+ {t:'Ersten Lernhub-Plan abgeschlossen',auto:()=>S.hub.plans.some(p=>p.done.length&&p.done.every(x=>x))},
+ {t:'12 Bücher gelesen (1 pro Monat)'},
+ {t:'100-Tage-Serie geschafft',auto:()=>streak()>=100}]},
+{id:'ge',c:'#E8853D',t:'Neue Erfahrungen',h:'laufend',
+ d:'Sachen machen, von denen du in 40 Jahren erzählst — eine pro Monat.',
+ ms:[{t:'5 Erfahrungen abgehakt',auto:()=>S.exp.filter(x=>x.done).length>=5},
+ {t:'15 Erfahrungen abgehakt',auto:()=>S.exp.filter(x=>x.done).length>=15},
+ {t:'Eine Sache gemacht, vor der du richtig Respekt hattest'},
+ {t:'Einen Monat lang jede Woche etwas Neues probiert'}]}];
+
+/* ============ REISEN: Startvorschläge ============ */
+const TRAVEL_SUGG=["Kasachstan — Heimatreise mit der Familie","Japan — Tokio & Kyoto","Island — Ringstraße","Norwegen — Fjorde","Italien — Amalfiküste","Kroatien — Segeltörn","Schottland — Highlands","Marokko — Marrakesch & Wüste","Thailand — Inseln","Schweiz — Alpenpanorama","Georgien — Kaukasus & Küche","New York im Winter"];
+
+/* ============ ERFAHRUNGEN: Startvorschläge ============ */
+const EXP_SUGG=["Halbmarathon laufen","Fallschirmsprung","Eisbaden im Winter","Blut spenden","Solo-Wochenendtrip","Russischen Kochkurs machen (oder mit Mama kochen lernen)","Vor Publikum sprechen","Auf ein Festival fahren","Sonnenaufgangs-Wanderung","24 Stunden komplett ohne Handy","Sprach-Tandempartner treffen","Einen Tag ehrenamtlich helfen","Sauna-Aufguss-Zeremonie erleben","Bouldern ausprobieren","Schach lernen und 10 Partien spielen","Ein Buch an einem Wochenende durchlesen"];
+
+/* ============ LERNHUB: Plan-Vorlagen ============ */
+/* {T} wird durch dein Thema ersetzt */
+const HUB_TYPES=[
+{k:'skill',l:'Praktisch können',d:'Du willst {T} selbst ausüben können'},
+{k:'know',l:'Tief verstehen',d:'Du willst {T} durchdringen und erklären können'},
+{k:'job',l:'Für Job & Studium',d:'Du willst {T} beruflich einsetzen'}];
+const HUB_PLAN={
+ phases:["Woche 1 · Landkarte","Woche 2 · Grundlagen","Woche 3 · Praxis","Woche 4 · Festigen"],
+ common:[
+  ["20-Minuten-Überblick: Schau 2 gute Einführungsvideos zu {T} („{T} erklärt“, „{T} für Anfänger“) und notiere, was dich am meisten überrascht hat.",
+   "Landkarte zeichnen: Teile {T} auf einem Blatt in 4–6 Teilgebiete auf. Du musst sie noch nicht verstehen — nur wissen, dass es sie gibt.",
+   "Die 3 besten Ressourcen finden: 1 Buch (Rezensionen checken), 1 YouTube-Kanal, 1 Kurs oder Podcast zu {T}. Nur diese drei — mehr sammeln ist Prokrastination.",
+   "Mini-Glossar: Schreib die 15 wichtigsten Fachbegriffe von {T} mit je einem Satz Erklärung auf.",
+   "Dein 4-Wochen-Ziel in einem Satz: „Nach 4 Wochen kann ich bei {T} konkret …“ — messbar und ehrlich."],
+  ["Lernrhythmus starten: 25 Minuten {T} pro Tag, feste Uhrzeit, Timer an. Heute: Kapitel 1 deiner Hauptressource.",
+   "Feynman-Technik: Erkläre laut in einfachen Worten, was du bisher über {T} weißt — als würdest du es einem 12-Jährigen erklären. Wo du stockst, liegt deine Lücke.",
+   "20 Karteikarten (App oder Papier) mit den Kernfakten von {T} anlegen und erste Runde wiederholen.",
+   "Einem Praktiker zuhören: Interview, Podcast oder Vlog von jemandem, der {T} täglich macht. Notiere: Was davon stand NICHT in den Grundlagen?",
+   "Zwischenbilanz: Welches Teilgebiet deiner Landkarte zieht dich am meisten? Das wird dein Praxis-Schwerpunkt für Woche 3."],
+  {skill:["Erstes echtes Üben: Führe die grundlegendste Tätigkeit von {T} selbst aus — klein, unperfekt, aber real.",
+   "Übungsroutine: Wiederhole die Kernübung von {T} an drei Tagen. Führe eine Fehlerliste: Was ging schief, was änderst du?",
+   "Schau einem Könner live oder im Video über die Schulter und vergleiche mit deiner Ausführung — 3 Unterschiede notieren.",
+   "Feedback holen: Zeig deine Ausführung von {T} einem Menschen, der es kann (Verein, Forum, Reddit, Bekannte) und stell 2 konkrete Fragen.",
+   "Steigerung: Übe die Kernübung mit einer Schwierigkeit mehr als beim ersten Mal."],
+  know:["Schreibe eine 2-Seiten-Zusammenfassung von {T} in eigenen Worten — ohne beim Schreiben nachzuschlagen, erst danach korrigieren.",
+   "Suche die Gegenposition: Was ist an {T} umstritten, wo irren sich Anfänger typischerweise? 3 Punkte notieren.",
+   "Wende {T} auf einen echten Fall an: Analysiere ein aktuelles Beispiel aus Nachrichten oder deinem Alltag mit dem, was du gelernt hast.",
+   "Feedback holen: Poste eine These zu {T} in einem Fachforum oder stell sie jemandem vom Fach — lass dich korrigieren.",
+   "Verbinde {T} mit etwas, das du schon gut kennst (Fußball, Fitness, IT, Geld): Schreib 5 Parallelen auf."],
+  job:["Finde heraus, wie {T} in deinem Umfeld (AOK, Studium) konkret eingesetzt wird — frag eine Person, die damit arbeitet.",
+   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an — dokumentiere Vorgehen und Ergebnis.",
+   "Lerne das wichtigste Werkzeug/Programm rund um {T} in einer 30-Minuten-Session kennen.",
+   "Feedback holen: Zeig deine Anwendung von {T} einem Kollegen oder Dozenten und frag: „Was würdest du anders machen?“",
+   "Notiere, wie {T} in deinem Lebenslauf/Jahresgespräch auftauchen könnte — mit deinem Praxisbeispiel als Beleg."]},
+  ["Teach-back: Erkläre {T} einer echten Person 10 Minuten lang frei — oder nimm ein 60-Sekunden-Video auf (TikTok-Synergie!).",
+   "Selbsttest: Beantworte die 10 wichtigsten Fragen zu {T} aus dem Gedächtnis, dann korrigieren. Unter 7 richtig? Lücken in die Karteikarten.",
+   "Wiederholungstermine setzen: Karteikarten-Wiederholung in 1 Woche, 1 Monat, 3 Monaten — jetzt in den Kalender.",
+   "Nächste Stufe definieren: Was wäre das nächste 4-Wochen-Ziel bei {T}, wenn du weitermachst? Aufschreiben — entscheiden kannst du später.",
+   "Abschluss-Bilanz: Vergleiche dein Können mit deinem Satz aus Woche 1. Was hast du erreicht, was hat dich überrascht?"]]
+};
+function hubTasks(type){
+ return [HUB_PLAN.common[0],HUB_PLAN.common[1],HUB_PLAN.common[2][type],HUB_PLAN.common[3]];
+}
+</script>
+
+<script>
 /* ================= State ================= */
 const $=s=>document.querySelector(s);
 const LSKEY='momentum-v1';
@@ -917,6 +1163,7 @@ S.mode=S.mode||'normal';S.days=S.days||{};S.ru=S.ru||{cur:0};S.hi=S.hi||{cur:0};
 S.fin=S.fin||{};S.fin.done=S.fin.done||[];S.fin.inp=S.fin.inp||{};
 S.tt=S.tt||{niche:null,done:[]};S.shown=S.shown||{};
 S.plan=S.plan||PLAN_DEF.slice();S.known=S.known||{};
+S.goals=S.goals||{};S.travel=S.travel||[];S.exp=S.exp||[];S.hub=S.hub||{plans:[]};
 function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
 
 /* ================= Datum ================= */
@@ -929,7 +1176,16 @@ const dayIdx=Math.max(0,Math.round((new Date(NOW.getFullYear(),NOW.getMonth(),NO
 const MONTHS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 const WD=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const WD_SHORT=['Mo','Di','Mi','Do','Fr','Sa','So'];
-const planIdxToday=(NOW.getDay()+6)%7; // Mo=0 … So=6
+const planIdxToday=(NOW.getDay()+6)%7;
+
+/* ================= SVG-Ring ================= */
+function ring(pct,color,size,label){
+ const sw=size>=50?6:5, r=(size-sw-2)/2, c=2*Math.PI*r, off=c*(1-Math.min(1,Math.max(0,pct)));
+ return '<svg class="ring" width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" role="img" aria-label="'+(label||'')+' '+Math.round(pct*100)+'%">'
+  +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="var(--surface2)" stroke-width="'+sw+'"/>'
+  +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-dasharray="'+c.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'" transform="rotate(-90 '+size/2+' '+size/2+')"/>'
+  +'<text class="ring-t" x="50%" y="50%" dy="4.5" text-anchor="middle">'+Math.round(pct*100)+'</text></svg>';
+}
 
 /* ================= Missionen ================= */
 const BONUS=[
@@ -940,18 +1196,21 @@ const BONUS=[
  {id:'b4',t:'10 Seiten in einem Sachbuch lesen',s:'Finanzen, Geschichte oder Psychologie — Hauptsache Seiten'},
  {id:'b5',t:'Schreib 3 Sätze über deinen Tag — auf Russisch',s:'Notiz-App reicht, Lautschrift erlaubt'},
  {id:'b6',t:'20 Minuten spazieren, Handy bleibt zu Hause',s:'Bestes Kopf-Reset-Tool, kostet nichts'},
- {id:'b7',t:'Kleinen Betrag aufs Tagesgeld überweisen',s:'Auch 10 € zählen — die Gewohnheit ist das Ziel'}];
+ {id:'b7',t:'Kleinen Betrag aufs Tagesgeld überweisen',s:'Auch 10 € zählen — die Gewohnheit ist das Ziel'},
+ {id:'b8',t:'15 Minuten deine nächste Reise recherchieren',s:'Flüge, Route, beste Zeit — Vorfreude zählt doppelt'},
+ {id:'b9',t:'Plane deine Erfahrung des Monats',s:'Eine aus deiner Leben-Liste konkret terminieren'}];
 
+function activeHubPlan(){return S.hub.plans.find(p=>p.done.some(x=>!x))}
 function missions(){
  const m=[];
- m.push({id:'ru',tag:'Russisch',tab:'ru',
+ m.push({id:'ru',tag:'Russisch',tab:'lernen/ru',
   t:S.ru.cur>=RU.length?'Blitz-Wiederholung: 5 Fragen':'Lektion '+(S.ru.cur+1)+': '+RU[Math.min(S.ru.cur,RU.length-1)].t,
   s:'4 Sätze laut sprechen + Mini-Quiz (~5 Min.)'});
- m.push({id:'hi',tag:'Geschichte',tab:'hist',
-  t:S.hi.cur>=HIST.length?'Wiederholung: Blättere ein altes Kapitel durch':'Kapitel '+(S.hi.cur+1)+': '+HIST[Math.min(S.hi.cur,HIST.length-1)].t,
-  s:'2 Minuten lesen + 1 Quizfrage'});
- const itM={id:'it',tag:'Informatik',tab:'it',
-  t:S.it.cur>=IT.length?'Wiederholung: Blättere eine alte Lektion durch':'Lektion '+(S.it.cur+1)+': '+IT[Math.min(S.it.cur,IT.length-1)].t,
+ const hiM={id:'hi',tag:'Geschichte',tab:'lernen/hist',
+  t:S.hi.cur>=HIST.length?'Wiederholung: ein altes Kapitel':'Kapitel '+(S.hi.cur+1)+': '+HIST[Math.min(S.hi.cur,HIST.length-1)].t,
+  s:'2 Minuten lesen + 1 Quizfrage'};
+ const itM={id:'it',tag:'Informatik',tab:'lernen/it',
+  t:S.it.cur>=IT.length?'Wiederholung: eine alte Lektion':'Lektion '+(S.it.cur+1)+': '+IT[Math.min(S.it.cur,IT.length-1)].t,
   s:'2 Minuten lesen + 1 Quizfrage'};
  const ttTotal=TT.reduce((a,p)=>a+p.d.length,0);
  const ttM={id:'tt',tag:'TikTok',tab:'tt',
@@ -962,10 +1221,19 @@ function missions(){
   t:planE?'Dein Plan heute: '+planE:'Trag deinen Wochenplan ein',
   s:planE?'So steht es in deinem Wochenplan ('+WD_SHORT[planIdxToday]+')':'Im Körper-Tab, dauert 2 Minuten'};
  const finM=(S.fin.done.length<FIN.length)
-  ?{id:'fin',tag:'Finanzen',tab:'fin',t:'Finanz-Lektion: '+FIN[S.fin.done.length].t,s:'Lesen + den „Mach jetzt“-Schritt angehen'}
-  :{id:'fin',tag:'Finanzen',tab:'fin',t:'Plan-Check: Stimmen deine Regler noch?',s:'2 Minuten im Finanzen-Tab'};
- if(S.mode==='kurz'){ m.push([itM,ttM,bodyM,finM][dayIdx%4]); }
- else{ m.push(itM,ttM,bodyM,finM); }
+  ?{id:'fin',tag:'Geld',tab:'fin',t:'Finanz-Lektion: '+FIN[S.fin.done.length].t,s:'Lesen + den „Mach jetzt“-Schritt angehen'}
+  :{id:'fin',tag:'Geld',tab:'fin',t:'Plan-Check: Stimmen deine Regler noch?',s:'2 Minuten im Geld-Tab'};
+ const hp=activeHubPlan();
+ const hubM=hp?{id:'hub',tag:'Lernhub',tab:'lernen/hub',
+  t:'Weiter mit „'+hp.topic+'“',s:'Der nächste Schritt deines 4-Wochen-Plans'}:null;
+ if(S.mode==='kurz'){
+  m.push(dayIdx%2?hiM:itM);
+  const rot=[ttM,bodyM,finM].concat(hubM?[hubM]:[]);
+  m.push(rot[dayIdx%rot.length]);
+ }else{
+  m.push(hiM,itM,ttM,bodyM,finM);
+  if(hubM)m.push(hubM);
+ }
  if(S.mode==='vollgas'){
   const i1=dayIdx%BONUS.length, i2=(dayIdx+3)%BONUS.length;
   m.push({id:BONUS[i1].id,tag:'Bonus',t:BONUS[i1].t,s:BONUS[i1].s});
@@ -993,12 +1261,12 @@ function renderHeader(){
  const total=(SEASON_END-EPOCH)/864e5;
  const pct=Math.min(100,Math.max(0,Math.round((dayIdx/total)*100)));
  $('#seasonFill').style.width=pct+'%';
- $('#seasonPct').textContent=pct+' % · fertig Sep 2027';
+ $('#seasonPct').textContent=pct+' % · Sep 2027';
 }
 function renderMissions(){
  const ms=missions(),t=today();
  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',b.dataset.mode===S.mode));
- const AREA={ru:'a-ru',hi:'a-hi',it:'a-it',fin:'a-fin',tt:'a-tt',body:'a-body'};
+ const AREA={ru:'a-ru',hi:'a-hi',it:'a-it',fin:'a-fin',tt:'a-tt',body:'a-body',hub:'a-it'};
  $('#missionList').innerHTML=ms.map(m=>{
   const d=!!t.done[m.id];
   return '<div class="mission '+(AREA[m.id]||'a-bonus')+(d?' done':'')+'" data-id="'+m.id+'">'
@@ -1012,7 +1280,7 @@ function renderMissions(){
  if(!all&&t.zn){t.zn=false;save()}
  $('#zunullBanner').innerHTML=t.zn
   ?'<div class="zunull-banner"><b>Tag komplett ⚡</b><span>Tag #'+(dayIdx+1)+' erledigt. Serie: '+streak()+' Tag(e). Bis morgen.</span></div>':'';
- renderHeader();
+ renderHeader();renderRings();renderHeat();
 }
 function completeMission(id){
  const t=today();
@@ -1025,29 +1293,73 @@ function celebrate(){
 }
 $('#ovlClose').addEventListener('click',()=>$('#ovl').classList.remove('on'));
 document.addEventListener('click',e=>{
- const chk=e.target.closest('.mcheck');
- if(chk&&!chk.classList.contains('mcheck-tt')){
-  const mi=chk.closest('.mission');const id=mi&&mi.dataset.id;if(!id)return;
+ const chk=e.target.closest('#missionList .mcheck');
+ if(chk){
+  const id=chk.closest('.mission').dataset.id;if(!id)return;
   const t=today();
   if(t.done[id]){delete t.done[id]}else{t.done[id]=true}
   save();renderMissions();return}
  const go=e.target.closest('[data-go]');
- if(go){switchTab(go.dataset.go)}
+ if(go){goNav(go.dataset.go)}
 });
 $('#modeRow').addEventListener('click',e=>{
  const b=e.target.closest('.mode-btn');if(!b)return;
  S.mode=b.dataset.mode;save();renderMissions();
 });
 
-/* ================= Tabs ================= */
+/* ================= Ringe + Heatmap ================= */
+function renderRings(){
+ const items=[
+  ['Russisch',S.ru.cur/RU.length,'var(--c-ru)'],
+  ['Geschichte',S.hi.cur/HIST.length,'var(--c-hi)'],
+  ['Informatik',S.it.cur/IT.length,'var(--c-it)'],
+  ['TikTok',S.tt.done.length/30,'var(--c-tt)'],
+  ['Geld',S.fin.done.length/FIN.length,'var(--c-fin)']];
+ $('#ringsRow').innerHTML=items.map(([l,p,c])=>
+  '<div class="ring-item">'+ring(p,c,56,l)+'<span>'+l+'</span></div>').join('');
+}
+function renderHeat(){
+ const cells=[];
+ const start=new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate());
+ start.setDate(start.getDate()-((NOW.getDay()+6)%7)-49); // Montag vor 7 Wochen
+ for(let w=0;w<8;w++)for(let d=0;d<7;d++){
+  const dt=new Date(start);dt.setDate(start.getDate()+w*7+d);
+  const k=dkey(dt);
+  const future=dt>NOW;
+  const n=S.days[k]?Object.keys(S.days[k].done).length:0;
+  const cls=n>=5?'h3':n>=3?'h2':n>=1?'h1':'';
+  cells.push('<div class="hcell '+cls+(k===TODAY?' hz':'')+'"'+(future?' style="opacity:.25"':'')+' title="'+k+': '+n+'"></div>');
+ }
+ $('#heatmap').innerHTML=cells.join('');
+}
+
+/* ================= Navigation ================= */
+let lernSub='ru', lebenSub='travel';
 function switchTab(id){
  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.tab===id));
  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id==='panel-'+id));
  window.scrollTo({top:0});
  if(id==='fin')drawChart();
+ if(id==='ziele')renderGoals();
+}
+function switchSub(nav,id){
+ const map={lernNav:['sub-ru','sub-hist','sub-it','sub-hub'],lebenNav:['sub-travel','sub-exp']};
+ document.querySelectorAll('#'+nav+' .sub-chip').forEach(c=>c.classList.toggle('on',c.dataset.sub===id));
+ map[nav].forEach(v=>{const el=document.getElementById(v);el.classList.toggle('on',v==='sub-'+id)});
+ if(nav==='lernNav')lernSub=id;else lebenSub=id;
+}
+function goNav(spec){
+ const [main,sub]=spec.split('/');
+ switchTab(main);
+ if(sub)switchSub(main==='lernen'?'lernNav':'lebenNav',sub);
 }
 document.querySelector('.tabs-in').addEventListener('click',e=>{
  const t=e.target.closest('.tab');if(t)switchTab(t.dataset.tab);
+});
+['lernNav','lebenNav'].forEach(nav=>{
+ document.getElementById(nav).addEventListener('click',e=>{
+  const c=e.target.closest('.sub-chip');if(c)switchSub(nav,c.dataset.sub);
+ });
 });
 
 /* ================= Quiz-Baustein ================= */
@@ -1114,7 +1426,7 @@ function startReview(){
  });
 }
 
-/* ================= Sequenzielle Kurse (Geschichte + Informatik) ================= */
+/* ================= Kurse (Geschichte + Informatik) ================= */
 function makeCourse(cfg){
  let view=Math.min(cfg.state().cur,cfg.data.length-1);
  function render(){
@@ -1142,7 +1454,74 @@ function makeCourse(cfg){
  render();
 }
 
-/* ================= FINANZEN ================= */
+/* ================= ZIELE ================= */
+function renderGoals(){
+ $('#goalList').innerHTML=GOALS.map(g=>{
+  const states=g.ms.map((m,i)=>m.auto?!!m.auto():!!S.goals[g.id+i]);
+  const pct=states.filter(Boolean).length/g.ms.length;
+  return '<div class="card goal" style="--area:'+g.c+'">'
+   +'<div class="goal-head">'+ring(pct,g.c,62,g.t)
+   +'<div class="gh-txt"><h3>'+g.t+'</h3><span class="pill amber">'+g.h+'</span><div class="goal-d mt" style="margin-top:6px">'+g.d+'</div></div></div>'
+   +'<div class="ms-list">'+g.ms.map((m,i)=>{
+     const done=states[i];
+     return m.auto
+      ?'<div class="ms-row'+(done?' done':'')+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span><span class="ms-auto">auto</span></div>'
+      :'<button class="ms-row'+(done?' done':'')+'" data-ms="'+g.id+i+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span></button>';
+    }).join('')+'</div></div>';
+ }).join('');
+}
+$('#panel-ziele').addEventListener('click',e=>{
+ const r=e.target.closest('[data-ms]');
+ if(r){const k=r.dataset.ms;
+  if(S.goals[k])delete S.goals[k];else S.goals[k]=true;
+  save();renderGoals();}
+});
+
+/* ================= LERNHUB ================= */
+let hubType='skill';
+function renderHubTypes(){
+ $('#hubTypes').innerHTML=HUB_TYPES.map(t=>
+  '<button class="hub-type'+(hubType===t.k?' on':'')+'" data-ht="'+t.k+'">'+t.l+'<small>'+t.d.split('{T}').join('deinem Thema')+'</small></button>').join('');
+}
+function renderHubPlans(){
+ if(!S.hub.plans.length){$('#hubPlans').innerHTML='<div class="card"><p class="sub">Noch kein Plan. Gib oben ein Thema ein — z. B. das, worüber du schon immer mehr wissen wolltest.</p></div>';return}
+ $('#hubPlans').innerHTML=S.hub.plans.map((p,pi)=>{
+  const tasks=hubTasks(p.type);
+  const flat=tasks.flat();
+  const done=p.done.filter(Boolean).length;
+  let idx=0;
+  return '<div class="card" style="--area:var(--c-it)">'
+   +'<div class="hub-head">'+ring(done/flat.length,'var(--c-it)',56,p.topic)
+   +'<div class="gh-txt"><h3>'+p.topic+'</h3><span class="pill amber">'+HUB_TYPES.find(t=>t.k===p.type).l+'</span></div>'
+   +'<button class="hub-del" data-hubdel="'+pi+'">Löschen</button></div>'
+   +tasks.map((phase,phi)=>'<div class="hub-phase">'+HUB_PLAN.phases[phi]+'</div>'
+     +phase.map(task=>{
+      const i=idx++;
+      const d=!!p.done[i];
+      return '<button class="ms-row'+(d?' done':'')+'" data-hubtask="'+pi+':'+i+'"><span class="ms-check"></span><span class="ms-t">'+task.split('{T}').join(p.topic)+'</span></button>';
+     }).join('')).join('')
+   +'</div>';
+ }).join('');
+}
+$('#sub-hub').addEventListener('click',e=>{
+ const ht=e.target.closest('[data-ht]');
+ if(ht){hubType=ht.dataset.ht;renderHubTypes();return}
+ if(e.target.closest('#hubCreate')){
+  const topic=$('#hubTopic').value.trim();
+  if(!topic){$('#hubTopic').focus();return}
+  const n=hubTasks(hubType).flat().length;
+  S.hub.plans.unshift({topic:topic,type:hubType,done:Array(n).fill(false)});
+  $('#hubTopic').value='';save();renderHubPlans();renderMissions();return}
+ const del=e.target.closest('[data-hubdel]');
+ if(del){S.hub.plans.splice(+del.dataset.hubdel,1);save();renderHubPlans();renderMissions();return}
+ const tk=e.target.closest('[data-hubtask]');
+ if(tk){const [pi,i]=tk.dataset.hubtask.split(':').map(Number);
+  S.hub.plans[pi].done[i]=!S.hub.plans[pi].done[i];
+  if(S.hub.plans[pi].done[i])completeMission('hub');
+  save();renderHubPlans();return}
+});
+
+/* ================= GELD ================= */
 const FININP=[
  {k:'sA',l:'Sparrate bis Studienende (von 1.300 €)',min:0,max:900,step:50,def:500,fmt:v=>v+' €/M'},
  {k:'car',l:'Autopreis',min:5000,max:14000,step:500,def:10000,fmt:v=>fmtE(v)},
@@ -1195,9 +1574,9 @@ function drawChart(){
  const maxV=Math.max(20000,Math.ceil(Math.max(...SIM)/5000)*5000);
  const X=i=>padL+i/(NMONTHS-1)*(W-padL-padR);
  const Y=v=>padT+(1-v/maxV)*(H-padT-padB);
- const ink=cssVar('--ink-dim'),grid=cssVar('--line-soft'),amber=cssVar('--chart1'),danger=cssVar('--danger');
+ const ink=cssVar('--ink-dim'),grid=cssVar('--line-soft'),green=cssVar('--chart1'),danger=cssVar('--danger');
  x2.clearRect(0,0,W,H);
- x2.font='11px system-ui';x2.fillStyle=ink;x2.strokeStyle=grid;x2.lineWidth=1;
+ x2.font='11px Outfit,system-ui';x2.fillStyle=ink;x2.strokeStyle=grid;x2.lineWidth=1;
  for(let g=0;g<=4;g++){const v=maxV/4*g,y=Y(v);
   x2.beginPath();x2.moveTo(padL,y);x2.lineTo(W-padR,y);x2.stroke();
   x2.fillText((v/1000)+'k',6,y+4);}
@@ -1214,12 +1593,12 @@ function drawChart(){
  x2.beginPath();x2.moveTo(X(0),Y(Math.max(0,SIM[0])));
  SIM.forEach((v,i)=>x2.lineTo(X(i),Y(Math.max(0,v))));
  x2.lineTo(X(NMONTHS-1),Y(0));x2.lineTo(X(0),Y(0));x2.closePath();
- x2.fillStyle=amber;x2.globalAlpha=.14;x2.fill();x2.globalAlpha=1;
+ x2.fillStyle=green;x2.globalAlpha=.13;x2.fill();x2.globalAlpha=1;
  x2.beginPath();SIM.forEach((v,i)=>{i?x2.lineTo(X(i),Y(Math.max(0,v))):x2.moveTo(X(i),Y(Math.max(0,v)))});
- x2.strokeStyle=amber;x2.lineWidth=2;x2.stroke();
+ x2.strokeStyle=green;x2.lineWidth=2;x2.stroke();
  const ev=SIM[NMONTHS-1];
- x2.beginPath();x2.arc(X(NMONTHS-1),Y(ev),4,0,7);x2.fillStyle=amber;x2.fill();
- x2.fillStyle=cssVar('--ink');x2.font='600 12px system-ui';
+ x2.beginPath();x2.arc(X(NMONTHS-1),Y(ev),4,0,7);x2.fillStyle=green;x2.fill();
+ x2.fillStyle=cssVar('--ink');x2.font='600 12px Outfit,system-ui';
  x2.fillText(fmtE(ev),X(NMONTHS-1)-70,Y(ev)-8);
 }
 $('#finChart').addEventListener('mousemove',e=>{
@@ -1249,13 +1628,12 @@ function renderZi(){
  };
  $('#ziWidget').addEventListener('input',upd);upd();
 }
-/* Finanz-Lektionen: offen sichtbar, erledigte wandern ins Archiv */
 let finArchOpen=false;
 function renderFinLessons(){
  const open=FIN.map((f,i)=>[f,i]).filter(([f,i])=>!S.fin.done.includes(i));
  const done=FIN.map((f,i)=>[f,i]).filter(([f,i])=>S.fin.done.includes(i));
  let h=open.map(([f,i])=>
-  '<div class="acc" data-acc="1"><button class="acc-head"><span class="acc-num num">'+String(i+1).padStart(2,'0')+'</span><span class="t">'+f.t+'</span><span class="chev">▶</span></button>'
+  '<div class="acc"><button class="acc-head"><span class="acc-num num">'+String(i+1).padStart(2,'0')+'</span><span class="t">'+f.t+'</span><span class="chev">▶</span></button>'
   +'<div class="acc-body"><p>'+f.x+'</p><div class="action-box"><b>Mach jetzt:</b> '+f.a+'</div>'
   +'<button class="btn small mt" data-findone="'+i+'">Gelesen &amp; verstanden ✓</button></div></div>').join('');
  if(!open.length)h='<p class="sub">Alle Lektionen abgeschlossen — stark. Unten kannst du alles wiederholen.</p>';
@@ -1296,7 +1674,7 @@ function renderTT(){
   bc.style.display='';
   $('#nicheBrief').innerHTML=
    '<p class="sub">Deine ersten 5 Video-Ideen — Tag 6, 9 und 10 des Playbooks greifen direkt darauf zu:</p>'
-   +'<div class="mt">'+n.ideas.map((id,j)=>'<div class="hook"><b class="num" style="color:var(--accent-ink)">'+(j+1)+'.</b> '+id+'</div>').join('')+'</div>'
+   +'<div class="mt">'+n.ideas.map((id,j)=>'<div class="hook"><b class="num" style="color:var(--area)">'+(j+1)+'.</b> '+id+'</div>').join('')+'</div>'
    +'<div class="action-box"><b>Recherche-Start:</b> '+n.study+'</div>';
  }else{bc.style.display='none'}
  const total=TT.reduce((a,p)=>a+p.d.length,0);
@@ -1341,7 +1719,6 @@ $('#planList').addEventListener('input',e=>{
  const f=e.target.closest('[data-plan]');if(!f)return;
  S.plan[+f.dataset.plan]=f.value;save();renderMissions();
 });
-/* Wissenskarten mit Archiv */
 const KNOW_SECTIONS=[['bel',KNOW_BEL,'#knowBel'],['erh',KNOW_ERH,'#knowErh'],['ern',KNOW_ERN,'#knowErn']];
 const knowOpen={};
 function renderKnow(){
@@ -1371,12 +1748,44 @@ $('#panel-body').addEventListener('click',e=>{
  if(a){knowOpen[a.dataset.knowarch]=!knowOpen[a.dataset.knowarch];renderKnow()}
 });
 
+/* ================= LEBEN: Reisen & Erfahrungen ================= */
+function renderBucket(listSel,suggSel,arr,suggs,suggLbl){
+ $(listSel).innerHTML=arr.length?arr.map((x,i)=>
+  '<div class="bucket-row'+(x.done?' done':'')+'"><button class="ms-check" data-bk="'+i+'" aria-label="abhaken"></button>'
+  +'<span class="bucket-t">'+x.t+'</span><button class="bucket-x" data-bx="'+i+'" aria-label="löschen">×</button></div>').join('')
+ :'<p class="sub">Noch leer — füge eigene Einträge hinzu oder tipp unten auf einen Vorschlag.</p>';
+ const remaining=suggs.filter(s=>!arr.some(x=>x.t===s));
+ $(suggSel).innerHTML=remaining.length?'<div class="sugg-lbl">'+suggLbl+'</div><div class="sugg-wrap">'
+  +remaining.map(s=>'<button class="sugg" data-sg="'+s.replace(/"/g,'&quot;')+'">+ '+s+'</button>').join('')+'</div>':'';
+}
+function renderLife(){
+ renderBucket('#travelList','#travelSugg',S.travel,TRAVEL_SUGG,'Vorschläge — antippen zum Übernehmen');
+ renderBucket('#expList','#expSugg',S.exp,EXP_SUGG,'Ideen — antippen zum Übernehmen');
+}
+function bucketHandlers(subSel,arr){
+ $(subSel).addEventListener('click',e=>{
+  const c=e.target.closest('[data-bk]');
+  if(c){arr[+c.dataset.bk].done=!arr[+c.dataset.bk].done;save();renderLife();renderGoals();return}
+  const x=e.target.closest('[data-bx]');
+  if(x){arr.splice(+x.dataset.bx,1);save();renderLife();return}
+  const s=e.target.closest('[data-sg]');
+  if(s){arr.push({t:s.dataset.sg,done:false});save();renderLife();return}
+ });
+}
+bucketHandlers('#sub-travel',S.travel);
+bucketHandlers('#sub-exp',S.exp);
+$('#travelAdd').addEventListener('click',()=>{const v=$('#travelInput').value.trim();if(v){S.travel.push({t:v,done:false});$('#travelInput').value='';save();renderLife()}});
+$('#expAdd').addEventListener('click',()=>{const v=$('#expInput').value.trim();if(v){S.exp.push({t:v,done:false});$('#expInput').value='';save();renderLife()}});
+$('#travelInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#travelAdd').click()});
+$('#expInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#expAdd').click()});
+
 /* ================= Init ================= */
 renderHeader();renderMissions();renderRu();
 makeCourse({data:HIST,state:()=>S.hi,mission:'hi',word:'Kapitel',lbl:'#hiProgLbl',bar:'#hiProgBar',host:'#hiLesson',prev:'#hiPrev',next:'#hiNext'});
 makeCourse({data:IT,state:()=>S.it,mission:'it',word:'Lektion',lbl:'#itProgLbl',bar:'#itProgBar',host:'#itLesson',prev:'#itPrev',next:'#itNext'});
+renderGoals();renderHubTypes();renderHubPlans();
 renderFinSliders();simulate();renderZi();renderFinLessons();
-renderTT();renderHooks();renderPlan();renderKnow();
+renderTT();renderHooks();renderPlan();renderKnow();renderLife();
 drawChart();
 window.addEventListener('resize',()=>{simulate();drawChart()});
 try{
