@@ -449,7 +449,7 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
       <div class="card">
         <div class="eyebrow">Lernhub</div>
         <h2>Bring dir alles selbst bei</h2>
-        <p class="sub">Gib ein Thema ein — der Lernhub baut dir einen praxisnahen 4-Wochen-Plan nach bewährter Lernmethodik: erst Landkarte, dann Grundlagen, dann echte Praxis, dann festigen.</p>
+        <p class="sub">Gib ein Thema ein — du bekommst einen 4-Wochen-Plan mit eingebautem Crashkurs: Das Kernwissen steht direkt im Plan, dazu kostenlose Ressourcen und wenige, gezielte Praxis-Aufgaben.</p>
         <div class="hub-form mt">
           <input id="hubTopic" placeholder="z. B. Physiotherapie, Fotografie, SQL …" maxlength="40">
           <div class="hub-types" id="hubTypes"></div>
@@ -542,8 +542,9 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
         <div id="travelSugg"></div>
       </div>
       <div class="card">
-        <h3>Die Reise-Formel</h3>
-        <p class="sub mt">Leg im Geld-Tab gedanklich 50–100 € pro Monat als Reisetopf zurück — dann ist jede Reise schon bezahlt, bevor du buchst. Und buch die nächste Reise, solange du noch von der letzten erzählst: Menschen mit konkretem Reisedatum im Kalender sind messbar zufriedener.</p>
+        <h3>Reise-Wissen</h3>
+        <p class="sub">Abhaken, was du drauf hast — sind alle Karten durch, schaltest du neue frei. Das hört nie auf.</p>
+        <div class="mt" id="knowTra"></div>
       </div>
     </div>
 
@@ -1221,6 +1222,116 @@ function findResources(topic){
 </script>
 
 <script>
+/* ============ GELD STUFE 2: 10 weitere Lektionen ============ */
+const FIN2=[
+{t:"Inflation & Realzins",x:"2 % Inflation klingen harmlos — aber sie halbieren die Kaufkraft deines Geldes in 35 Jahren. Deshalb ist „sicher aufs Sparbuch“ in Wahrheit ein garantierter Verlust: 0,5 % Zinsen minus 2 % Inflation = −1,5 % real, jedes Jahr. Der Realzins (Zins minus Inflation) ist die einzige Zahl, die zählt. Dein Tagesgeld gleicht Inflation ungefähr aus (gut für Notgroschen und kurzfristige Ziele), aber echtes Vermögen wächst nur in Anlagen, die langfristig über der Inflation liegen — historisch: breite Aktienmärkte.",a:"Rechne einmal selbst: Dein Tagesgeldzins minus aktuelle Inflationsrate. Positiv oder negativ?"},
+{t:"Deine erste Steuererklärung",x:"Ab dem ersten vollen Berufsjahr lohnt sie sich fast immer — Berufseinsteiger bekommen im Schnitt mehrere hundert Euro zurück. Die Basics: Werbungskostenpauschale (1.230 €) gibt es automatisch; alles darüber (Fahrten zur Arbeit ab 21 km, Arbeitszimmer/Homeoffice-Pauschale 6 €/Tag, Fortbildungen, Arbeitsmittel wie Laptop) bringt extra Geld zurück. Kostenlos geht es über ELSTER (offiziell, etwas sperrig); Apps wie „Steuererklärung einfach“ führen dich für ~40 € durch — die sich meist sofort rentieren. Frist: bis Ende September des Folgejahres (mit Pflicht), freiwillig sogar 4 Jahre rückwirkend.",a:"Leg heute einen Ordner (digital reicht) an: „Steuer 2027“ — ab jetzt wandern alle Belege (Fortbildung, Arbeitsmittel, Fahrten) direkt dort hinein."},
+{t:"ETF-Feinheiten: TER, thesaurierend, Tracking",x:"Drei Begriffe, dann bist du fit fürs Depot: (1) TER = laufende Kosten pro Jahr; unter 0,3 % ist gut, dein Welt-ETF sollte ~0,2 % kosten. (2) Thesaurierend = Dividenden werden automatisch wieder angelegt (perfekt für den Aufbau, kein Aufwand) vs. ausschüttend = Dividenden aufs Konto (fühlt sich gut an, muss aber manuell reinvestiert werden). Für dich: thesaurierend. (3) Tracking Difference = wie exakt der ETF seinen Index abbildet — bei den großen Anbietern (iShares, Vanguard, Xtrackers) alles im grünen Bereich. Mehr musst du wirklich nicht wissen; alles darüber hinaus ist Hobby, nicht Notwendigkeit.",a:"Check deinen (künftigen) ETF auf diese 3 Werte — sie stehen im Factsheet auf Seite 1."},
+{t:"bAV & VL: Geld vom Arbeitgeber",x:"Zwei Dinge, die viele liegen lassen: (1) Vermögenswirksame Leistungen (VL) — bis zu 40 €/Monat vom Arbeitgeber geschenkt, du musst nur einen VL-Vertrag einrichten (am besten als ETF-Sparplan). Frag die Personalabteilung, ob die AOK das zahlt. (2) Betriebliche Altersvorsorge (bAV) — lohnt sich vor allem, wenn der Arbeitgeber ordentlich zuschusst (ab 20 % Pflichtzuschuss, gute Arbeitgeber geben mehr). Vorsicht: bAV-Verträge sind unflexibel und mindern die gesetzliche Rente leicht — bei kleinem Zuschuss ist der eigene ETF-Sparplan oft besser. Regel: Erst Geschenke einsammeln (VL, hoher bAV-Zuschuss), dann eigenes Depot.",a:"Frag diese Woche in der Personalabteilung: „Zahlt die AOK VL, und wie hoch ist der bAV-Zuschuss?“ — zwei Sätze, potenziell hunderte Euro pro Jahr."},
+{t:"Kredite & die 0%-Finanzierungs-Falle",x:"Warum du dein Auto bar kaufst: Jeder Kredit hat Kosten — sichtbar (Zinsen) oder versteckt. Die „0%-Finanzierung“ im Möbelhaus ist einkalkuliert: Barzahler könnten oft 10–15 % Rabatt verhandeln, Finanzierer zahlen den Listenpreis. Leasing lohnt fast nur für Firmen (Steuervorteile). Dispo ist mit 10–12 % der teuerste Kredit deines Lebens — nie länger als ein paar Tage nutzen. Die einzige okaye Schuld für Privatleute: eine Immobilie mit solider Finanzierung. Konsum auf Pump dagegen bedeutet: Du zahlst morgen mehr für Dinge, die dann schon weniger wert sind.",a:"Merk dir den Verhandlungssatz für den Autokauf: „Was ist Ihr bester Preis bei sofortiger Barzahlung?“ — und schweig danach, bis der Verkäufer antwortet."},
+{t:"Mietrecht-Basics für deinen Auszug",x:"Die fünf Dinge, die dich vor teuren Fehlern schützen: (1) Kaution: maximal 3 Kaltmieten, du darfst sie in 3 Monatsraten zahlen — steht im Gesetz (§ 551 BGB). (2) Übergabeprotokoll: JEDEN Mangel bei Einzug fotografieren und schriftlich festhalten — sonst zahlst du beim Auszug für fremde Schäden. (3) Schönheitsreparaturen: Klauseln mit starren Fristen („alle 3 Jahre streichen“) sind oft unwirksam. (4) Mieterhöhungen: max. 20 % in 3 Jahren (in vielen Städten 15 %), und nur bis zur ortsüblichen Vergleichsmiete. (5) Nebenkostenabrechnung: kommt sie später als 12 Monate nach Abrechnungszeitraum, musst du Nachzahlungen nicht leisten. Bei Streit: Mieterverein (~90 €/Jahr) — zahlt sich beim ersten Konflikt aus.",a:"Speicher dir eine Übergabeprotokoll-Vorlage (kostenlos beim Mieterbund) — für den Tag, an dem du deine Wohnung bekommst."},
+{t:"Gehaltsverhandlung: Das Drehbuch",x:"Konkret für dein Übernahmegespräch 2027: (1) Vorbereitung: Recherchiere die Spanne für Wirtschaftsinformatiker-Einsteiger in deiner Region (kununu, Stepstone Gehaltsreport, TVöD/Tarif-Tabellen der AOK). (2) Nenne im Gespräch NIE zuerst eine Zahl — frag: „Welche Eingruppierung sehen Sie vor?“ (3) Wenn du eine Zahl nennst, nenne eine konkrete krumme („Ich hatte 3.850 brutto im Kopf“) — wirkt recherchiert statt gewürfelt. (4) Argumente sind Leistungen, nicht Bedürfnisse: dein Praxiswissen aus 3 Jahren dualem Studium zählt, deine Miete nicht. (5) Wenn beim Gehalt nichts geht: Urlaubstage, Homeoffice-Tage, Weiterbildungsbudget — alles verhandelbar. Üb das Gespräch einmal laut.",a:"Schreib heute deine 3 stärksten Leistungs-Argumente auf (Projekte, Kenntnisse, Verantwortung aus dem dualen Studium). Die Liste wächst bis 2027 mit."},
+{t:"TikTok & Steuern: Nebeneinkommen richtig",x:"Sobald dein TikTok den ersten Euro einspielt (Affiliate, Creator-Programm), bist du steuerlich Unternehmer: (1) Gewerbe anmelden — kostet ~20–60 €, dauert 20 Minuten, muss aber VOR dem Geldverdienen passieren (Bußgeld-Risiko). (2) Kleinunternehmerregelung wählen: unter 25.000 € Jahresumsatz keine Umsatzsteuer, kaum Bürokratie — für den Start immer richtig. (3) Einnahmen minus Ausgaben (Handy anteilig, Schnittsoftware, Equipment) = Gewinn, kommt in die Steuererklärung (Anlage G + EÜR). (4) Als dualer Student: kurz beim Arbeitgeber anzeigen (Nebentätigkeit), Verträge verbieten selten Content-Erstellung. Klingt nach viel, ist ein Nachmittag — und dann bist du offiziell Unternehmer mit 22.",a:"Merken als Wenn-Dann: „WENN mein Account auf Monetarisierung zugeht, DANN melde ich vorher das Gewerbe an.“ Nicht früher nötig, nicht später erlaubt."},
+{t:"Depot-Pflege: Rebalancing & Ruhe",x:"Die unbequeme Wahrheit der Geldanlage: Nach dem Einrichten ist Nichtstun die beste Strategie. Studien (u. a. die berühmte „tote Depots performen am besten“-Analyse) zeigen: Je öfter Anleger handeln, desto schlechter die Rendite — Gebühren, schlechtes Timing, Emotionen. Dein Pflege-Programm: 1× pro Jahr (Geburtstag als Termin) prüfen: Läuft der Sparplan? Freistellungsauftrag ausgeschöpft? Falls du mehrere Positionen hast: Weicht die Aufteilung stark ab, einmal zurechtrücken (Rebalancing) — am einfachsten, indem frisches Geld in die untergewichtete Position fließt. Alles andere: App zu, Leben leben. Kurseinbrüche? Historisch war jeder einzelne eine Kaufgelegenheit für Sparplan-Anleger.",a:"Leg den jährlichen „Depot-TÜV“ auf deinen Geburtstag — 20 Minuten, einmal im Jahr, mehr braucht es nicht."},
+{t:"Der Notfallordner",x:"Unbequem, aber erwachsen: Ein Ordner (physisch oder verschlüsselt digital), in dem alles Wichtige liegt — Konten & Depots mit Zugangshinweisen, Versicherungspolicen, Verträge, Vollmachten. Warum jetzt schon: Wenn dir etwas zustößt, müssen deine Eltern sonst raten, wo dein Geld liegt. Und umgekehrt: Sprich mit deinen Eltern, ob ES einen solchen Überblick gibt — Vorsorgevollmacht und Patientenverfügung (kostenlose Formulare beim Bundesjustizministerium) ersparen Familien im Ernstfall Monate an Behördenstress. Ein Nachmittag Arbeit, den man genau einmal macht und hoffentlich nie braucht.",a:"Erstelle die erste Seite heute: eine simple Liste aller deiner Konten und Verträge. 15 Minuten."}];
+function genFinCycle(n){
+ const topics=[["Kontenmodell verfeinern","Recherchiere das 3-Konten-Modell (Fixkosten / Sparen / Leben) und vergleiche es mit deinem aktuellen Setup. Übernimm eine Verbesserung.","Richte einen fehlenden Dauerauftrag ein oder passe einen an."],
+ ["Versicherungs-TÜV","Prüfe deine laufenden Versicherungen: Haftpflicht aktuell? BU-Thema geklärt? Doppelversicherungen? Kündige oder ergänze, was nicht passt.","Einen konkreten Vertrag prüfen oder ein Vergleichsangebot einholen."],
+ ["Abo-Audit","Geh deine Kontoauszüge der letzten 3 Monate durch und liste JEDES Abo. Kündige alles, was du 30 Tage nicht genutzt hast.","Mindestens ein Abo kündigen oder bewusst bestätigen."],
+ ["Gehalts-Benchmark","Recherchiere aktuelle Gehälter für dein Profil (Stepstone-Report, kununu, Tariftabellen). Notiere deine Zielspanne fürs nächste Gespräch.","Deine Zielzahl schriftlich festhalten."],
+ ["Immobilie vs. Miete","Rechne einmal ehrlich durch (Finanztip-Rechner): Was würde Kaufen in deiner Region kosten vs. Mieten + ETF-Differenz? Kein Druck — nur Klarheit.","Das Ergebnis in 3 Sätzen notieren."],
+ ["Spendenkonzept","Wohlstand mit System: Überleg dir, ob und wohin du regelmäßig einen kleinen Betrag geben willst (auch 5 €/Monat zählen). Effektive Organisationen: GiveWell-Empfehlungen.","Entscheidung treffen — auch „später“ ist eine, wenn sie bewusst ist."]];
+ const t=topics[(n-1)%topics.length];
+ return [{t:"Zyklus "+n+": "+t[0],x:t[1],a:t[2]}];
+}
+
+/* ============ KÖRPER STUFE 2: Nachschub-Karten ============ */
+const KNOW_BEL2=[
+{t:"Periodisierung: In Wellen trainieren",x:"Der Körper passt sich an Abwechslung an, nicht an ewig Gleiches. Einfachstes Modell für dich: 3 Wochen steigern (Gewicht oder Wiederholungen), 1 Woche leichter (Deload), dann von etwas höherem Niveau neu starten. Fortgeschrittener: Blöcke mit Fokus — 6 Wochen mehr Volumen (Muskelaufbau), 6 Wochen schwerer/weniger Wiederholungen (Kraft). Du musst keine Wissenschaft daraus machen: Allein die 3+1-Welle schlägt planloses „immer Vollgas“ deutlich — weil sie Ermüdung managt statt sie zu ignorieren."},
+{t:"Tempo & Pausen: Die unterschätzten Stellschrauben",x:"Zwei kostenlose Upgrades für jedes Training: (1) Exzentrik kontrollieren — 2–3 Sekunden ablassen erzeugt mehr Wachstumsreiz als schnelles Abfedern, bei gleichem Gewicht. (2) Pausen ernst nehmen — bei schweren Grundübungen 2–3 Minuten (volle Leistung im nächsten Satz schlägt hektisches Durchpowern), bei Isolationsübungen reichen 60–90 Sekunden. Wer zwischen den Sätzen am Handy versackt (5+ Minuten), trainiert kalt; wer nach 30 Sekunden weitermacht, verschenkt Leistung."},
+{t:"Plateaus durchbrechen",x:"Stagniert eine Übung 3+ Wochen, liegt es fast immer an einem von vier Dingen — in dieser Reihenfolge prüfen: (1) Schlaf & Stress (häufigste Ursache, unbeliebteste Antwort), (2) Essen (im Defizit wächst wenig), (3) zu wenig harte Sätze nah am Muskelversagen, (4) zu lange dasselbe Programm. Werkzeuge: Gewicht 10 % runter und mit sauberer Technik neu aufbauen; Wiederholungsbereich wechseln (5–8 statt 10–15); Übungsvariante tauschen (Kurzhantel statt Langhantel). Ein Plateau ist ein Signal, kein Urteil."},
+{t:"Beweglichkeit gezielt statt endlos",x:"Stundenlanges Stretching bringt wenig — gezieltes Arbeiten an DEINEN zwei, drei Baustellen viel. Für Kraftsportler typisch: Sprunggelenk (limitiert die Kniebeuge — Test: Knie über Zehen bei flacher Ferse?), Hüftbeuger (Sitzberuf!) und Brustwirbelsäule (Überkopfdrücken). Wirksamster Ansatz: „Loaded Stretching“ — Dehnung unter leichtem Gewicht (z. B. tiefe Kniebeuge halten, Split Squat unten pausieren). 5 Minuten vor dem Training an der persönlichen Baustelle schlagen 30 Minuten Gießkannen-Stretching."}];
+const KNOW_ERH2=[
+{t:"Morgenpuls & HRV: Dein Ermüdungs-Radar",x:"Der einfachste Erholungs-Messwert kostet nichts: der Ruhepuls direkt nach dem Aufwachen. Miss ihn eine Woche lang (Finger an den Hals, 30 Sekunden zählen ×2, oder Smartwatch) — das ist deine Baseline. Liegt er an einem Morgen 7+ Schläge darüber, ist dein System belastet (Training, Stress, beginnender Infekt): Mach den Tag leichter. Herzratenvariabilität (HRV) misst dasselbe feiner, braucht aber ein Gerät. Die Regel dahinter: Nicht der Plan bestimmt die Belastung, sondern dein Zustand."},
+{t:"Kälte & Wärme: Wann was",x:"Beides wirkt — aber gegensätzlich: Kälte (Eisbad, kalte Dusche) dämpft Entzündung und Muskelkater, dämpft aber auch das Muskelwachstums-Signal — deshalb NICHT direkt nach dem Krafttraining, gut aber bei Spielen dicht hintereinander oder akuter Überlastung. Wärme (Sauna) fördert Durchblutung und Regeneration ohne diesen Nachteil — ideal am Abend nach dem Training oder an Ruhetagen. Merkregel: Kälte, wenn du schnell wieder funktionieren musst; Wärme, wenn du besser werden willst."},
+{t:"Zwei Arten müde: Muskel vs. Nervensystem",x:"Muskelermüdung kennst du (Muskelkater, schwere Beine) — sie ist lokal und in 48–72 h weg. Tückischer ist zentrale Ermüdung: Das Nervensystem ist nach vielen schweren, explosiven oder mental fordernden Einheiten erschöpft — Symptome: alles fühlt sich schwerer an als es ist, Motivation im Keller, Reizbarkeit, schlechter Schlaf trotz Müdigkeit. Muskelkater darfst du weglächeln; zentrale Ermüdung nicht — sie ist die Vorstufe zu Verletzung und Krankheit. Antwort: 2–3 Tage wirklich leicht (Spazieren, Sauna, Schlaf), nicht „einfach durchziehen“."},
+{t:"Der Wochen-Rhythmus des Schlafs",x:"Eine kurze Nacht ruiniert nichts — entscheidend ist das Wochenkonto (Ziel: ~52+ Stunden pro Woche). Praktische Konsequenzen: Nach einer kurzen Nacht am nächsten Abend 60–90 Minuten früher ins Bett (nicht am Wochenende „nachschlafen“ — das verschiebt nur deine innere Uhr). Powernaps: 15–20 Minuten vor 15 Uhr sind Gold, längere oder spätere stören die Nacht. Und der unterschätzte Hebel: Morgens in den ersten 30 Minuten Tageslicht ins Gesicht (Balkon, Fenster auf, kurzer Gang) — stellt die innere Uhr und macht das Einschlafen am Abend messbar leichter."}];
+const KNOW_ERN2=[
+{t:"Mikronährstoffe: Die üblichen Verdächtigen",x:"Für Sportler in Deutschland sind praktisch nur vier Lücken relevant: Vitamin D3 (Winterhalbjahr — Supplement sinnvoll, 1.000–2.000 IE), Magnesium (bei viel Schwitzen; Vollkorn, Nüsse, Kakao — Krämpfe sind aber meist Belastungs-, nicht Magnesiumsache), Omega-3 (2× fetter Fisch pro Woche oder Algenöl), Eisen (nur relevant bei wenig Fleischkonsum — nicht blind supplementieren, erst Blutbild). Alles andere deckt bunte, echte Ernährung. Multivitamin-Präparate: teurer Urin."},
+{t:"Meal-Prep ohne Tupper-Religion",x:"Du musst nicht 10 identische Boxen füllen. Das 80/20-System: Koche 2× pro Woche die DOPPELTE Menge (Sonntag + Mittwoch), und das Mittagessen der Folgetage ist erledigt. Halte 3 „Notfall-Gerichte“ unter 10 Minuten im Repertoire (z. B. Eier + Vollkornbrot + Gemüse; Skyr-Bowl; Reis aus dem Kocher + TK-Gemüse + Hähnchen). Der wahre Feind der guten Ernährung ist nicht Wissen, sondern Hunger + leerer Kühlschrank um 19 Uhr. Meal-Prep ist Hungermanagement, keine Ästhetik."},
+{t:"Restaurant, Alkohol & echtes Leben",x:"Ernährung, die soziale Anlässe verbietet, scheitert. Die Regeln der Entspannten: (1) Ein Restaurantbesuch pro Woche ändert NICHTS an deiner Bilanz — iss, worauf du Lust hast, ohne Kompensations-Drama. (2) Beim Alkohol zählt die Dosis: 1–2 Bier sind sozial, ab 4+ leidet Schlaf, Regeneration und Training der nächsten 48 h messbar. (3) Vor dem Feiern normal essen (nüchtern trinken = doppelt betrunken + Heißhunger). (4) Der Kater-Tag ist Erholungs-, kein Trainingstag. Konsistenz über Monate schlägt Perfektion über Wochen."},
+{t:"Zucker & Verarbeitung einordnen",x:"Zucker ist kein Gift, aber ein Kalorien-Trojaner: Er macht Essen leicht überkonsumierbar, ohne zu sättigen. Die praktikable Hierarchie statt Verboten: Getränke zuerst (flüssige Kalorien sind der größte Einzelhebel — Cola, Säfte, Energy raus oder auf Zero), dann Snack-Umgebung (was nicht zu Hause ist, wird nicht gegessen), dann der Rest. Hochverarbeitete Produkte sind designt, dass du weiterisst — nicht dein Willensschwäche-Problem, sondern deren Geschäftsmodell. 80 % echte Lebensmittel, 20 % was du willst: nachhaltiger als jede Diät mit Namen."}];
+function genKnowCycle(key,n){
+ const P={bel:[["Technik-Video-Analyse","Film dich bei deiner wichtigsten Übung von der Seite und vergleiche mit einem Referenzvideo (z. B. Jeff Nippard). Notiere 2 Korrekturen und wende sie in der nächsten Einheit an."],["Schwachstellen-Audit","Welche Muskelgruppe oder Bewegung hinkt hinterher? Wähle EINE gezielte Übung dafür und plane sie für die nächsten 4 Wochen fest ein."],["Neuer Reiz","Probiere in einer Einheit eine dir unbekannte Übungsvariante (aus einem seriösen Kanal) und entscheide danach bewusst: übernehmen oder verwerfen."]],
+ erh:[["Schlaf-Experiment","Wähle EINEN Schlaf-Hebel (feste Aufstehzeit, kühleres Zimmer, Bildschirm-Stopp) und teste ihn 7 Nächte. Bewerte danach ehrlich den Effekt."],["Regenerations-Check","Miss eine Woche deinen Morgenpuls und notiere daneben dein Energielevel (1–10). Erkenne dein Muster."],["Stress-Inventur","Schreib deine 3 größten Energiefresser auf und für jeden eine konkrete Mini-Gegenmaßnahme. Setz eine davon um."]],
+ ern:[["Protein-Stichprobe","Tracke 3 ehrliche Tage dein Protein (App). Liegst du unter dem Ziel: plane die eine fehlende Portion konkret ein."],["Neues Rezept-Level","Koche ein Gericht mit einer Technik, die du noch nie gemacht hast (schmoren, dünsten, richtig anbraten). Es zählt für dein Repertoire."],["Einkaufs-Systematik","Erstelle eine Standard-Einkaufsliste, mit der dein Kühlschrank IMMER 3 schnelle proteinreiche Mahlzeiten hergibt."]],
+ tra:[["Ziel-Dossier","Nimm ein Ziel von deiner Bucketlist und erstelle ein Mini-Dossier: beste Reisezeit, Flugpreis-Spanne, 3 Highlights, grobes Tagesbudget. 30 Minuten."],["Preis-Radar","Richte für dein Top-Ziel einen Preisalarm ein (Google Flights) — buchen musst du nichts, aber du bekommst ein Gefühl für gute Preise."],["Micro-Adventure","Plane ein Wochenend-Abenteuer in unter 2 h Entfernung (Zug oder Rad) — Reisen beginnt vor der Haustür."]]};
+ const set=P[key];
+ const t=set[(n-1)%set.length];
+ return [{t:"Auftrag "+n+": "+t[0],x:t[1]}];
+}
+
+/* ============ REISE-WISSEN ============ */
+const KNOW_TRA=[
+{t:"Flüge günstig finden — ohne Mythen",x:"Vergiss „Dienstag buchen“ und Inkognito-Modus (beides widerlegt). Was wirklich wirkt: (1) Flexibilität schlägt alles — Google Flights mit „ganzer Monat“-Ansicht zeigt dir die günstigsten Tage. (2) Früh buchen lohnt bei Ferienzeiten (2–4 Monate vorher), Last-Minute fast nie bei Flügen. (3) Preisalarm setzen statt täglich checken. (4) Rechne den Gesamtpreis: 30 € gesparter Flug mit 60 € Gepäckgebühr ist kein Schnäppchen. (5) Umsteigeverbindungen mit 6+ Stunden können eine Gratis-Stadtbesichtigung sein."},
+{t:"Unterkunft: Lage schlägt Sterne",x:"Die Regel erfahrener Reisender: lieber 3 Sterne im Zentrum als 5 Sterne am Stadtrand — du bist zum Erleben da, nicht zum Im-Zimmer-Sitzen, und sparst täglich Fahrzeit + Ticketkosten. Bewertungen richtig lesen: Ignoriere die Durchschnittsnote, lies die 3-Sterne-Bewertungen (ehrlichste Kritik) und filtere nach neuesten. Ab 3 Personen oder 5+ Nächten: Apartment prüfen (Küche spart massiv Essensgeld). Und immer: Screenshot der Buchung offline speichern."},
+{t:"Geld im Ausland: Die DCC-Falle",x:"Die teuerste Sekunde jeder Reise ist die Frage am Kartenterminal: „In Euro oder Landeswährung zahlen?“ — IMMER Landeswährung! „In Euro“ (Dynamic Currency Conversion) nutzt einen miesen Wechselkurs, 3–8 % Verlust. Dazu: Eine Reise-Kreditkarte ohne Fremdwährungsgebühr besorgen (kostenlose gibt es, Finanztip-Vergleich), Bargeld nur an Bank-Automaten (nie Euronet & Co.), und eine zweite Karte getrennt vom Portemonnaie lagern. Diese vier Gewohnheiten sparen auf jeder Reise real Geld."},
+{t:"Packen: Das Handgepäck-System",x:"Wer nur mit Handgepäck reist, spart Gebühren, Wartezeit am Band und das Verlust-Risiko. Das System: Rollen statt falten, Packwürfel (je einer pro Kategorie), maximal 1 Woche Kleidung — ab da wird gewaschen statt geschleppt. Die Universal-Liste: 5× Unterwäsche/Socken, 3 Oberteile + 1 warm, 2 Hosen, 1 Schuhe zusätzlich, Kulturbeutel unter 1 Liter, Powerbank, Adapter. Alles Wichtige (Dokumente, Medikamente, 1 Wechsel-Outfit) IMMER ins Handgepäck — auch wenn ein Koffer mitfliegt."},
+{t:"Dokumente & Sicherheit",x:"Das 10-Minuten-Sicherheitsnetz vor jeder Reise: (1) Fotos von Reisepass/Perso, Kreditkarten-Sperrnummern und Buchungen in die Cloud UND an die eigene E-Mail. (2) „Sicher Reisen“-App des Auswärtigen Amts installieren (Krisenwarnungen, Botschaftskontakte) — bei größeren Reisen in die Krisenvorsorgeliste ELEFAND eintragen. (3) Auslandsreise-Krankenversicherung: ~10–15 €/JAHR, deckt Rücktransport — die gesetzliche Kasse tut das außerhalb der EU nicht. Ohne die Police kann ein gebrochenes Bein in den USA fünfstellig werden."},
+{t:"Reiseapotheke & Impfungen",x:"Standard-Set (passt in eine Brotdose): Ibuprofen, Elektrolyte + Loperamid (Magen-Darm ist Reisekrankheit Nr. 1), Pflaster/Blasenpflaster, Desinfektionsgel, persönliche Medikamente doppelt (getrennt gepackt), Sonnencreme ab Faktor 30. Für Fernreisen (Asien, Afrika, Südamerika): 6–8 Wochen vorher Impfcheck — Standardimpfungen auffrischen, je nach Ziel Hepatitis A, Typhus. Kostenlos informieren: Tropeninstitut-Websites; viele Krankenkassen (deine!) bezuschussen Reiseimpfungen — nachfragen."}];
+const KNOW_TRA2=[
+{t:"Der Reisetopf",x:"Reisen konkurriert im Kopf mit Sparen — bis es ein eigenes Budget hat. Richte ein Unterkonto „Reisen“ ein (Tagesgeld oder Space beim Neobroker) und füttere es per Dauerauftrag mit 50–100 €/Monat. Effekt: Jede Reise ist beim Buchen BEREITS bezahlt, null schlechtes Gewissen, und du buchst früher (= günstiger). Bonus-Psychologie: Menschen mit gebuchter Reise im Kalender sind messbar zufriedener — Vorfreude ist der längste Teil des Urlaubs."},
+{t:"Roadtrip planen",x:"Die Kunst liegt im Weglassen: Maximal 3 Übernachtungsorte pro Woche (jede Ortswechsel-Nacht kostet einen halben Erlebnistag), Fahrtetappen unter 3 Stunden, und pro Tag EIN Fixpunkt — der Rest bleibt frei für Zufallsfunde. Route grob in Google My Maps anlegen, Highlights als Pins sammeln, aber die Reihenfolge vor Ort entscheiden. Der häufigste Anfängerfehler: 8 Städte in 7 Tagen. Du warst dann überall und hast nichts erlebt."},
+{t:"Langstrecke & Jetlag",x:"Jetlag-Management beginnt im Flieger: Uhr sofort auf Zielzeit stellen und danach leben (schlafen/wachbleiben entsprechend), viel Wasser, wenig Alkohol. Am Ziel: erster Tag draußen verbringen — Tageslicht ist der stärkste Taktgeber der inneren Uhr. Richtung Osten (Asien) ist härter als Westen (USA); Faustregel: ein Tag Anpassung pro 1–2 Zeitzonen. Melatonin (rezeptfrei) kann die ersten 2–3 Nächte am Ziel helfen. Und: Den ersten Tag nie mit Mietwagen-Langstrecke verplanen."},
+{t:"Wie Locals reisen: Geheimtipp-Recherche",x:"Die Touristen-Falle vermeiden: (1) Reddit ist Gold — Subreddits wie r/JapanTravel oder r/askTokyo beantworten konkrete Fragen ehrlicher als jeder Reiseblog mit Affiliate-Links. (2) Google Maps: Restaurants nach 4,3–4,6 Sternen mit VIELEN Bewertungen in Nicht-Touristen-Vierteln filtern — 4,9 mit 12 Bewertungen ist Familie, 4,0 direkt am Dom ist Falle. (3) Free Walking Tours am ersten Tag: Orientierung + Fragen an einen echten Local. (4) Ein Abend ohne Plan pro Stadt: einfach in ein belebtes Nicht-Zentrum-Viertel fahren und treiben lassen."}];
+
+/* ============ LERNHUB: Crashkurse (Direktwissen) ============ */
+const CRASH_GENERIC=["Das 80/20 jedes Fachgebiets: Ein kleiner Kern aus 15–20 Konzepten erklärt den Großteil der Praxis. Deine erste Aufgabe ist immer, diesen Kern zu finden — nicht alles zu lesen.","Lernen = Abrufen, nicht Wiederlesen: Der Testing-Effekt ist der am besten belegte Lern-Fakt überhaupt. Sich selbst abfragen (Anki, Selbsttest) schlägt Markieren und Zusammenfassen deutlich.","Spaced Repetition: Wiederhole nach 1 Tag, 3 Tagen, 1 Woche, 1 Monat — genau dann, wenn du fast vergessen hast. So wandert Wissen ins Langzeitgedächtnis.","Feynman-Technik: Was du nicht einfach erklären kannst, hast du nicht verstanden. Laut erklären deckt Lücken schneller auf als jeder Test.","Projekte verankern Wissen: Eine echte Anwendung (etwas bauen, durchführen, anwenden) verankert mehr als 10 Stunden Theorie.","Experten-Shortcut: Ein Praktiker-Interview oder „Day in the life“-Video zeigt dir in 20 Minuten, was wirklich zählt — und was nur Lehrbuch-Folklore ist."];
+const CRASH={
+"physio":["Grundprinzip Belastung & Anpassung: Gewebe (Muskel, Sehne, Knochen) wird stärker, wenn es dosiert belastet wird, und schwächer, wenn es ruhiggestellt wird. Moderne Therapie belastet deshalb früh und gezielt — „Schonung“ ist selten der Plan.","Schmerz ≠ Schaden: Schmerz ist ein Alarmsystem, das auch von Stress, Angst und Erwartung moduliert wird (biopsychosoziales Modell). Chronischer Schmerz kann bestehen, wenn das Gewebe längst geheilt ist.","RICE ist veraltet: Bei akuten Verletzungen gilt heute PEACE & LOVE — u. a. wenig Entzündungshemmer, früh optimal belasten statt komplett pausieren.","Aktiv schlägt passiv: Die Evidenz ist eindeutig — Übungstherapie (Kraft, Mobilität) wirkt bei den meisten Beschwerden besser und nachhaltiger als Massage, Ultraschall & Co. Passives ist Ergänzung, nicht Kern.","Die großen Baustellen der Praxis: unspezifischer Rückenschmerz (häufigste Diagnose, meist ohne strukturellen Befund), Schulter-Impingement, Knie (Patellaspitzensyndrom, Kreuzband-Reha), Sprunggelenk.","Berufswege in DE: 3-jährige Ausbildung oder Studium (zunehmend akademisiert); Sportphysiotherapie ist eine gefragte Spezialisierung mit Zusatzfortbildungen."],
+"sql":["SELECT spalten FROM tabelle WHERE bedingung — dieses Muster ist 70 % aller SQL-Abfragen. ORDER BY sortiert, LIMIT begrenzt.","JOIN verknüpft Tabellen über Schlüssel: FROM kunden JOIN auftraege ON kunden.id = auftraege.kunden_id. INNER = nur Treffer beider Seiten, LEFT = alle links, auch ohne Treffer.","GROUP BY fasst zusammen: SELECT region, AVG(kosten) FROM faelle GROUP BY region — eine Zeile pro Gruppe. Filter auf Gruppen heißt HAVING, nicht WHERE.","Primärschlüssel = eindeutige ID jeder Zeile; Fremdschlüssel = Verweis auf eine ID in anderer Tabelle. Das ist das ganze Geheimnis relationaler Datenbanken.","NULL ist nicht 0 und nicht leer — es heißt „unbekannt“. Vergleiche mit NULL brauchen IS NULL / IS NOT NULL, sonst bekommst du stillschweigend falsche Ergebnisse.","Indexe machen Abfragen schnell (wie ein Buchregister), kosten aber Schreibgeschwindigkeit — deshalb nicht auf jede Spalte."],
+"programmier":["Variablen sind beschriftete Kisten, Datentypen bestimmen den Inhalt: Zahl, Text (String), Wahrheitswert, Liste, Dictionary. Die Hälfte aller Anfängerfehler sind Typ-Verwechslungen.","If/Else + Schleifen = die gesamte Logik: Mit Verzweigung und Wiederholung lässt sich theoretisch jedes Programm der Welt schreiben.","Funktionen: Code mit Namen, Eingabe und Ausgabe. Regel DRY (Don't Repeat Yourself) — jede Logik existiert genau einmal.","Fehlermeldungen sind Wegweiser, keine Vorwürfe: Immer die LETZTE Zeile zuerst lesen (der eigentliche Fehler), dann die Zeilennummer. Fehlermeldung wörtlich googeln ist Profi-Standard.","Der Lern-Hebel Nummer 1: eigene Mini-Projekte ab Woche 1 (Downloads-Sortierer, Rechner, kleine Webseite). Tutorials schauen ohne bauen = Fußball lernen vom Sofa.","Python als Start: liest sich fast wie Englisch, läuft überall, riesige Community. Kostenlos loslegen auf replit.com ohne Installation."],
+"foto":["Das Belichtungsdreieck: Blende (wie viel Licht + Tiefenschärfe), Verschlusszeit (Licht + Bewegungsschärfe), ISO (Helligkeit + Rauschen). Jedes Foto ist ein Kompromiss dieser drei.","Offene Blende (kleine Zahl, f/1.8) = unscharfer Hintergrund (Portraits); geschlossene (f/8–11) = alles scharf (Landschaft).","Licht schlägt Equipment: Goldene Stunde (nach Sonnenaufgang/vor Untergang) macht aus jeder Kamera Magie; Mittagssonne macht aus jeder Kamera hartes Schattenchaos. Erst Licht sehen lernen, dann Technik kaufen.","Komposition zuerst: Drittelregel (Motiv auf die Linien, nicht die Mitte), führende Linien, Vordergrund für Tiefe. Das kostet nichts und verbessert jedes Bild sofort.","RAW statt JPEG, sobald du bearbeitest: RAW speichert alle Bilddaten und verzeiht Fehler bei Belichtung enorm. Kostenloses Bearbeiten: Darktable oder Lightroom Mobile (Basisfunktionen).","Die beste Kamera ist die dabei: Ein bewusst komponiertes Handyfoto schlägt die Spiegelreflex im Schrank. Smartphone-Kameras beherrschen heute 80 % der Fälle."],
+"sprach":["Comprehensible Input: Du lernst am schnellsten mit Material, das du zu ~80 % verstehst — anspruchsvoll, aber nicht frustrierend. Serien mit Untertiteln, einfache Podcasts, Kinderbücher.","Die 1.000 häufigsten Wörter decken ~80 % der Alltagssprache. Frequenzlisten + Anki schlagen jedes „Kapitel 7: Im Reisebüro“.","Sprechen ab Tag 1 — laut, auch allein: Selbstgespräche, Nachsprechen (Shadowing), Sätze aufnehmen. Sprachen sind Motorik, nicht nur Wissen.","Fehler sind Daten: Muttersprachler korrigieren dich gern, wenn du sie darum bittest. Perfektionismus ist der größte Lernblocker.","Spaced Repetition (Anki) für Vokabeln, Immersion (Musik, YouTube, Filme) für Gefühl, echte Gespräche für alles — die Mischung machts.","Der beste kostenlose Audio-Kurs überhaupt: Language Transfer — vermittelt Denk-Strukturen statt Phrasen zum Auswendiglernen."],
+"fitness":["Progressive Überlastung ist die einzige eiserne Regel: mehr Gewicht, mehr Wiederholungen oder bessere Technik als letztes Mal — sonst ist es Bewegung, kein Training.","Dosis: ~10–20 harte Sätze pro Muskelgruppe pro Woche, jeder Satz 0–3 Wiederholungen vor dem Muskelversagen. Mehr ist selten besser, weniger geht für Erhalt.","Protein 1,6–2 g pro kg Körpergewicht täglich, auf 3–4 Portionen verteilt. Der einzige Makro, den man aktiv managen muss.","Grundübungen zuerst: Kniebeuge, Kreuzheben-Varianten, Drücken, Ziehen — sie trainieren am meisten Muskulatur pro Zeit. Isolation ist das Dessert, nicht das Hauptgericht.","Schlaf ist der anabolste Faktor überhaupt: unter 7 Stunden sinken Kraft, Regeneration und Muskelschutz messbar. Kein Supplement kompensiert das.","Konstanz schlägt Optimierung: Das „perfekte“ Programm, das du abbrichst, verliert gegen das gute Programm, das du 2 Jahre durchziehst."],
+"koch":["Die vier Elemente guten Kochens (Samin Nosrat): Salz (verstärkt), Fett (trägt Geschmack), Säure (balanciert), Hitze (verwandelt). Schmeckt etwas flach: fast immer fehlt Salz oder Säure.","Maillard-Reaktion = Bräunung = Geschmack: Pfanne richtig heiß, Fleisch/Gemüse trocken tupfen, nicht zu früh bewegen. Blasse Zwiebeln sind der häufigste Anfängerfehler.","Mise en place: ALLES schneiden und bereitstellen, BEVOR der Herd angeht. Profis kochen entspannt, weil sie vorher denken.","Ein scharfes Messer ist sicherer als ein stumpfes (rutscht nicht ab) und macht 80 % der Küchenarbeit angenehmer. Ein gutes Kochmesser + Wetzstahl reicht.","Nudelwasser ist flüssiges Gold: Das stärkehaltige Wasser emulgiert Saucen (Pasta-Wasser + Fett + Käse = cremig ohne Sahne).","Rezepte sind Landkarten, keine Gesetze: Lerne die Technik dahinter (schmoren, braten, emulgieren) — dann kochst du aus dem, was da ist. Genau das ist „ohne Rezept kochen“."],
+"geschicht":["Quellenkritik zuerst: Wer schrieb das, wann, für wen, mit welchem Interesse? Sieger schreiben Geschichte — gute Historiker lesen deshalb gegen den Strich.","Chronologie als Kleiderschrank: Ein grobes Epochen-Gerüst (Antike → Mittelalter → Frühe Neuzeit → Moderne) gibt jedem neuen Fakt einen Platz. Ohne Gerüst bleibt alles Anekdote.","Geografie erklärt mehr als Könige: Flüsse, Küsten, Gebirge und Rohstoffe bestimmen, wo Städte, Reiche und Kriege entstehen.","Multikausalität: Große Ereignisse haben nie EINE Ursache. „Woran lag es?“ ist die falsche Frage — „welche Faktoren kamen zusammen?“ die richtige.","Präsentismus vermeiden: Menschen der Vergangenheit an heutigen Maßstäben zu messen, verhindert Verstehen. Erst verstehen, dann urteilen.","Geschichte reimt sich: Muster (Inflation, Imperien-Zerfall, Informationsrevolutionen) wiederholen sich in Variationen — das ist ihr praktischer Nutzen."],
+"finanz":["Zinseszins ist der Kern von allem: Früh anfangen schlägt viel einzahlen. 300 €/Monat ab 23 sind mit 50 mehr als 600 €/Monat ab 35.","Reihenfolge: Notgroschen (3 Monatsausgaben) → teure Schulden tilgen → dann erst investieren. Wer andersrum startet, verkauft im Notfall mit Verlust.","Diversifikation kostenlos: Ein Welt-ETF (FTSE All-World, MSCI ACWI) = 3.000+ Firmen mit einem Kauf. Einzelaktien-Picking verlieren selbst Profis mehrheitlich.","Kosten fressen Rendite: 1,5 % Fondsgebühr statt 0,2 % ETF-TER kosten über 30 Jahre zehntausende Euro. Kosten sind die einzige sichere Stellschraube.","Zeit im Markt schlägt Timing: Die besten Börsentage folgen oft direkt auf die schlechtesten. Wer Crashs aussitzt (Sparplan läuft weiter), gewann historisch immer — ab 15 Jahren Haltedauer.","Steuern: 1.000 € Kapitalerträge pro Jahr sind steuerfrei — Freistellungsauftrag beim Broker eintragen, 2 Minuten, sonst verschenkt."],
+"psycho":["Gewohnheiten = Schleife aus Auslöser → Routine → Belohnung. Verändern heißt: Auslöser sichtbar machen (oder verstecken), nicht Willenskraft anschreien.","Umgebung schlägt Willenskraft: Der Mensch mit den Sportschuhen an der Tür trainiert öfter als der mit dem stärkeren Willen. Gestalte Umgebungen, nicht Vorsätze.","Klein anfangen, lächerlich klein: 2 Minuten pro Tag etablieren die Identität („ich bin jemand, der …“) — Umfang steigern ist danach leicht, anfangen ist das Schwere.","Motivation folgt Handlung, nicht umgekehrt: Anfangen erzeugt Lust am Weitermachen (Zeigarnik-Effekt). Auf Motivation warten heißt nie anfangen.","Dopamin belohnt Erwartung, nicht Erhalt: Deshalb zieht das Handy so stark (variable Belohnung) — und deshalb hilft es, Reize zu entfernen statt zu widerstehen.","Schlaf, Bewegung, Tageslicht, Menschen: Die vier Säulen mentaler Gesundheit sind banal, gratis und wirksamer als jede App. Erst Säulen, dann Feintuning."],
+"excel":["Zellbezüge: A1 relativ (wandert beim Kopieren mit), $A$1 absolut (bleibt fixiert) — F4 schaltet um. Das Verständnis dieser einen Sache trennt Nutzer von Könnern.","XVERWEIS (bzw. SVERWEIS) verbindet Tabellen: „Hol mir zu dieser Kundennummer den Namen aus der anderen Liste“ — die meistgebrauchte Funktion im Büro.","Pivot-Tabellen fassen tausende Zeilen per Drag & Drop zusammen (Summen, Mittelwerte pro Kategorie) — ohne eine einzige Formel. 20 Minuten lernen, Jahre profitieren.","Daten als „intelligente Tabelle“ formatieren (Strg+T): automatische Bereiche, Filter, sprechende Spaltennamen in Formeln.","WENN + SUMMEWENN/ZÄHLENWENN decken 80 % der Alltagslogik ab. Verschachtelungs-Monster vermeiden — lieber Hilfsspalten.","Tastenkürzel mit Riesenhebel: Strg+Pfeil (ans Datenende), Strg+Shift+Pfeil (markieren), Alt+= (Autosumme), Strg+T (Tabelle)."],
+"ki":["Machine Learning lernt Regeln aus Beispielen statt sie programmiert zu bekommen: 100.000 Bilder mit Label rein, Muster-Erkennung raus.","Training vs. Inferenz: Training ist das teure Lernen (Wochen, Rechenzentren), Inferenz das billige Anwenden (deine Anfrage). Du sprichst immer mit dem fertigen Modell.","LLMs sind Text-Vorhersager: Sie berechnen das wahrscheinlichste nächste Wort — daraus entsteht verblüffende Fähigkeit UND selbstbewusster Unsinn (Halluzination). Immer prüfen, was man weiterverwendet.","Prompt-Hebel: Rolle geben, Kontext + Beispiele liefern, Format vorgeben, nachhaken statt neu würfeln. Der Unterschied zwischen mäßig und stark ist selten das Modell, sondern der Prompt.","Garbage in, garbage out: KI ist so gut wie ihre Trainingsdaten — Verzerrungen (Bias) wandern mit hinein und wieder heraus.","Datenschutz-Grundregel: Keine echten Personendaten in öffentliche KI-Tools. Im Gesundheitswesen ist das nicht Vorsicht, sondern Pflicht."],
+"rad":["Passform vor allem: Rahmengröße + Sattelhöhe (Bein fast gestreckt bei Pedal unten) entscheiden über Komfort und Knie-Gesundheit. Beim Kauf: Probefahren, nicht nur Tabelle.","Gebraucht kaufen ist beim Gravel-Einstieg smart: 1.500-€-Räder gibt es 1–2 Jahre alt für die Hälfte (Kleinanzeigen, bikesale). Checkliste: Kette, Ritzel, Bremsbeläge, Risse am Rahmen.","Reifendruck ist die günstigste Federung: Gravel fährt man mit deutlich weniger Druck als Rennrad (grob 2–3 bar je nach Breite/Gewicht) — mehr Grip, mehr Komfort.","Trittfrequenz 80–90 U/min in leichtem Gang schont Knie und ermüdet langsamer als kraftvolles Stampfen in schwerem Gang. Schalten ist Können, nicht Schwäche.","Wartungs-ABC: A wie Luft (wöchentlich), B wie Bremse (Check vor jeder Fahrt), C wie Kette (alle ~200 km reinigen + ölen). Damit fährt ein Rad Jahre.","Routen planen mit Komoot (kostenlose Region) — perfekt für deine Bauernhof-Runde: Wegtypen zeigen dir, wo Schotter statt Bundesstraße wartet. Helm + Licht sind Nicht-Verhandelbar."]};
+function findCrash(topic){
+ const t=topic.toLowerCase();
+ const map=[["physio",["physio","anatomie","reha","massage"]],["sql",["sql","datenbank"]],["programmier",["python","programmier","coding","informatik","code","javascript","web"]],["foto",["foto","kamera","video"]],["sprach",["sprache","spanisch","englisch","französisch","russisch","italienisch"]],["fitness",["fitness","training","kraft","muskel","gym"]],["koch",["koch","küche","rezept","backen"]],["geschicht",["geschichte","history","antike"]],["finanz",["finanz","geld","etf","invest","aktien","steuer"]],["psycho",["psycho","gewohnheit","habit","mental","meditation"]],["excel",["excel","power bi","tabellen"]],["ki",["ki","ai","machine learning","llm","prompt"]],["rad",["rad","bike","gravel","fahrrad"]]];
+ for(const [key,ks] of map){if(ks.some(k=>t.includes(k)))return {c:CRASH[key],matched:true}}
+ return {c:CRASH_GENERIC,matched:false};
+}
+/* Lernhub-Aufgaben v2: 12 Aufgaben, Wissen steckt im Crashkurs */
+const HUB_PLAN2={
+ phases:["Woche 1 · Fundament","Woche 2 · Vertiefen","Woche 3 · Anwenden","Woche 4 · Festigen"],
+ w1:["Lies den Crashkurs oben zweimal in Ruhe. Erkläre danach laut in 60 Sekunden, worum es bei {T} im Kern geht — ohne hinzusehen.",
+  "Leg 15 Anki-Karten (apps.ankiweb.net) aus den Crashkurs-Punkten an: Vorderseite Frage, Rückseite Kernaussage. Erste Abfragerunde direkt.",
+  "Schreib dein 4-Wochen-Ziel in einem Satz auf: „Nach 4 Wochen kann ich bei {T} konkret …“ — messbar und ehrlich."],
+ w2:["Arbeite die Hauptressource aus der Box oben durch — über die Woche verteilt, 25 Minuten pro Tag reichen.",
+  "Feynman-Check: Erkläre {T} laut, als wäre dein Zuhörer 12. Jede Stelle, an der du stockst, wird eine neue Anki-Karte.",
+  "Schau einem Praktiker über die Schulter (Ressourcen-Box oder YouTube „{T} day in the life“) und notiere 3 Dinge, die im Crashkurs NICHT standen."],
+ w3:{skill:["Führe die grundlegendste Tätigkeit von {T} einmal selbst aus — klein, unperfekt, real. Der Crashkurs sagt dir, worauf es dabei ankommt.",
+   "Wiederhole die Kernübung ein zweites Mal und führe eine Fehlerliste: Was lief anders als beim Profi-Video?",
+   "Hol dir eine ehrliche Rückmeldung von jemandem, der {T} kann (Bekannte, Verein, passendes Subreddit) — stell 2 konkrete Fragen."],
+ know:["Schreib eine 1-Seiten-Zusammenfassung von {T} aus dem Kopf, korrigiere danach mit deinen Quellen.",
+   "Wende {T} auf einen echten Fall aus deinem Alltag oder den Nachrichten an — 10 Sätze, schriftlich.",
+   "Vertritt eine These zu {T} gegenüber einem Menschen oder im Fachforum und lass dich korrigieren."],
+ job:["Finde heraus, wie {T} bei AOK/Studium konkret eingesetzt wird — frag eine Person, die täglich damit arbeitet.",
+   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an und dokumentiere das Ergebnis kurz.",
+   "Zeig deine Anwendung einem Kollegen/Dozenten und frag wörtlich: „Was würdest du anders machen?“"]},
+ w4:["Teach-back: Erkläre {T} einer echten Person 10 Minuten frei — oder mach ein 60-Sekunden-Video daraus (Content!).",
+  "Selbsttest: Beantworte die 10 wichtigsten Fragen zu {T} aus dem Gedächtnis (deine Anki-Karten sind der Fragenkatalog). Unter 7? Nachlegen.",
+  "Bilanz + nächste Stufe: Vergleiche dein Können mit dem Satz aus Woche 1 und definiere, was Stufe 2 wäre — entscheiden kannst du später."]};
+function hubTasks2(type){return [HUB_PLAN2.w1,HUB_PLAN2.w2,HUB_PLAN2.w3[type],HUB_PLAN2.w4]}
+</script>
+
+<script>
 /* ============ ZIELE: Dein Zielbild in 1–5 Jahren ============ */
 /* Alle Meilensteine sind EINMALIG erreichbar. auto = wird aus deinem Fortschritt berechnet. */
 const GOALS=[
@@ -1228,8 +1339,8 @@ const GOALS=[
  d:'Gym als Routine, selbst kochen, Kardio draußen, Vorsorge — ein Körper in Bestform.',
  ms:[{t:'10 Gerichte, die du ohne Rezept kochen kannst'},
  {t:'Gravel Bike gekauft'},
- {t:'Wöchentliche Rad-Tour zum Bauernhof (Milch & Honig) ist Routine'},
- {t:'Schlafroutine mit fester Aufstehzeit etabliert'},
+ {t:'Erste Rad-Tour zum Bauernhof gefahren — Milch & Honig geholt'},
+ {t:'Feste Aufstehzeit festgelegt und Wecker-System eingerichtet'},
  {t:'Check-up + großes Blutbild beim Arzt gemacht'},
  {t:'Alle Körper-Wissenskarten verinnerlicht',auto:()=>['bel','erh','ern'].every((k,ki)=>[KNOW_BEL,KNOW_ERH,KNOW_ERN][ki].every((_,i)=>S.known[k+i]))}]},
 {id:'gr',c:'var(--c-ru)',t:'Russisch sprechen',h:'Sprache',
@@ -1284,8 +1395,8 @@ const GOALS=[
  {t:'Eine Sache gemacht, vor der du richtig Respekt hattest'}]},
 {id:'gs',c:'#E85D8A',t:'Menschen & Beziehung',h:'Sozial',
  d:'Ein volles Leben braucht Menschen — Freundschaften pflegen, offen für die Richtige.',
- ms:[{t:'Regelmäßige Unternehmungen mit Freunden etabliert'},
- {t:'Aktiv neue Menschen kennengelernt (außerhalb von Verein & Arbeit)'},
+ ms:[{t:'Festen wiederkehrenden Termin mit Freunden vereinbart'},
+ {t:'Eine neue Person außerhalb von Verein & Arbeit kennengelernt'},
  {t:'In einer glücklichen Beziehung'}]}];
 
 /* ============ REISEN & ERFAHRUNGEN: Startvorschläge ============ */
@@ -1351,6 +1462,8 @@ S.tt=S.tt||{niche:null,done:[]};S.shown=S.shown||{};
 S.plan=S.plan||PLAN_DEF.slice();S.known=S.known||{};
 S.goals=S.goals||{};S.travel=S.travel||[];S.exp=S.exp||[];S.hub=S.hub||{plans:[]};
 S.goalsCustom=S.goalsCustom||{};S.customGoals=S.customGoals||[];
+S.hiddenMs=S.hiddenMs||{};S.hiddenGoals=S.hiddenGoals||{};
+S.finStage=S.finStage||0;S.knowStage=S.knowStage||{};
 function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 
@@ -1421,9 +1534,10 @@ function missions(){
  const bodyM={id:'body',tag:'Körper',tab:'body',
   t:planE?'Dein Plan heute: '+planE:'Trag deinen Wochenplan ein',
   s:planE?'So steht es in deinem Wochenplan ('+WD_SHORT[planIdxToday]+')':'Im Körper-Tab, dauert 2 Minuten'};
- const finM=(S.fin.done.length<FIN.length)
-  ?{id:'fin',tag:'Geld',tab:'fin',t:'Finanz-Lektion: '+FIN[S.fin.done.length].t,s:'Lesen + den „Mach jetzt“-Schritt angehen'}
-  :{id:'fin',tag:'Geld',tab:'fin',t:'Plan-Check: Stimmen deine Regler noch?',s:'2 Minuten im Geld-Tab'};
+ const finNext=finLessonList().find(l=>!S.fin.done.includes(l.key));
+ const finM=finNext
+  ?{id:'fin',tag:'Geld',tab:'fin',t:'Geld-Lektion: '+finNext.les.t,s:'Lesen + den „Mach jetzt“-Schritt angehen'}
+  :{id:'fin',tag:'Geld',tab:'fin',t:'Alle Geld-Lektionen durch — Nachschub freischalten!',s:'Im Geld-Tab wartet der Freischalt-Knopf'};
  const hp=activeHubPlan();
  const hubM=hp?{id:'hub',tag:'Lernhub',tab:'lernen/hub',
   t:'Weiter mit „'+hp.topic+'“',s:'Der nächste Schritt deines 4-Wochen-Plans'}:null;
@@ -1700,18 +1814,22 @@ function msRowHTML(done,txt,attr,delAttr){
   +(attr?'</button>':'</div>');
 }
 function renderGoals(){
- let h=GOALS.map(g=>{
+ const hiddenCount=Object.keys(S.hiddenMs).length+Object.keys(S.hiddenGoals).length;
+ let h=hiddenCount?'<button class="arch-toggle" id="goalRestore" style="margin:0 0 14px">'+hiddenCount+' ausgeblendete(s) wiederherstellen</button>':'';
+ h+=GOALS.filter(g=>!S.hiddenGoals[g.id]).map(g=>{
   const custom=S.goalsCustom[g.id]||[];
-  const states=g.ms.map((m,i)=>m.auto?!!m.auto():!!S.goals[g.id+i]);
+  const vis=g.ms.map((m,i)=>[m,i]).filter(([m,i])=>!S.hiddenMs[g.id+i]);
+  const states=vis.map(([m,i])=>m.auto?!!m.auto():!!S.goals[g.id+i]);
   const all=states.concat(custom.map(c=>c.done));
   const pct=all.length?all.filter(Boolean).length/all.length:0;
   return '<div class="card goal" style="--area:'+g.c+'">'
    +'<div class="goal-head">'+ring(pct,g.c,62,g.t)
-   +'<div class="gh-txt"><h3>'+g.t+'</h3><span class="pill amber">'+g.h+'</span><div class="goal-d" style="margin-top:6px">'+g.d+'</div></div></div>'
+   +'<div class="gh-txt"><h3>'+g.t+'</h3><span class="pill amber">'+g.h+'</span><div class="goal-d" style="margin-top:6px">'+g.d+'</div></div>'
+   +'<button class="hub-del" data-gdel="'+g.id+'">Ausblenden</button></div>'
    +'<div class="ms-list">'
-   +g.ms.map((m,i)=>m.auto
-     ?'<div class="ms-row'+(states[i]?' done':'')+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span><span class="ms-auto">auto</span></div>'
-     :'<button class="ms-row'+(states[i]?' done':'')+'" data-ms="'+g.id+i+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span></button>').join('')
+   +vis.map(([m,i],vi)=>m.auto
+     ?'<div class="ms-row'+(states[vi]?' done':'')+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span><span class="ms-auto">auto</span><button class="bucket-x" data-msdel="'+g.id+':'+i+'" aria-label="entfernen">×</button></div>'
+     :'<div class="ms-row'+(states[vi]?' done':'')+'"><button class="ms-check" data-ms="'+g.id+i+'" aria-label="abhaken"></button><span class="ms-t">'+m.t+'</span><button class="bucket-x" data-msdel="'+g.id+':'+i+'" aria-label="entfernen">×</button></div>').join('')
    +custom.map((c,i)=>'<div class="ms-row'+(c.done?' done':'')+'"><button class="ms-check" data-cms="'+g.id+':'+i+'" aria-label="abhaken"></button><span class="ms-t">'+esc(c.t)+'</span><button class="bucket-x" data-cmx="'+g.id+':'+i+'" aria-label="löschen">×</button></div>').join('')
    +'</div>'
    +'<div class="bucket-add mt"><input data-msin="'+g.id+'" placeholder="Eigenen Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-msadd="'+g.id+'">+</button></div>'
@@ -1735,6 +1853,11 @@ function renderGoals(){
  $('#goalList').innerHTML=h;
 }
 $('#panel-ziele').addEventListener('click',e=>{
+ const md=e.target.closest('[data-msdel]');
+ if(md){const [g,i]=md.dataset.msdel.split(':');S.hiddenMs[g+i]=true;save();renderGoals();return}
+ const gd=e.target.closest('[data-gdel]');
+ if(gd){S.hiddenGoals[gd.dataset.gdel]=true;save();renderGoals();return}
+ if(e.target.closest('#goalRestore')){S.hiddenMs={};S.hiddenGoals={};save();renderGoals();return}
  const r=e.target.closest('[data-ms]');
  if(r){const k=r.dataset.ms;
   if(S.goals[k])delete S.goals[k];else S.goals[k]=true;
@@ -1776,20 +1899,25 @@ function renderHubTypes(){
 function renderHubPlans(){
  if(!S.hub.plans.length){$('#hubPlans').innerHTML='<div class="card"><p class="sub">Noch kein Plan. Gib oben ein Thema ein — du kannst beliebig viele Pläne parallel laufen lassen.</p></div>';return}
  $('#hubPlans').innerHTML=S.hub.plans.map((p,pi)=>{
-  const tasks=hubTasks(p.type);
+  const tasks=hubTasks2(p.type);
   const flat=tasks.flat();
+  if(p.done.length!==flat.length)p.done=p.done.slice(0,flat.length).concat(Array(Math.max(0,flat.length-p.done.length)).fill(false));
   const done=p.done.filter(Boolean).length;
   const open=hubOpen.has(pi);
   const res=findResources(p.topic);
+  const crash=findCrash(p.topic);
   let idx=0;
   let h='<div class="card" style="--area:var(--c-it)">'
    +'<button class="hub-head" data-hubtoggle="'+pi+'" style="width:100%;text-align:left">'+ring(done/flat.length,'var(--c-it)',52,p.topic)
    +'<div class="gh-txt"><h3>'+esc(p.topic)+'</h3><span class="pill amber">'+HUB_TYPES.find(t=>t.k===p.type).l+'</span> <span class="pill">'+done+' / '+flat.length+'</span></div>'
    +'<span class="chev" style="color:var(--ink-faint);transform:rotate('+(open?90:0)+'deg)">▶</span></button>';
   if(open){
-   h+='<div class="action-box mt"><b>Kostenlose Ressourcen für dich:</b>'
+   h+='<div class="action-box mt"><b>Crashkurs — das Kernwissen zuerst:</b>'
+    +(crash.matched?'':'<div class="res-row">Für dieses Thema habe ich kein Spezialwissen hinterlegt — hier das universelle Lern-Fundament; die Inhalte liefern dir die Ressourcen unten.</div>')
+    +crash.c.map((b,bi)=>'<div class="res-row"><b>'+(bi+1)+'.</b> '+b+'</div>').join('')+'</div>';
+   h+='<div class="action-box mt"><b>Kostenlose Ressourcen:</b>'
     +res.map(r=>'<div class="res-row"><b>'+r[0]+'</b> — '+r[1]+'<br>'+linkify(r[2])+'</div>').join('')+'</div>';
-   h+=tasks.map((phase,phi)=>'<div class="hub-phase">'+HUB_PLAN.phases[phi]+'</div>'
+   h+=tasks.map((phase,phi)=>'<div class="hub-phase">'+HUB_PLAN2.phases[phi]+'</div>'
      +phase.map(task=>{
       const i=idx++;
       const d=!!p.done[i];
@@ -1806,7 +1934,7 @@ $('#sub-hub').addEventListener('click',e=>{
  if(e.target.closest('#hubCreate')){
   const topic=$('#hubTopic').value.trim();
   if(!topic){$('#hubTopic').focus();return}
-  const n=hubTasks(hubType).flat().length;
+  const n=hubTasks2(hubType).flat().length;
   S.hub.plans.unshift({topic:topic,type:hubType,done:Array(n).fill(false)});
   hubOpen.clear();hubOpen.add(0);
   $('#hubTopic').value='';save();renderHubPlans();renderMissions();return}
@@ -1852,7 +1980,7 @@ function simulate(){
  SIM=[];let bal=14000;
  const sA=inp('sA'),sB=inp('sB');
  for(let i=0;i<NMONTHS;i++){
-  if(i>0)bal+=(i<=14?sA:sB);
+  if(i>0)bal+=(i<=13?sA:sB);
   if(i===inp('carM'))bal-=inp('car');
   if(i===inp('mvM'))bal-=inp('mv');
   SIM.push(bal);
@@ -1888,7 +2016,7 @@ function drawChart(){
  x2.beginPath();x2.moveTo(padL,Y(5000));x2.lineTo(W-padR,Y(5000));x2.stroke();
  x2.setLineDash([]);x2.globalAlpha=1;
  x2.fillStyle=danger;x2.fillText('Notgroschen 5k',W-padR-88,Y(5000)-5);
- const evs=[[inp('carM'),'Auto'],[15,'3k netto'],[inp('mvM'),'Auszug']];
+ const evs=[[inp('carM'),'Auto'],[14,'3k netto'],[inp('mvM'),'Auszug']];
  x2.strokeStyle=ink;x2.fillStyle=ink;
  evs.forEach(([i,l],n)=>{x2.setLineDash([2,3]);x2.globalAlpha=.5;
   x2.beginPath();x2.moveTo(X(i),padT);x2.lineTo(X(i),H-padB);x2.stroke();
@@ -1932,18 +2060,26 @@ function renderZi(){
  $('#ziWidget').addEventListener('input',upd);upd();
 }
 let finArchOpen=false;
+function finLessonList(){
+ let list=FIN.map((l,i)=>({key:i,les:l}));
+ if(S.finStage>=1)list=list.concat(FIN2.map((l,i)=>({key:100+i,les:l})));
+ for(let n=1;n<=S.finStage-1;n++)genFinCycle(n).forEach((l,i)=>list.push({key:'fc'+n+'_'+i,les:l}));
+ return list;
+}
 function renderFinLessons(){
- const open=FIN.map((f,i)=>[f,i]).filter(([f,i])=>!S.fin.done.includes(i));
- const done=FIN.map((f,i)=>[f,i]).filter(([f,i])=>S.fin.done.includes(i));
- let h=open.map(([f,i])=>
-  '<div class="acc"><button class="acc-head"><span class="acc-num num">'+String(i+1).padStart(2,'0')+'</span><span class="t">'+f.t+'</span><span class="chev">▶</span></button>'
-  +'<div class="acc-body"><p>'+f.x+'</p><div class="action-box"><b>Mach jetzt:</b> '+f.a+'</div>'
-  +'<button class="btn small mt" data-findone="'+i+'">Gelesen &amp; verstanden ✓</button></div></div>').join('');
- if(!open.length)h='<p class="sub">Alle Lektionen abgeschlossen — stark. Unten kannst du alles wiederholen.</p>';
+ const list=finLessonList();
+ const open=list.filter(l=>!S.fin.done.includes(l.key));
+ const done=list.filter(l=>S.fin.done.includes(l.key));
+ let h=open.map((l)=>
+  '<div class="acc"><button class="acc-head"><span class="acc-num num">'+String(list.indexOf(l)+1).padStart(2,'0')+'</span><span class="t">'+l.les.t+'</span><span class="chev">▶</span></button>'
+  +'<div class="acc-body"><p>'+l.les.x+'</p><div class="action-box"><b>Mach jetzt:</b> '+l.les.a+'</div>'
+  +'<button class="btn small mt" data-findone="'+l.key+'">Gelesen &amp; verstanden ✓</button></div></div>').join('');
+ if(!open.length)h='<div style="text-align:center;padding:14px 4px"><div style="font-size:30px">🎉</div><p class="sub mt">Alles durchgearbeitet — hier ist nie Schluss:</p>'
+  +'<button class="btn mt" id="finMore">'+(S.finStage===0?'10 Vertiefungs-Lektionen freischalten →':'Nächsten Geld-Auftrag freischalten →')+'</button></div>';
  if(done.length){
   h+='<button class="arch-toggle" id="finArch">'+(finArchOpen?'Archiv ausblenden':done.length+' erledigte Lektion(en) anzeigen')+'</button>';
-  if(finArchOpen)h+=done.map(([f,i])=>
-   '<div class="know-done"><span>✓ '+f.t+'</span><button data-finundo="'+i+'">nochmal lesen</button></div>').join('');
+  if(finArchOpen)h+=done.map(l=>
+   '<div class="know-done"><span>✓ '+l.les.t+'</span><button data-finundo="'+l.key+'">nochmal lesen</button></div>').join('');
  }
  $('#finLessons').innerHTML=h;
 }
@@ -1951,11 +2087,13 @@ $('#panel-fin').addEventListener('click',e=>{
  const h=e.target.closest('.acc-head');
  if(h){h.closest('.acc').classList.toggle('open');return}
  const b=e.target.closest('[data-findone]');
- if(b){const i=+b.dataset.findone;
-  if(!S.fin.done.includes(i)){S.fin.done.push(i);save();completeMission('fin')}
-  renderFinLessons();return}
+ if(b){const k=isNaN(+b.dataset.findone)?b.dataset.findone:+b.dataset.findone;
+  if(!S.fin.done.includes(k)){S.fin.done.push(k);save();completeMission('fin')}
+  renderFinLessons();renderMissions();return}
  const u=e.target.closest('[data-finundo]');
- if(u){S.fin.done=S.fin.done.filter(x=>x!==+u.dataset.finundo);save();renderFinLessons();return}
+ if(u){const k=isNaN(+u.dataset.finundo)?u.dataset.finundo:+u.dataset.finundo;
+  S.fin.done=S.fin.done.filter(x=>x!==k);save();renderFinLessons();return}
+ if(e.target.closest('#finMore')){S.finStage++;save();renderFinLessons();renderMissions();return}
  if(e.target.closest('#finArch')){finArchOpen=!finArchOpen;renderFinLessons()}
 });
 
@@ -2022,16 +2160,29 @@ $('#planList').addEventListener('input',e=>{
  const f=e.target.closest('[data-plan]');if(!f)return;
  S.plan[+f.dataset.plan]=f.value;save();renderMissions();
 });
-const KNOW_SECTIONS=[['bel',KNOW_BEL,'#knowBel'],['erh',KNOW_ERH,'#knowErh'],['ern',KNOW_ERN,'#knowErn']];
+const KNOW_BATCHES={bel:[KNOW_BEL,KNOW_BEL2],erh:[KNOW_ERH,KNOW_ERH2],ern:[KNOW_ERN,KNOW_ERN2],tra:[KNOW_TRA,KNOW_TRA2]};
+const KNOW_SECTIONS=[['bel','#knowBel'],['erh','#knowErh'],['ern','#knowErn'],['tra','#knowTra']];
 const knowOpen={};
+function knowData(key){
+ const st=S.knowStage[key]||0;
+ let d=KNOW_BATCHES[key][0].slice();
+ if(st>=1)d=d.concat(KNOW_BATCHES[key][1]);
+ for(let n=1;n<=st-1;n++)d=d.concat(genKnowCycle(key,n));
+ return d;
+}
 function renderKnow(){
- KNOW_SECTIONS.forEach(([key,data,sel])=>{
+ KNOW_SECTIONS.forEach(([key,sel])=>{
+  const data=knowData(key);
   const open=data.map((d,i)=>[d,i]).filter(([d,i])=>!S.known[key+i]);
   const done=data.map((d,i)=>[d,i]).filter(([d,i])=>S.known[key+i]);
   let h=open.map(([d,i])=>
    '<div class="acc"><button class="acc-head"><span class="t">'+d.t+'</span><span class="chev">▶</span></button>'
    +'<div class="acc-body"><p>'+d.x+'</p><button class="btn ghost small mt" data-know="'+key+i+'">Weiß ich — ausblenden ✓</button></div></div>').join('');
-  if(!open.length)h='<p class="sub">Alles ausgeblendet — du hast es drauf.</p>';
+  if(!open.length){
+   const st=S.knowStage[key]||0;
+   h='<div style="text-align:center;padding:10px 4px"><p class="sub">Alles verinnerlicht — Nachschub wartet:</p>'
+    +'<button class="btn small mt" data-knowmore="'+key+'">'+(st===0?'Vertiefungs-Karten freischalten →':'Neuen Auftrag freischalten →')+'</button></div>';
+  }
   if(done.length){
    h+='<button class="arch-toggle" data-knowarch="'+key+'">'+(knowOpen[key]?'Archiv ausblenden':done.length+' ausgeblendete anzeigen')+'</button>';
    if(knowOpen[key])h+=done.map(([d,i])=>
@@ -2040,16 +2191,20 @@ function renderKnow(){
   $(sel).innerHTML=h;
  });
 }
-$('#panel-body').addEventListener('click',e=>{
+function knowClicks(e){
  const h=e.target.closest('.acc-head');
- if(h){h.closest('.acc').classList.toggle('open');return}
+ if(h){h.closest('.acc').classList.toggle('open');return true}
  const k=e.target.closest('[data-know]');
- if(k){S.known[k.dataset.know]=true;save();renderKnow();return}
+ if(k){S.known[k.dataset.know]=true;save();renderKnow();return true}
  const u=e.target.closest('[data-knowundo]');
- if(u){delete S.known[u.dataset.knowundo];save();renderKnow();return}
+ if(u){delete S.known[u.dataset.knowundo];save();renderKnow();return true}
+ const m=e.target.closest('[data-knowmore]');
+ if(m){const key=m.dataset.knowmore;S.knowStage[key]=(S.knowStage[key]||0)+1;save();renderKnow();return true}
  const a=e.target.closest('[data-knowarch]');
- if(a){knowOpen[a.dataset.knowarch]=!knowOpen[a.dataset.knowarch];renderKnow()}
-});
+ if(a){knowOpen[a.dataset.knowarch]=!knowOpen[a.dataset.knowarch];renderKnow();return true}
+ return false;
+}
+$('#panel-body').addEventListener('click',knowClicks);
 
 /* ================= LEBEN: Reisen & Erfahrungen ================= */
 function renderBucket(listSel,suggSel,arr,suggs,suggLbl){
@@ -2077,6 +2232,7 @@ function bucketHandlers(subSel,arr){
 }
 bucketHandlers('#sub-travel',S.travel);
 bucketHandlers('#sub-exp',S.exp);
+$('#knowTra').addEventListener('click',knowClicks);
 $('#travelAdd').addEventListener('click',()=>{const v=$('#travelInput').value.trim();if(v){S.travel.push({t:v,done:false});$('#travelInput').value='';save();renderLife()}});
 $('#expAdd').addEventListener('click',()=>{const v=$('#expInput').value.trim();if(v){S.exp.push({t:v,done:false});$('#expInput').value='';save();renderLife()}});
 $('#travelInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#travelAdd').click()});
