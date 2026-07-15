@@ -315,6 +315,12 @@ canvas.chart{width:100%;height:240px;display:block}
 .hub-del{color:var(--ink-faint);font-size:12.5px;font-weight:600}
 .hub-del:hover{color:var(--danger)}
 .hub-phase{font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--area);margin:14px 0 2px}
+.hub-head{cursor:pointer;display:flex;gap:14px;align-items:center;border-radius:12px}
+.hub-head:hover .chev{color:var(--ink)}
+.res-row{margin-top:9px;font-size:13px;line-height:1.45}
+.res-row b{color:var(--ink)}
+.res-row a{color:var(--area);font-weight:600;text-decoration:none;word-break:break-all}
+.res-row a:hover{text-decoration:underline}
 
 footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);font-size:12px;text-align:center}
 </style>
@@ -1047,25 +1053,201 @@ const KNOW_ERN=[
 </script>
 
 <script>
-/* ============ ZIELE: 7 Langzeitziele (1–5 Jahre) ============ */
-/* auto-Meilensteine werden live aus deinem Fortschritt berechnet */
+/* ============ RUSSISCH STUFE 2: Grammatik & Ausdruck (12 Lektionen) ============ */
+const RU2=[
+{t:"Mein & Dein — Besitz ausdrücken",f:"„U menjá jest“ — die russische Art zu sagen, was man hat.",p:[
+["U menjá jest maschína.","Ich habe ein Auto.","У меня есть машина."],
+["U tebjá jest wrémja?","Hast du Zeit?","У тебя есть время?"],
+["U nas balschája semjá.","Wir haben eine große Familie.","У нас большая семья."],
+["U menjá njet deneg.","Ich habe kein Geld. (scherzhaft nützlich)","У меня нет денег."]],
+s:"Zähl laut 5 Dinge auf, die du hast („U menjá jest …“) und 2, die du nicht hast („U menjá njet …“).",
+q:[["Wie sagt man „Ich habe“?",["Ja imjéju","U menjá jest","Mnje jest"],1],["„U tebjá jest wrémja?“ heißt …",["Hast du Geld?","Hast du Zeit?","Wo bist du?"],1]]},
+{t:"Mir ist / mir gefällt — Dativ-Gefühle",f:"Russen sagen nicht „ich mag“, sondern „mir gefällt“ — das Muster steckt überall.",p:[
+["Mnje nráwitsja éta muzýka.","Mir gefällt diese Musik.","Мне нравится эта музыка."],
+["Mnje chóladna / scharkó.","Mir ist kalt / heiß.","Мне холодно / жарко."],
+["Mnje núschna twajá pómaschtsch.","Ich brauche deine Hilfe.","Мне нужна твоя помощь."],
+["Mnje kaschétsja, éta prawílna.","Mir scheint, das ist richtig.","Мне кажется, это правильно."]],
+s:"Sag 4 Sätze mit „Mnje …“: was dir gefällt, was du brauchst, wie dir ist.",
+q:[["„Mnje nráwitsja“ heißt wörtlich …",["Ich liebe","Mir gefällt","Ich will"],1],["„Mnje núschna pómaschtsch“ = …",["Ich helfe gern","Ich brauche Hilfe","Hilfe kommt"],1]]},
+{t:"Hingehen oder unterwegs sein?",f:"idtí vs. chadít — die berühmten Bewegungsverben, einfach erklärt.",p:[
+["Ja idú w magasín.","Ich gehe (gerade) in den Laden.","Я иду в магазин."],
+["Ja chaschú w sportsál tri rása w nedélju.","Ich gehe (regelmäßig) 3× die Woche ins Gym.","Я хожу в спортзал три раза в неделю."],
+["My jédem w Ispániju.","Wir fahren (gerade/bald) nach Spanien.","Мы едем в Испанию."],
+["Ja jésdil w Pólschu.","Ich bin (mal) nach Polen gefahren.","Я ездил в Польшу."]],
+s:"Sag je 2 Sätze: Wohin gehst du JETZT gerade — und wohin gehst du REGELMÄSSIG? Spür den Unterschied idú/chaschú.",
+q:[["„Ja chaschú w sportsál“ betont …",["einmaliges Gehen","regelmäßiges Gehen","schnelles Gehen"],1],["Für Fahrzeuge nimmt man …",["idtí/chadít","jéchat/jésdit","stajáts"],1]]},
+{t:"Vollendet oder nicht? Aspekte light",f:"delal vs. sdélal — DER Grammatik-Kern des Russischen, ohne Fachchinesisch.",p:[
+["Ja délal damáschku wjes wétscher.","Ich habe den ganzen Abend an den Aufgaben gearbeitet. (Prozess)","Я делал домашку весь вечер."],
+["Ja sdélal damáschku!","Ich habe die Aufgaben FERTIG gemacht. (Ergebnis)","Я сделал домашку!"],
+["Ja tschitál étu knígu.","Ich habe in dem Buch gelesen.","Я читал эту книгу."],
+["Ja pratschitál étu knígu.","Ich habe das Buch durchgelesen.","Я прочитал эту книгу."]],
+s:"Erzähl von gestern: 2 Dinge, die du GEMACHT HAST (Prozess: délal) und 2, die du FERTIG bekommen hast (s-/pra-: sdélal, pratschitál).",
+q:[["„sdélal“ betont …",["den Prozess","das fertige Ergebnis","die Zukunft"],1],["Die Vorsilbe pra-/s- macht ein Verb meist …",["höflicher","vollendet","verneint"],1]]},
+{t:"Höflich per „Sie“",f:"wy-Form für Ältere und Fremde — Respekt ist in der russischen Kultur Pflicht.",p:[
+["Wy nje padskáschete, gdje …?","Können Sie mir sagen, wo … ist?","Вы не подскажете, где …?"],
+["Sadítes, paschálusta!","Setzen Sie sich, bitte!","Садитесь, пожалуйста!"],
+["Iswiníte, móschna wapróss?","Entschuldigen Sie, darf ich etwas fragen?","Извините, можно вопрос?"],
+["Spassíba wam balschóje!","Vielen Dank Ihnen!","Спасибо вам большое!"]],
+s:"Spiel durch: Du triffst eine ältere Bekannte deiner Eltern. Begrüßung, eine höfliche Frage, Verabschiedung — alles in der wy-Form.",
+q:[["Ältere Verwandte spricht man an mit …",["ty","wy","on"],1],["„Wy nje padskáschete …“ ist …",["ein Befehl","eine sehr höfliche Frage","eine Beschwerde"],1]]},
+{t:"Wenn & würde — Konditional",f:"Mit „by“ träumst du auf Russisch: würde, hätte, wäre.",p:[
+["Ja by kupíl gravel-báik.","Ich würde ein Gravel-Bike kaufen.","Я бы купил грэвел-байк."],
+["Jésli by u menjá býla kwartíra …","Wenn ich eine Wohnung hätte …","Если бы у меня была квартира…"],
+["Ja by chatél paméhat w Japóniju.","Ich würde gern nach Japan reisen.","Я бы хотел поехать в Японию."],
+["Bylo by atlítschna!","Das wäre großartig!","Было бы отлично!"]],
+s:"Träum laut auf Russisch: 4 „Ja by …“-Sätze über dein Leben in 5 Jahren — Wohnung, Reisen, Geld, Russisch.",
+q:[["Das Wörtchen „by“ macht einen Satz …",["verneint","konditional (würde/hätte)","vergangen"],1],["„Ja by chatél“ heißt …",["Ich will sofort","Ich würde gern","Ich wollte nie"],1]]},
+{t:"Befehle & Bitten",f:"Von „gib mal“ bis „hör auf“ — der Imperativ des Alltags.",p:[
+["Daj mnje, paschálusta …","Gib mir bitte …","Дай мне, пожалуйста …"],
+["Paslúschaj menjá!","Hör mir zu!","Послушай меня!"],
+["Nje sabúd pasvaníts!","Vergiss nicht anzurufen!","Не забудь позвонить!"],
+["Dawáj sdélajem éta wméste.","Lass uns das zusammen machen.","Давай сделаем это вместе."]],
+s:"Formuliere 4 echte Bitten an deine Familie auf Russisch — von „gib mir“ bis „lass uns zusammen …“.",
+q:[["„Dawáj …“ + Verb heißt …",["Hör auf","Lass uns …","Geh weg"],1],["„Nje sabúd“ = …",["Vergiss nicht","Beeil dich","Warte"],0]]},
+{t:"Zeit genauer ausdrücken",f:"Vor zwei Jahren, in einer Woche, seit Montag — Zeit-Bausteine.",p:[
+["Dwa góda nasád ja byl w Amérike.","Vor zwei Jahren war ich in Amerika.","Два года назад я был в Америке."],
+["Tschéres nedélju u menjá ekzámen.","In einer Woche habe ich eine Prüfung.","Через неделю у меня экзамен."],
+["Ja utschú rússki s ijúlja.","Ich lerne Russisch seit Juli.","Я учу русский с июля."],
+["Kaschdy djen pa dwádzat minút.","Jeden Tag 20 Minuten.","Каждый день по двадцать минут."]],
+s:"Erzähl deine Timeline: Was war vor einem Jahr, was ist in einem Jahr, was machst du jeden Tag? 3 Sätze mit nasád/tschéres/káschdy.",
+q:[["„nasád“ heißt …",["ab jetzt","zurück/vor (Zeit)","niemals"],1],["„tschéres nedélju“ = …",["letzte Woche","in einer Woche","jede Woche"],1]]},
+{t:"Sätze verbinden",f:"patamú schta, kagdá, katóry — aus kurzen Sätzen werden echte Gedanken.",p:[
+["Ja utschú rússki, patamú schta éta mají kórni.","Ich lerne Russisch, weil das meine Wurzeln sind.","Я учу русский, потому что это мои корни."],
+["Kagdá ja sakóntschu utschjóbu, ja perejédu.","Wenn ich das Studium beende, ziehe ich um.","Когда я закончу учёбу, я перееду."],
+["Éta tot tschelawék, katóry mnje pamóg.","Das ist der Mensch, der mir geholfen hat.","Это тот человек, который мне помог."],
+["Ja nadéjus, schto wsjo palútschitsja.","Ich hoffe, dass alles klappt.","Я надеюсь, что всё получится."]],
+s:"Bau 3 lange Sätze über deine Pläne — jeder mit patamú schta (weil), kagdá (wenn/als) oder schto (dass).",
+q:[["„patamú schta“ heißt …",["obwohl","weil","danach"],1],["„Ja nadéjus, schto …“ = …",["Ich hoffe, dass …","Ich weiß, dass …","Ich sage, dass …"],0]]},
+{t:"Small Talk auf Profi-Niveau",f:"Füllwörter & Reaktionen, die dich sofort natürlicher klingen lassen.",p:[
+["Nu, w óbschtschem, tak.","Na ja, im Großen und Ganzen so.","Ну, в общем, так."],
+["Da ty schto! Serjósna?","Was du nicht sagst! Im Ernst?","Да ты что! Серьёзно?"],
+["Koróтsche gawarjá …","Kurz gesagt …","Короче говоря…"],
+["Éta samóje gláwnaje.","Das ist das Wichtigste.","Это самое главное."]],
+s:"Hör deinen Eltern heute beim Russischsprechen zu und zähl, wie oft „nu“, „koróтsche“ oder „w óbschtschem“ fällt. Benutze danach selbst eins davon.",
+q:[["„Da ty schto!“ drückt aus …",["Langeweile","Überraschung","Wut"],1],["„koróтsche“ leitet ein …",["eine Zusammenfassung","eine Frage","einen Streit"],0]]},
+{t:"Diskutieren & überzeugen",f:"Argumente auf Russisch — die Königsdisziplin.",p:[
+["Wa-pérwych … wa-wtarých …","Erstens … zweitens …","Во-первых… во-вторых…"],
+["S adnój staraný … s drugój staraný …","Einerseits … andererseits …","С одной стороны… с другой стороны…"],
+["Ty dólschen priznáts, schto …","Du musst zugeben, dass …","Ты должен признать, что…"],
+["Dawáj pasmótrim na fákty.","Schauen wir auf die Fakten.","Давай посмотрим на факты."]],
+s:"Überzeuge einen imaginären Skeptiker auf Russisch, dass Sauna gesund ist — mit „wa-pérwych, wa-wtarých“ und einem Fakt.",
+q:[["„Wa-pérwych“ heißt …",["Zum Beispiel","Erstens","Endlich"],1],["„priznáts“ = …",["zugeben","verlieren","wiederholen"],0]]},
+{t:"Die Meister-Prüfung",f:"Lektion 12: Alles zusammen — du führst jetzt echte Gespräche mit Struktur.",p:[
+["Ja mnóga wýutschil sa éta wrémja.","Ich habe in dieser Zeit viel gelernt.","Я много выучил за это время."],
+["Tepér ja gawarjú swabódneje.","Jetzt spreche ich freier.","Теперь я говорю свободнее."],
+["Ja prodalscháju utschítsja káschdy djen.","Ich lerne jeden Tag weiter.","Я продолжаю учиться каждый день."],
+["Sledújuschtschaja zel — swabódny rasgawór.","Das nächste Ziel: freies Sprechen.","Следующая цель — свободный разговор."]],
+s:"Die Meister-Prüfung: Führe ein 10-Minuten-Gespräch mit deinen Eltern über einen ECHTEN Plan (Auto, Wohnung, Reise) — nur Russisch, mit Begründungen (patamú schta) und Zeitangaben. Danach warten die Sprech-Zyklen auf dich.",
+q:[["„prodalschát“ heißt …",["aufhören","weitermachen","anfangen"],1],["„swabódna“ = …",["frei/fließend","langsam","leise"],0]]}];
+
+/* ============ GESCHICHTE STUFE 2: Themen-Vertiefungen (12 Kapitel) ============ */
+const HIST2=[
+{e:"Vertiefung",t:"Die Geschichte des Geldes",x:"Erst Muscheln und Vieh, dann Münzen (Lydien, ~600 v. Chr.), dann Papier (China, 1.000 Jahre vor Europa!), dann Zahlen auf Bildschirmen. Der rote Faden: Geld wurde immer abstrakter — und basiert am Ende auf genau einer Sache: Vertrauen. Als 1971 die Golddeckung des Dollars fiel, wurde jede Währung der Welt zu reinem Vertrauensgeld („Fiat“). Deshalb ist Inflation so gefährlich: Sie ist kein Preisproblem, sondern ein Vertrauensproblem. Und deshalb funktionieren dein ETF und dein Tagesgeld nur, solange Institutionen stabil bleiben — Geldgeschichte ist Institutionengeschichte.",m:"Geld = geronnenes Vertrauen. Je abstrakter es wurde, desto wichtiger wurden stabile Institutionen.",q:["Worauf basiert modernes Geld seit 1971 letztlich?",["Auf Gold","Auf Vertrauen in Institutionen","Auf Silber"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Medizin",x:"Bis vor 150 Jahren war ein Krankenhaus ein Ort zum Sterben: Ärzte gingen ohne Händewaschen von der Leiche zur Geburt. Als Ignaz Semmelweis 1847 nachwies, dass Händedesinfektion das Kindbettfieber um 90 % senkt, wurde er ausgelacht und starb in der Psychiatrie. Erst Keimtheorie (Pasteur), Antisepsis (Lister), Antibiotika (Fleming 1928) und Impfungen machten Medizin wirksam — fast alles davon in nur 100 Jahren. Merk dir das Muster: Die größten Durchbrüche wurden anfangs verspottet, weil sie das Selbstbild der Experten angriffen.",m:"Fast die gesamte wirksame Medizin ist jünger als 150 Jahre — und begann mit Händewaschen.",q:["Warum wurde Semmelweis abgelehnt?",["Seine Daten waren falsch","Seine Erkenntnis griff das Selbstbild der Ärzte an","Händewaschen war verboten"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Energie",x:"Jede Zivilisationsstufe ist eine Energiestufe: Muskel → Wasser/Wind → Kohle → Öl → Strom → Atom. Der Sprung zur Kohle machte Britannien zur Weltmacht, der zum Öl machte den Nahen Osten zum Schauplatz der Weltpolitik (fast jeder Konflikt dort hat eine Energie-Dimension). Heute läuft der nächste Umbau: erneuerbare Energien plus Speicher. Wer Energiegeschichte kennt, versteht Geopolitik: Staaten handeln selten aus Ideologie, oft aus Energie-Interesse.",m:"Zivilisation = verfügbare Energie. Energiewenden verschieben Weltmacht — gerade wieder.",q:["Was verschob historisch am stärksten die Machtverhältnisse zwischen Staaten?",["Mode","Zugang zu neuen Energiequellen","Sprachen"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Seuchen",x:"Seuchen haben Geschichte öfter umgeschrieben als Schlachten: Die Pest beendete den Feudalismus mit, eingeschleppte Pocken eroberten Amerika effektiver als jede Armee, die Spanische Grippe 1918 tötete mehr Menschen als der Erste Weltkrieg (50+ Millionen), und Cholera zwang Städte zur größten Gesundheitsrevolution überhaupt: Kanalisation und sauberes Trinkwasser — die zwei Erfindungen, die mehr Leben retteten als die gesamte Hightech-Medizin. Corona 2020 war historisch gesehen Standardprogramm: Leugnen, Sündenböcke, dann Anpassung — exakt wie 1348.",m:"Kanalisation und sauberes Wasser retteten mehr Leben als jede andere Erfindung der Geschichte.",q:["Welche Maßnahme rettete historisch die meisten Leben?",["Operationen","Sauberes Wasser und Kanalisation","Vitamine"],1]},
+{e:"Vertiefung",t:"Die Geschichte des Handels",x:"Globalisierung gab es dreimal: die Seidenstraße (Antike bis Mittelalter), die Kolonialära mit ihren Handelskompanien — die niederländische VOC war die erste Aktiengesellschaft der Welt, Aktienmarkt und Börse entstanden buchstäblich für den Gewürzhandel — und die Container-Ära ab 1956: Malcolm McLeans simple Stahlkiste senkte Verladekosten um 97 % und machte „Made in China“ erst möglich. Merke: Nicht Politiker globalisieren die Welt, sondern Transportkosten. Sinken sie, wächst der Handel — egal, was Regierungen wollen.",m:"Der Schiffscontainer veränderte die Weltwirtschaft mehr als die meisten Verträge: Transportkosten −97 %.",q:["Was machte die moderne Globalisierung technisch möglich?",["Das Internet allein","Der Schiffscontainer","Flugzeuge"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Kommunikation",x:"Jede Beschleunigung der Information hat Machtstrukturen zerlegt: Buchdruck → Reformation. Zeitung → Öffentlichkeit und Revolutionen. Telegraf (ab 1844) → erstmals reiste Information schneller als Menschen; Weltpolitik in Echtzeit. Radio → Massenmobilisierung (auch die dunkle Seite: Propaganda der 1930er). Fernsehen → Vietnam wurde zum ersten Krieg, den ein Wohnzimmer verlor. Internet & Social Media → jeder ist Sender. Dein TikTok-Plan ist Teil dieser 500-jährigen Linie: Die Verteiler der Information hatten IMMER die Macht — jetzt kannst du selbst einer sein.",m:"Wer Information verteilt, hat Macht. Diese Rolle wurde immer weiter demokratisiert — bis zu dir.",q:["Was bewirkte der Telegraf grundlegend Neues?",["Billigere Bücher","Information reiste erstmals schneller als Menschen","Bessere Musik"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Städte",x:"10.000 Jahre lang lebten fast alle Menschen auf dem Land — seit 2007 lebt erstmals die Mehrheit in Städten. Städte waren lange tödlich (mehr Beerdigungen als Geburten, nur Zuzug hielt sie am Leben), aber sie waren immer die Innovationsmaschinen: Dichte erzeugt Austausch, Austausch erzeugt Ideen. Fast alles in diesem Tool — Schrift, Demokratie, Banken, Universitäten — wurde in Städten erfunden. Deine Auszugs-Entscheidung reiht sich hier ein: Menschen ziehen seit Jahrtausenden dorthin, wo Chancen dichter sind.",m:"Städte = Dichte = Ideen. Seit 2007 ist der Mensch mehrheitlich ein Stadtwesen.",q:["Warum waren Städte historisch Innovationsmaschinen?",["Bessere Luft","Dichte erzeugt Austausch und damit Ideen","Mehr Platz"],1]},
+{e:"Vertiefung",t:"Die Geschichte des Essens",x:"Der Kolumbus-Austausch krempelte alle Küchen um: Tomate (Italien!), Kartoffel (Deutschland!), Chili (Asien!) — alles aus Amerika, alles erst seit ~400 Jahren da. Die Kartoffel allein ließ Europas Bevölkerung explodieren; ihre Missernte 1845 ließ Irland verhungern und trieb Millionen in die USA. Konservendose (Napoleon suchte haltbare Soldatennahrung), Kühlschrank und Kunstdünger (Haber-Bosch ernährt heute die halbe Weltbevölkerung) machten Essen dann industriell. Dein Vorsatz „viel selbst kochen“ ist historisch gesehen Luxus und Rebellion zugleich.",m:"Deine „traditionelle“ Küche ist jung: Tomate, Kartoffel & Co. kamen erst mit dem Kolumbus-Austausch.",q:["Woher stammen Tomate, Kartoffel und Chili ursprünglich?",["Aus Asien","Aus Amerika","Aus Afrika"],1]},
+{e:"Vertiefung",t:"Die Geschichte des Sports",x:"Antike Olympia-Sieger waren Halbgötter mit lebenslanger Versorgung — dann verbot Rom die Spiele als Heidentum, und 1.500 Jahre lang war organisierter Sport praktisch tot. Das moderne Comeback kam mit der Industrialisierung: Fabrikarbeiter bekamen den freien Samstagnachmittag, und genau in dieses Zeitfenster hinein erfand England den modernen Fußball (Regeln von 1863). Vereine entstanden aus Kirchgemeinden und Fabriken (Bayer Leverkusen, Manchester United war eine Eisenbahner-Mannschaft). Profitum, Fernsehgeld, Champions League — Sport ist heute Teil der Unterhaltungsindustrie, aber sein Kern von 1863 ist intakt: elf Leute, ein Ball, ein Samstagnachmittag.",m:"Moderner Sport ist ein Kind des freien Samstagnachmittags der Industriearbeiter.",q:["Warum entstand der moderne Vereinssport im 19. Jahrhundert?",["Könige befahlen es","Arbeiter bekamen erstmals geregelte Freizeit","Das Fernsehen brauchte Inhalte"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Wissenschaft",x:"Wissenschaft ist keine Sammlung von Fakten, sondern eine Methode mit Geschichte: Die Griechen dachten scharf, aber experimentierten kaum. Das islamische Goldene Zeitalter fügte systematisches Experimentieren hinzu (Ibn al-Haytham, ~1000, gilt als erster echter Experimentator). Europa baute daraus ab 1600 die Maschine: Fachzeitschriften, Peer-Review, Reproduzierbarkeit. Der Kern ist kontraintuitiv: Wissenschaft lebt nicht vom Beweisen, sondern vom WIDERLEGEN — eine Theorie ist nur dann wissenschaftlich, wenn sie scheitern könnte. Deshalb ist „Die Wissenschaft sagt endgültig …“ ein Widerspruch in sich: Sie ist das beste Korrekturverfahren, das wir haben, kein Orakel.",m:"Wissenschaft = organisiertes Widerlegen. Ihre Stärke ist nicht Gewissheit, sondern Selbstkorrektur.",q:["Was macht eine Theorie wissenschaftlich?",["Viele Anhänger","Sie könnte durch Beobachtung widerlegt werden","Ein Professorentitel"],1]},
+{e:"Vertiefung",t:"Die Geschichte der Weltreligionen",x:"Ein Crashkurs in Verbreitung: Hinduismus (älteste lebende Tradition, ohne Gründer gewachsen), Judentum (erster konsequenter Monotheismus, Wurzel von zwei Weltreligionen), Buddhismus (Reformbewegung aus Indien, wanderte nach Osten), Christentum und Islam (beide aus dem Nahen Osten, beide missionierend, zusammen heute über die Hälfte der Menschheit). Muster: Religionen verbreiteten sich entlang der Handelswege — Buddhismus über die Seidenstraße, Islam über Karawanen- und Seehandel, Christentum über römische Straßen. Glaube reiste immer im Gepäck des Handels. Verstehen heißt hier nicht glauben: Ohne Religionsgeschichte sind Weltpolitik, Kunst und Kalender nicht lesbar.",m:"Religionen verbreiteten sich entlang der Handelswege — Glaube reiste im Gepäck der Händler.",q:["Entlang welcher Strukturen verbreiteten sich Weltreligionen vor allem?",["Entlang der Handelswege","Über Gebirgsketten","Per Zufall"],0]},
+{e:"Vertiefung",t:"Was die Geschichte dich lehrt",x:"Zum Abschluss der Stufe 2 die Meta-Lektionen, die sich durch alle 60 Kapitel ziehen: (1) Institutionen sterben von innen, nicht von außen — pflege, was funktioniert. (2) Knappheit verschiebt Macht — mach dich rar in dem, was du kannst. (3) Wer Information verteilt, hat Einfluss — du lebst in der ersten Epoche, in der das jedem offensteht. (4) Fast jeder „sichere“ Konsens wurde irgendwann korrigiert — bleib korrigierbar. (5) Die Katastrophen kamen selten angekündigt, die Chancen auch nicht — Reserven und Neugier sind die einzige Vorbereitung, die für beides funktioniert. Danach warten die Forscher-Zyklen: Ab jetzt erforschst du selbst.",m:"Geschichte macht nicht klüger über gestern, sondern gelassener und schärfer für morgen.",q:["Was ist die wiederkehrende Lehre über Institutionen?",["Sie sind unzerstörbar","Sie sterben meist durch Aushöhlung von innen","Sie sind egal"],1]}];
+
+/* ============ INFORMATIK STUFE 2: Praxis & Tiefe (12 Lektionen) ============ */
+const IT2=[
+{e:"Praxis",t:"Linux & Terminal: Die Sprache der Server",x:"90 % aller Server der Welt laufen auf Linux — wer IT ernst meint, kommt am schwarzen Fenster nicht vorbei. Die gute Nachricht: 10 Befehle decken den Alltag: ls (zeigen), cd (wechseln), mkdir, cp, mv, rm, cat (lesen), grep (suchen), | (Ausgabe weiterreichen — die genialste Idee der Unix-Welt: kleine Werkzeuge verketten). Auf Windows bekommst du mit WSL ein echtes Linux per Klick. Wer im Praktikum am Terminal navigieren kann, ohne zu googeln, wirkt sofort wie ein anderer Jahrgang.",m:"10 Terminal-Befehle + das Pipe-Prinzip = Grundausstattung. Kostenlos üben: WSL auf Windows aktivieren.",q:["Was macht der Pipe-Operator | ?",["Löscht Dateien","Reicht die Ausgabe eines Befehls an den nächsten weiter","Startet den Server neu"],1]},
+{e:"Praxis",t:"TCP/IP: Wie Daten wirklich reisen",x:"Deine Nachricht wird in Pakete zerhackt, jedes bekommt Absender + Empfänger-IP, und Router reichen sie Hop für Hop weiter — jedes Paket kann einen anderen Weg nehmen! TCP nummeriert die Pakete, quittiert den Empfang und fordert Verlorenes neu an; IP kümmert sich nur ums Zustellen. Diese Arbeitsteilung in Schichten ist DAS Architekturprinzip der IT: Jede Schicht löst ihr Problem und vertraut der darunter. Probier „tracert google.de“ (Windows) — du siehst live jeden Router zwischen dir und Google.",m:"Paket-Vermittlung + Schichtenmodell: jede Schicht ein Problem. Sichtbar machen mit tracert/traceroute.",q:["Was garantiert TCP, das IP nicht garantiert?",["Schnelligkeit","Vollständige, geordnete Zustellung","Verschlüsselung"],1]},
+{e:"Praxis",t:"Datenbank-Design: Normalisierung",x:"Der Klassiker-Fehler: eine Riesentabelle, in der der Kundenname 500-mal steht — bis er sich ändert und du 499 Stellen vergisst. Normalisierung heißt: Jede Information genau einmal, verknüpft über Schlüssel. Faustregeln: (1) Keine Listen in einer Zelle. (2) Alles hängt vom ganzen Schlüssel ab. (3) Keine Abhängigkeiten zwischen Nicht-Schlüssel-Feldern. In der Praxis reichen diese drei Stufen (3. Normalform) fast immer. Übung: Nimm eine chaotische Excel-Liste aus deinem Alltag und zerlege sie in 3 saubere Tabellen mit IDs — genau das ist Datenbank-Design.",m:"Jede Info genau einmal. Übung: eine Excel-Liste in 3 verknüpfte Tabellen zerlegen.",q:["Was ist das Kernziel der Normalisierung?",["Weniger Tabellen","Jede Information existiert genau einmal","Schönere Spaltennamen"],1]},
+{e:"Praxis",t:"Python konkret: Dein Einstieg",x:"Python ist die beste erste Sprache: liest sich fast wie Englisch, riesige Community, überall einsetzbar (Automatisierung, Daten, KI, Web). Dein konkreter Fahrplan: python.org installieren (oder online starten auf replit.com), dann die ersten 5 Kapitel eines Einsteigerkurses — und ab Tag 3 die goldene Regel: Baue MINI-Projekte statt Tutorials zu bingen. Erste Ideen: ein Skript, das deine Downloads nach Dateityp sortiert; ein Zinseszins-Rechner; ein Vokabeltrainer für deine Russisch-Wörter. Der Unterschied zwischen „Tutorial geschaut“ und „selbst gebaut“ ist der Unterschied zwischen Zuschauen und Fußballspielen.",m:"Regel ab Tag 3: eigene Mini-Projekte statt Tutorial-Marathon. Downloads-Sortierer ist der Klassiker.",q:["Was ist der wichtigste Lern-Hebel beim Programmieren?",["Viele Tutorials schauen","Früh eigene Mini-Projekte bauen","Bücher sammeln"],1]},
+{e:"Praxis",t:"Der Web-Stack: Frontend, Backend, Datenbank",x:"Jede Web-App hat drei Etagen: Frontend (HTML/CSS/JavaScript — läuft im Browser des Nutzers), Backend (Server-Logik: prüft, rechnet, entscheidet — z. B. Python/Java/Node), Datenbank (speichert). Warum die Trennung? Sicherheit (dem Browser darf man NIE vertrauen — jede Prüfung muss das Backend wiederholen) und Skalierung (jede Etage wächst unabhängig). Wenn du dieses Tool hier ansiehst: Es ist bewusst NUR Frontend — deine Daten bleiben im Browser. Sobald mehrere Nutzer dasselbe sehen sollen, braucht es Backend + Datenbank. Diese Grenze zu erkennen ist Architektur-Denken.",m:"Drei Etagen, klare Aufgaben — und dem Frontend darf man sicherheitstechnisch nie trauen.",q:["Warum muss das Backend alle Eingaben erneut prüfen?",["Aus Höflichkeit","Weil der Browser vom Nutzer manipulierbar ist","Weil es schneller ist"],1]},
+{e:"Praxis",t:"REST-APIs bauen: Gute Schnittstellen-Manieren",x:"Eine gute API ist wie gutes UI-Design — nur für Programme: Ressourcen als Substantive (/kunden/42/vertraege, nicht /getKundenVertraegeById), HTTP-Verben für Aktionen (GET lesen, POST anlegen, PUT ändern, DELETE löschen), sprechende Statuscodes (200 ok, 201 angelegt, 400 dein Fehler, 401 wer bist du?, 404 gibt's nicht, 500 mein Fehler) und Versionierung (/v1/), damit alte Nutzer nicht brechen. Teste APIs kostenlos mit der Browser-Konsole oder Tools wie Hoppscotch. Wer im Meeting sagen kann „das gehört ins Backend, als POST auf /antraege“, spricht die Sprache beider Welten — genau dein Profil.",m:"Substantive als Pfade, Verben über HTTP, ehrliche Statuscodes, Versionierung. Das ist 80 % von API-Design.",q:["Welcher Statuscode bedeutet „der Fehler liegt beim Aufrufer“?",["200","400","500"],1]},
+{e:"Praxis",t:"Docker: Software im Container",x:"Das ewige Problem: „Bei mir läuft's!“ — beim Kollegen nicht, auf dem Server erst recht nicht. Docker löst es radikal: Die App wird mit ALLEM, was sie braucht (Bibliotheken, Konfiguration, Laufzeit), in ein Container-Image gepackt — und dieses Image läuft überall exakt gleich, vom Laptop bis zur Cloud. Ein Container ist dabei keine schwere virtuelle Maschine, sondern ein isolierter Prozess — startet in Sekunden. Moderne IT-Landschaften sind Container-Flotten, orchestriert von Kubernetes. Für dich reicht erstmal das Konzept + einmal „docker run hello-world“ gesehen zu haben.",m:"Container = App + komplette Umgebung in einer Kiste. Ende von „bei mir läuft's“.",q:["Was packt ein Docker-Image ein?",["Nur den Code","Code plus alle Abhängigkeiten und Umgebung","Das Betriebssystem des Laptops"],1]},
+{e:"Praxis",t:"Cloud-Architektur: IaaS, PaaS, SaaS",x:"Drei Stufen des Selber-Machens: IaaS (du mietest nackte Server — maximale Kontrolle, maximale Arbeit), PaaS (du gibst nur Code ab, die Plattform kümmert sich um Server, Skalierung, Updates), SaaS (du nutzt fertige Software im Browser — Office 365, SAP Cloud). Die Business-Frage dahinter, die DU später beantworten wirst: Was ist Kern-Differenzierung (selbst bauen) und was Commodity (einkaufen)? Faustregel: Alles, was dich nicht vom Wettbewerb unterscheidet, kauft man als Service. Eine Krankenkasse differenziert sich nicht über selbstgebaute E-Mail-Server.",m:"IaaS/PaaS/SaaS = Stufen des Selbermachens. Nur bauen, was dich unterscheidet — Rest einkaufen.",q:["Wann sollte eine Firma etwas selbst bauen statt als SaaS kaufen?",["Immer","Wenn es sie vom Wettbewerb unterscheidet","Wenn es billig ist"],1]},
+{e:"Praxis",t:"Requirements Engineering: Die teuersten Fehler",x:"Studien seit Jahrzehnten einig: Die teuersten Softwarefehler entstehen nicht im Code, sondern davor — in falsch verstandenen Anforderungen. Ein in der Anforderungsphase gefundener Fehler kostet 1×, nach dem Release 100×. Handwerkszeug: User Stories („Als Sachbearbeiter möchte ich X, damit Y“) zwingen zur Begründung; Akzeptanzkriterien machen „fertig“ messbar; und die mächtigste Frage der Branche lautet: „Was ist das Problem hinter deinem Lösungswunsch?“ — denn Nutzer bestellen fast immer Lösungen („mach mir ein Excel-Export-Feature“) statt Probleme zu nennen. Das ist der Kern deines künftigen Jobs.",m:"Frag nie „was willst du?“, frag „welches Problem löst das?“. Anforderungsfehler kosten 100×.",q:["Wo entstehen die teuersten Softwarefehler?",["Beim Tippen","In falsch verstandenen Anforderungen","Beim Deployment"],1]},
+{e:"Praxis",t:"ITIL & IT-Service-Management",x:"Großunternehmen betreiben IT wie ein Kraftwerk: nach Prozessen. ITIL ist der De-facto-Standard dafür — die wichtigsten Begriffe, die dir im Konzern täglich begegnen werden: Incident (Störung: schnell Symptom beheben), Problem (Ursache dahinter: dauerhaft lösen — der Unterschied ist Prüfungsstoff UND Alltagsweisheit), Change (kontrollierte Änderung mit Freigabe, damit nicht Freitag 16 Uhr jemand die Produktion zerschießt), SLA (vertraglich zugesichertes Service-Level, z. B. „99,9 % Verfügbarkeit“). Klingt bürokratisch, verhindert aber genau das Chaos, das entsteht, wenn 500 Leute an einem System schrauben.",m:"Incident = Symptom schnell weg, Problem = Ursache dauerhaft weg. Verwechsle es nie im Konzern.",q:["Was unterscheidet Incident- von Problem-Management?",["Nichts","Incident behebt das Symptom, Problem die Ursache","Problem ist nur größer"],1]},
+{e:"Praxis",t:"Data Pipelines: Vom Rohdatum zum Dashboard",x:"Zwischen „Daten existieren“ und „Vorstand sieht Dashboard“ liegt die Pipeline: Extract (aus Quellsystemen holen), Transform (putzen! Duplikate, Formate, fehlende Werte — 80 % der echten Arbeit), Load (ins Data Warehouse). Modernes Muster: erst laden, dann im Warehouse transformieren (ELT), weil Speicher billig ist. Dazu Orchestrierung (Pipelines laufen nachts automatisch, brechen sauber ab, melden Fehler). Der Berufseinstieg über Datenpipelines + SQL ist einer der gefragtesten überhaupt — und bei einer Krankenkasse mit Millionen Datensätzen täglich Brot-und-Butter-Geschäft.",m:"80 % der Datenarbeit ist Putzen. ETL/ELT + SQL = einer der sichersten Berufseinstiege der Branche.",q:["Was ist erfahrungsgemäß der aufwendigste Teil einer Daten-Pipeline?",["Das Laden","Das Bereinigen/Transformieren","Das Dashboard-Design"],1]},
+{e:"Praxis",t:"LLMs & Prompt Engineering",x:"Sprachmodelle wie das, das dieses Tool gebaut hat, sind trainierte Muster-Vervollständiger — und ein Berufswerkzeug, das du beherrschen solltest wie Excel. Die vier Hebel guter Prompts: (1) Rolle & Kontext geben („Du bist Datenbank-Experte, ich bin Student …“), (2) konkrete Beispiele zeigen statt abstrakt beschreiben, (3) Format vorgeben (Tabelle, Liste, Schritte), (4) nachhaken und verfeinern statt neu würfeln. Und die Berufsregel Nummer eins, gerade im Gesundheitswesen: Niemals ungeprüfte KI-Ausgaben weiterreichen und niemals echte Personendaten in öffentliche Tools eingeben. Wer LLMs kontrolliert einsetzt, arbeitet messbar schneller — wer ihnen blind vertraut, produziert selbstbewussten Unsinn.",m:"Rolle + Beispiele + Format + Iteration. Und: nie Personendaten rein, nie ungeprüft raus.",q:["Was gehört zu einem guten Prompt?",["Möglichst wenig Kontext","Rolle, Beispiele und gewünschtes Format","Großbuchstaben"],1]}];
+
+/* ============ Endlose Vertiefung: Zyklen-Generator ============ */
+const CYCLE_TOPICS={
+ hi:["die Geschichte deiner Stadt und Region","dein Geburtsjahr und -jahrzehnt","ein Land von deiner Reise-Bucketlist","die Geschichte des Fußballs im Detail","eine historische Person deiner Wahl","die Geschichte Kasachstans nach 1991","ein aktueller Konflikt und seine historischen Wurzeln","die Geschichte einer Erfindung, die du täglich nutzt"],
+ it:["ein Skript, das einen nervigen Handgriff automatisiert","eine kleine Webseite über ein Thema, das du liebst","SQL-Übungen mit einem echten Übungsdatensatz","ein Dashboard aus echten Daten (z. B. deinem Training)","ein Programm, das eine API abfragt","einen Vokabeltrainer für deine Russisch-Wörter"],
+ ru:["Essen & Kochen","die Kindheit deiner Eltern","deine Zukunftspläne","Sport & Training","Reisen & Urlaub","Arbeit & Studium","Nachrichten & Weltgeschehen","Familie & Traditionen"]};
+function genCycle(area,n){
+ const tp=CYCLE_TOPICS[area][(n-1)%CYCLE_TOPICS[area].length];
+ if(area==='hi')return[
+  {e:"Zyklus "+n,t:"Forschungsauftrag: "+tp,x:"Du bist jetzt dein eigener Geschichtslehrer. Diese Woche erforschst du: "+tp+". Erster Schritt: 30 Minuten Wikipedia-Rabbit-Hole — starte beim Hauptartikel und folge 3 Links, die dich neugierig machen. Notiere 5 Dinge, die du nicht wusstest.",m:"Selbst recherchieren lernt tiefer als jede fertige Lektion.",q:null},
+  {e:"Zyklus "+n,t:"Doku-Abend",x:"Finde eine Doku (YouTube: ARTE, Terra X, MrWissen2go Geschichte) zu „"+tp+"“ und schau sie ganz. Schreib danach in 3 Sätzen auf, was die Kernaussage war.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Die Gegenseite",x:"Jede Geschichte hat mehrere Perspektiven. Finde zu „"+tp+"“ eine Sichtweise, die deiner ersten Quelle widerspricht oder sie ergänzt. Was erklärt den Unterschied?",m:null,q:null},
+  {e:"Zyklus "+n,t:"Erzähl es weiter",x:"Erzähle einer Person aus deinem Umfeld 3 Minuten lang das Spannendste über „"+tp+"“ — frei, ohne Notizen. (Oder: mach ein 60-Sekunden-Video daraus — Content!)",m:null,q:null},
+  {e:"Zyklus "+n,t:"Verbindung zu heute",x:"Finde eine aktuelle Nachricht, die mit „"+tp+"“ zusammenhängt, und formuliere in 2 Sätzen die Verbindung. Geschichte, die du anwenden kannst, bleibt.",m:null,q:null}];
+ if(area==='it')return[
+  {e:"Zyklus "+n,t:"Projekt: "+tp,x:"Dein neues Praxisprojekt: "+tp+". Heute nur definieren: Was genau soll es am Ende können? Ein Satz, messbar. Dann 20 Minuten recherchieren, welche Werkzeuge du brauchst (kostenlos: Python, VS Code, replit.com, sqlbolt.com).",m:"Projekte lehren, was Tutorials nie können: das Debuggen der Realität.",q:null},
+  {e:"Zyklus "+n,t:"Bauen, Teil 1",x:"25 Minuten Timer, dann bauen: die kleinste Version, die irgendetwas tut. Hässlich ist erlaubt, Hauptsache es läuft. Bei Fehlern: Fehlermeldung wörtlich googeln — das ist keine Schwäche, das ist der Beruf.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Bauen, Teil 2",x:"Zweite Session: eine Funktion mehr. Nutze eine KI als Pair-Programmer — aber tippe den Code selbst ab und erkläre dir jede Zeile laut. Kopieren ohne Verstehen ist verschwendete Zeit.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Aufräumen & dokumentieren",x:"Gib Variablen sprechende Namen, lösche toten Code, schreib 5 Zeilen README: Was tut es, wie startet man es? Dokumentieren ist Denken in Zeitlupe.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Vorzeigen & Learnings",x:"Zeig das Projekt einer Person (oder poste es auf GitHub). Notiere 3 Dinge, die du beim nächsten Projekt anders machst. Dann wartet Zyklus "+(n+1)+".",m:null,q:null}];
+ return[
+  {e:"Zyklus "+n,t:"Sprech-Woche: "+tp,x:"Dein Gesprächsthema diese Runde: "+tp+". Sammle 10 Wörter/Ausdrücke dazu (Übersetzer erlaubt, Lautschrift notieren) und sprich jedes 3× laut.",m:"Wortschatz wächst in Themen-Inseln, nicht alphabetisch.",q:null},
+  {e:"Zyklus "+n,t:"Das echte Gespräch",x:"Führe mit deinen Eltern 5–10 Minuten Gespräch über „"+tp+"“ — auf Russisch. Sag vorher: „Papráw menjá, jésli ja aschibájus“ (Korrigier mich, wenn ich Fehler mache).",m:null,q:null},
+  {e:"Zyklus "+n,t:"Hören & Verstehen",x:"Schau 10 Minuten russischsprachigen Content zu „"+tp+"“ (YouTube, russische Untertitel an). Schreib 5 neue Ausdrücke in Lautschrift auf.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Schreiben",x:"Schreib 5 Sätze über „"+tp+"“ — Lautschrift reicht. Benutze mindestens einmal „patamú schta“ (weil) und einmal eine Zeitangabe.",m:null,q:null},
+  {e:"Zyklus "+n,t:"Selbstgespräch aufnehmen",x:"Nimm dich 2 Minuten mit dem Handy auf, wie du frei über „"+tp+"“ sprichst. Anhören, 2 Verbesserungen notieren. Danach: Zyklus "+(n+1)+" mit neuem Thema.",m:null,q:null}];
+}
+
+/* ============ LERNHUB: Kostenlose Ressourcen ============ */
+const RESOURCES=[
+{k:["physio","anatomie","medizin","reha","massage"],r:[["Physiotutors (YouTube)","Evidenzbasierte Physio-Techniken & Tests, Hunderte Videos","youtube.com/@Physiotutors"],["Kenhub Anatomie","Kostenlose Anatomie-Artikel & Videos auf Deutsch","kenhub.com/de"],["Khan Academy Medicine","Physiologie-Grundlagen, kostenlos","khanacademy.org"]]},
+{k:["sql","datenbank","daten"],r:[["SQLBolt","Interaktiver SQL-Kurs im Browser, in 2 Stunden durchgespielt","sqlbolt.com"],["SQL-Practice","Echte Übungsaufgaben mit Beispiel-Datenbanken","sql-practice.com"],["Mode SQL Tutorial","Von Basics bis Analytics, praxisnah","mode.com/sql-tutorial"]]},
+{k:["python","programmier","coding","informatik","code","javascript","web"],r:[["freeCodeCamp","Kompletter Programmier-Lehrplan mit Zertifikaten, 100 % kostenlos","freecodecamp.org"],["CS50 (Harvard, YouTube)","Der beste Informatik-Einstiegskurs der Welt, frei verfügbar","cs50.harvard.edu"],["Programmieren Starten (YouTube)","Deutsche Python-Tutorials für Einsteiger","youtube.com/@ProgrammierenStarten"]]},
+{k:["foto","kamera","video","schnitt"],r:[["r/photoclass","Kompletter Foto-Jahreskurs auf Reddit, kostenlos","reddit.com/r/photoclass"],["Benjamin Jaworskyj (YouTube)","Deutsch, einfach erklärt, von Basics bis Bildgestaltung","youtube.com/@jaworskyj"],["CapCut Tutorials (YouTube)","Videoschnitt für Social Media, Suchbegriff „CapCut Anfänger“","youtube.com"]]},
+{k:["sprache","spanisch","englisch","französisch","russisch","language"],r:[["Language Transfer","Der beste kostenlose Audio-Sprachkurs — Denkmethode statt Pauken","languagetransfer.org"],["Easy Languages (YouTube)","Straßeninterviews mit Untertiteln, viele Sprachen","youtube.com/@easylanguages"],["Anki","Karteikarten-App mit Spaced Repetition, Goldstandard","apps.ankiweb.net"]]},
+{k:["fitness","training","kraft","muskel","gym","ernährung"],r:[["Jeff Nippard (YouTube)","Studienbasiertes Krafttraining, exzellent aufbereitet","youtube.com/@JeffNippard"],["Renaissance Periodization","Dr. Mike Israetel: Hypertrophie & Programmdesign","youtube.com/@RenaissancePeriodization"],["examine.com","Unabhängige Supplement- & Ernährungs-Studienlage","examine.com"]]},
+{k:["kochen","küche","rezept","backen"],r:[["J. Kenji López-Alt (YouTube)","Kochtechniken mit Warum-Erklärung — POV-Videos aus der Küche","youtube.com/@JKenjiLopezAlt"],["Ethan Chlebowski (YouTube)","Systematisch kochen lernen statt Rezepte nachkochen","youtube.com/@EthanChlebowski"],["Serious Eats","Riesige Technik-Datenbank, alles getestet","seriouseats.com"]]},
+{k:["geschichte","history","antike","krieg"],r:[["MrWissen2go Geschichte","Deutsche Geschichtserklärungen, top für Einstieg","youtube.com/@MrWissen2goGeschichte"],["Kings and Generals (YouTube)","Animierte Schlachten & Epochen, englisch","youtube.com/@KingsandGenerals"],["ZDF Terra X / ARTE Mediathek","Kostenlose Doku-Goldgrube","zdf.de / arte.tv"]]},
+{k:["finanz","geld","etf","invest","aktien","steuer"],r:[["Finanztip (YouTube + Web)","Verbraucherorientiert, deutsch, werbefrei finanziert","finanztip.de"],["Finanzfluss (YouTube)","ETF & Vermögensaufbau für Einsteiger","youtube.com/@Finanzfluss"],["Bundesanzeiger/BaFin-Verbraucherseiten","Offizielle, neutrale Basisinfos","bafin.de"]]},
+{k:["psycho","gewohnheit","habit","mental","meditation","selbst"],r:[["HealthyGamerGG (YouTube)","Psychiater erklärt Motivation, Gewohnheiten, Fokus","youtube.com/@HealthyGamerGG"],["Huberman Lab (Podcast)","Neurowissenschaft für Alltag: Schlaf, Fokus, Sport","hubermanlab.com"],["Kurzgesagt (YouTube)","Komplexe Themen in 10 Minuten, deutsch verfügbar","youtube.com/@KurzgesagtDE"]]},
+{k:["excel","power bi","tabellen","office"],r:[["Leila Gharani (YouTube)","Excel & Power BI von Basics bis Profi","youtube.com/@LeilaGharani"],["Excel Easy","Kostenloser Komplett-Kurs, Schritt für Schritt","excel-easy.com"],["Microsoft Learn","Offizielle kostenlose Lernpfade inkl. Power BI","learn.microsoft.com"]]},
+{k:["ki","ai","machine learning","llm","prompt"],r:[["Elements of AI","Kostenloser Uni-Kurs (deutsch), perfekter Einstieg","elementsofai.de"],["3Blue1Brown Neural Networks","Die schönste visuelle Erklärung neuronaler Netze","youtube.com/@3blue1brown"],["Andrej Karpathy (YouTube)","LLMs von Grund auf, für Fortgeschrittene","youtube.com/@AndrejKarpathy"]]},
+{k:["rad","bike","gravel","fahrrad","kardio","ausdauer"],r:[["GCN — Global Cycling Network","Alles über Radfahren: Technik, Training, Kaufberatung","youtube.com/@gcn"],["Rennrad-News & Gravel-Guides","Deutsche Kaufberatung & Routenplanung","rennrad-news.de"],["Komoot","Routenplaner — perfekt für deine Bauernhof-Runde","komoot.de"]]}];
+const RES_GENERIC=[["YouTube-Suche","Suche „[Thema] für Anfänger“ und „[Thema] erklärt“ — sortiere nach Aufrufen","youtube.com"],["Khan Academy / freeCodeCamp","Kostenlose strukturierte Kurse für fast alles Akademische & Technische","khanacademy.org"],["Wikipedia-Portal + Anki","Überblick im Portal-Artikel, Kernfakten in Karteikarten","wikipedia.org · apps.ankiweb.net"]];
+function findResources(topic){
+ const t=topic.toLowerCase();
+ for(const grp of RESOURCES){if(grp.k.some(k=>t.includes(k)))return grp.r}
+ return RES_GENERIC;
+}
+</script>
+
+<script>
+/* ============ ZIELE: Dein Zielbild in 1–5 Jahren ============ */
+/* Alle Meilensteine sind EINMALIG erreichbar. auto = wird aus deinem Fortschritt berechnet. */
 const GOALS=[
-{id:'gh',c:'var(--c-body)',t:'Optimale Gesundheit',h:'laufend',
- d:'Kraft, Schlaf, Ernährung, Vorsorge — ein Körper, der Jahrzehnte halten soll.',
- ms:[{t:'Wochenplan 12 Wochen am Stück durchgezogen'},
- {t:'Einen Monat lang ø 7,5+ Stunden Schlaf'},
- {t:'Protein-Ziel 30 Tage in Folge getroffen'},
+{id:'gh',c:'var(--c-body)',t:'Optimale Gesundheit',h:'Gesundheit',
+ d:'Gym als Routine, selbst kochen, Kardio draußen, Vorsorge — ein Körper in Bestform.',
+ ms:[{t:'10 Gerichte, die du ohne Rezept kochen kannst'},
+ {t:'Gravel Bike gekauft'},
+ {t:'Wöchentliche Rad-Tour zum Bauernhof (Milch & Honig) ist Routine'},
+ {t:'Schlafroutine mit fester Aufstehzeit etabliert'},
  {t:'Check-up + großes Blutbild beim Arzt gemacht'},
  {t:'Alle Körper-Wissenskarten verinnerlicht',auto:()=>['bel','erh','ern'].every((k,ki)=>[KNOW_BEL,KNOW_ERH,KNOW_ERN][ki].every((_,i)=>S.known[k+i]))}]},
-{id:'gr',c:'var(--c-ru)',t:'Russisch fließend',h:'1–3 Jahre',
- d:'Vom Verstehen zum echten Sprechen — mit Familie, im Urlaub, am Telefon.',
- ms:[{t:'10 Lektionen abgeschlossen',auto:()=>S.ru.cur>=10},
- {t:'Alle 30 Lektionen abgeschlossen',auto:()=>S.ru.cur>=30},
+{id:'gr',c:'var(--c-ru)',t:'Russisch sprechen',h:'Sprache',
+ d:'Vom Verstehen zum echten Sprechen — mit Familie, am Telefon, im Urlaub.',
+ ms:[{t:'Grundkurs: 30 Lektionen abgeschlossen',auto:()=>S.ru.stage>0||S.ru.cur>=30},
+ {t:'Stufe 2: Grammatik & Ausdruck abgeschlossen',auto:()=>S.ru.stage>1},
  {t:'5-Minuten-Gespräch mit den Eltern geführt'},
  {t:'Ein Telefonat mit Verwandten komplett auf Russisch'},
  {t:'Einen Film/Serie auf Russisch verstanden'},
  {t:'Im Urlaub selbstständig Russisch gesprochen'}]},
-{id:'gt',c:'var(--c-tt)',t:'TikTok als Einnahmequelle',h:'1–2 Jahre',
+{id:'gj',c:'var(--c-it)',t:'Karriere & Freiheit',h:'Arbeit',
+ d:'Stabile Arbeit mit gutem Gehalt und viel Homeoffice-Flexibilität.',
+ ms:[{t:'Informatik-Grundkurs abgeschlossen',auto:()=>S.it.stage>0||S.it.cur>=24},
+ {t:'Studium erfolgreich abgeschlossen (Sep 2027)'},
+ {t:'Festanstellung mit gutem Gehalt gesichert'},
+ {t:'Homeoffice-Flexibilität verhandelt'},
+ {t:'Erste Gehalts-/Eingruppierungsverhandlung geführt'}]},
+{id:'gt',c:'var(--c-tt)',t:'TikTok-Einnahmequelle',h:'Einkommen',
  d:'Von null auf ein Konto, das jeden Monat Geld überweist.',
  ms:[{t:'Nische gewählt und Account aufgebaut',auto:()=>S.tt.niche!==null},
  {t:'30-Tage-Playbook komplett durchgezogen',auto:()=>S.tt.done.length>=30},
@@ -1073,7 +1255,7 @@ const GOALS=[
  {t:'Ersten Euro verdient (Affiliate oder Creator-Programm)'},
  {t:'10.000 Follower — Creator-Programm freigeschaltet'},
  {t:'500 € in einem Monat verdient'}]},
-{id:'gf',c:'var(--c-fin)',t:'Stabile Finanzen',h:'1–5 Jahre',
+{id:'gf',c:'var(--c-fin)',t:'Stabile Finanzen',h:'Geld',
  d:'Notgroschen, Auto bar bezahlt, eigene Wohnung, wachsendes Depot.',
  ms:[{t:'Alle 12 Finanz-Lektionen durchgearbeitet',auto:()=>S.fin.done.length>=12},
  {t:'Notgroschen (5.000 €) liegt separat auf Tagesgeld'},
@@ -1081,35 +1263,36 @@ const GOALS=[
  {t:'Auto bar gekauft — ohne Kredit'},
  {t:'Eigene Wohnung bezogen, Budget hält'},
  {t:'25.000 € Nettovermögen erreicht'}]},
-{id:'gv',c:'#14B8A6',t:'Schöne Reisen',h:'jedes Jahr',
- d:'Mindestens eine Reise pro Jahr, die du nie vergisst — geplant statt verschoben.',
+{id:'gv',c:'#14B8A6',t:'Viel Reisen',h:'Welt',
+ d:'Jedes Jahr mindestens eine Reise in ein Land, das du noch nicht kennst.',
  ms:[{t:'Bucketlist mit 10 Zielen gefüllt',auto:()=>S.travel.length>=10},
  {t:'Nächste Reise konkret gebucht'},
  {t:'3 neue Länder besucht',auto:()=>S.travel.filter(x=>x.done).length>=3},
  {t:'Heimatreise: Kasachstan mit der Familie'},
  {t:'Die eine große Traumreise gemacht'}]},
-{id:'gw',c:'var(--c-hi)',t:'Umfassendes Wissen',h:'laufend',
- d:'Geschichte, Informatik, Bücher, Lernhub — jeden Tag ein Stück klüger.',
- ms:[{t:'Weltgeschichte: alle 48 Kapitel',auto:()=>S.hi.cur>=48},
- {t:'Informatik: alle 24 Lektionen',auto:()=>S.it.cur>=24},
+{id:'gw',c:'var(--c-hi)',t:'Umfassendes Wissen',h:'Bildung',
+ d:'Geschichte, Bücher, Lernhub — jeden Tag ein Stück klüger, ohne Endpunkt.',
+ ms:[{t:'Weltgeschichte: alle 48 Kapitel',auto:()=>S.hi.stage>0||S.hi.cur>=48},
+ {t:'Geschichte Stufe 2: Themen-Vertiefungen',auto:()=>S.hi.stage>1},
  {t:'Ersten Lernhub-Plan abgeschlossen',auto:()=>S.hub.plans.some(p=>p.done.length&&p.done.every(x=>x))},
- {t:'12 Bücher gelesen (1 pro Monat)'},
- {t:'100-Tage-Serie geschafft',auto:()=>streak()>=100}]},
-{id:'ge',c:'#E8853D',t:'Neue Erfahrungen',h:'laufend',
- d:'Sachen machen, von denen du in 40 Jahren erzählst — eine pro Monat.',
+ {t:'12 Bücher gelesen'},
+ {t:'Ein Wissensgebiet so gut, dass du es anderen erklärst'}]},
+{id:'ge',c:'#E8853D',t:'Neue Erfahrungen',h:'Leben',
+ d:'Dinge tun, von denen du in 40 Jahren erzählst.',
  ms:[{t:'5 Erfahrungen abgehakt',auto:()=>S.exp.filter(x=>x.done).length>=5},
  {t:'15 Erfahrungen abgehakt',auto:()=>S.exp.filter(x=>x.done).length>=15},
- {t:'Eine Sache gemacht, vor der du richtig Respekt hattest'},
- {t:'Einen Monat lang jede Woche etwas Neues probiert'}]}];
+ {t:'Eine Sache gemacht, vor der du richtig Respekt hattest'}]},
+{id:'gs',c:'#E85D8A',t:'Menschen & Beziehung',h:'Sozial',
+ d:'Ein volles Leben braucht Menschen — Freundschaften pflegen, offen für die Richtige.',
+ ms:[{t:'Regelmäßige Unternehmungen mit Freunden etabliert'},
+ {t:'Aktiv neue Menschen kennengelernt (außerhalb von Verein & Arbeit)'},
+ {t:'In einer glücklichen Beziehung'}]}];
 
-/* ============ REISEN: Startvorschläge ============ */
+/* ============ REISEN & ERFAHRUNGEN: Startvorschläge ============ */
 const TRAVEL_SUGG=["Kasachstan — Heimatreise mit der Familie","Japan — Tokio & Kyoto","Island — Ringstraße","Norwegen — Fjorde","Italien — Amalfiküste","Kroatien — Segeltörn","Schottland — Highlands","Marokko — Marrakesch & Wüste","Thailand — Inseln","Schweiz — Alpenpanorama","Georgien — Kaukasus & Küche","New York im Winter"];
-
-/* ============ ERFAHRUNGEN: Startvorschläge ============ */
-const EXP_SUGG=["Halbmarathon laufen","Fallschirmsprung","Eisbaden im Winter","Blut spenden","Solo-Wochenendtrip","Russischen Kochkurs machen (oder mit Mama kochen lernen)","Vor Publikum sprechen","Auf ein Festival fahren","Sonnenaufgangs-Wanderung","24 Stunden komplett ohne Handy","Sprach-Tandempartner treffen","Einen Tag ehrenamtlich helfen","Sauna-Aufguss-Zeremonie erleben","Bouldern ausprobieren","Schach lernen und 10 Partien spielen","Ein Buch an einem Wochenende durchlesen"];
+const EXP_SUGG=["Gravel-Tour zum Bauernhof — Milch & Honig direkt vom Hof","Halbmarathon laufen","Fallschirmsprung","Eisbaden im Winter","Blut spenden","Solo-Wochenendtrip","Mit Mama ein russisches Gericht kochen lernen","Vor Publikum sprechen","Auf ein Festival fahren","Sonnenaufgangs-Wanderung","24 Stunden komplett ohne Handy","Sprach-Tandempartner treffen","Einen Tag ehrenamtlich helfen","Sauna-Aufguss-Zeremonie erleben","Bouldern ausprobieren","Ein Buch an einem Wochenende durchlesen"];
 
 /* ============ LERNHUB: Plan-Vorlagen ============ */
-/* {T} wird durch dein Thema ersetzt */
 const HUB_TYPES=[
 {k:'skill',l:'Praktisch können',d:'Du willst {T} selbst ausüben können'},
 {k:'know',l:'Tief verstehen',d:'Du willst {T} durchdringen und erklären können'},
@@ -1117,35 +1300,35 @@ const HUB_TYPES=[
 const HUB_PLAN={
  phases:["Woche 1 · Landkarte","Woche 2 · Grundlagen","Woche 3 · Praxis","Woche 4 · Festigen"],
  common:[
-  ["20-Minuten-Überblick: Schau 2 gute Einführungsvideos zu {T} („{T} erklärt“, „{T} für Anfänger“) und notiere, was dich am meisten überrascht hat.",
-   "Landkarte zeichnen: Teile {T} auf einem Blatt in 4–6 Teilgebiete auf. Du musst sie noch nicht verstehen — nur wissen, dass es sie gibt.",
-   "Die 3 besten Ressourcen finden: 1 Buch (Rezensionen checken), 1 YouTube-Kanal, 1 Kurs oder Podcast zu {T}. Nur diese drei — mehr sammeln ist Prokrastination.",
-   "Mini-Glossar: Schreib die 15 wichtigsten Fachbegriffe von {T} mit je einem Satz Erklärung auf.",
-   "Dein 4-Wochen-Ziel in einem Satz: „Nach 4 Wochen kann ich bei {T} konkret …“ — messbar und ehrlich."],
-  ["Lernrhythmus starten: 25 Minuten {T} pro Tag, feste Uhrzeit, Timer an. Heute: Kapitel 1 deiner Hauptressource.",
-   "Feynman-Technik: Erkläre laut in einfachen Worten, was du bisher über {T} weißt — als würdest du es einem 12-Jährigen erklären. Wo du stockst, liegt deine Lücke.",
-   "20 Karteikarten (App oder Papier) mit den Kernfakten von {T} anlegen und erste Runde wiederholen.",
-   "Einem Praktiker zuhören: Interview, Podcast oder Vlog von jemandem, der {T} täglich macht. Notiere: Was davon stand NICHT in den Grundlagen?",
+  ["20-Minuten-Überblick: Suche auf YouTube „{T} erklärt“ und „{T} für Anfänger“, schau die 2 meistgeklickten Videos und notiere, was dich am meisten überrascht hat.",
+   "Landkarte zeichnen: Öffne den Wikipedia-Artikel zu {T} und zeichne aus dem Inhaltsverzeichnis eine Übersicht mit 4–6 Teilgebieten auf ein Blatt.",
+   "Deine 3 Ressourcen festlegen (Vorschläge stehen oben in der Ressourcen-Box): 1 Hauptkurs/Kanal, 1 Nachschlagewerk, 1 Praktiker zum Zuschauen. Mehr sammeln ist Prokrastination.",
+   "Mini-Glossar: Schreib die 15 wichtigsten Fachbegriffe von {T} mit je einem Satz Erklärung auf — Wikipedia + dein Hauptkurs reichen dafür.",
+   "Dein 4-Wochen-Ziel in einem Satz aufschreiben: „Nach 4 Wochen kann ich bei {T} konkret …“ — messbar und ehrlich."],
+  ["Lernrhythmus starten: 25 Minuten {T} pro Tag, feste Uhrzeit, Timer an. Heute: Lektion/Kapitel 1 deiner Hauptressource.",
+   "Feynman-Technik: Erkläre laut in einfachen Worten, was du bisher über {T} weißt — als würdest du es einem 12-Jährigen erklären. Wo du stockst, liegt deine Lücke: notieren.",
+   "Lade Anki (kostenlos, apps.ankiweb.net) und lege 20 Karteikarten mit den Kernfakten von {T} an. Erste Wiederholungsrunde direkt machen.",
+   "Einem Praktiker zuhören: Such einen Podcast oder ein Interview mit jemandem, der {T} täglich macht (YouTube: „{T} Interview“ / „day in the life“). Notiere: Was davon stand NICHT in den Grundlagen?",
    "Zwischenbilanz: Welches Teilgebiet deiner Landkarte zieht dich am meisten? Das wird dein Praxis-Schwerpunkt für Woche 3."],
-  {skill:["Erstes echtes Üben: Führe die grundlegendste Tätigkeit von {T} selbst aus — klein, unperfekt, aber real.",
-   "Übungsroutine: Wiederhole die Kernübung von {T} an drei Tagen. Führe eine Fehlerliste: Was ging schief, was änderst du?",
-   "Schau einem Könner live oder im Video über die Schulter und vergleiche mit deiner Ausführung — 3 Unterschiede notieren.",
-   "Feedback holen: Zeig deine Ausführung von {T} einem Menschen, der es kann (Verein, Forum, Reddit, Bekannte) und stell 2 konkrete Fragen.",
-   "Steigerung: Übe die Kernübung mit einer Schwierigkeit mehr als beim ersten Mal."],
+  {skill:["Erstes echtes Üben: Führe die grundlegendste Tätigkeit von {T} selbst aus — klein, unperfekt, aber real. Vorher 1 Anleitung deiner Hauptressource dazu anschauen.",
+   "Übungsroutine: Wiederhole die Kernübung von {T} an drei Tagen. Führe eine Fehlerliste: Was ging schief, was änderst du beim nächsten Mal?",
+   "Schau einem Könner zu (YouTube: „{T} Profi“ oder live) und vergleiche mit deiner Ausführung — 3 konkrete Unterschiede notieren.",
+   "Feedback holen: Zeig deine Ausführung von {T} einem Menschen, der es kann — Reddit-Community, Forum, Verein oder Bekannte. Stell 2 konkrete Fragen.",
+   "Steigerung: Übe die Kernübung mit einer Schwierigkeit mehr als beim ersten Mal — und miss dich an deiner Fehlerliste von Tag 2."],
   know:["Schreibe eine 2-Seiten-Zusammenfassung von {T} in eigenen Worten — ohne beim Schreiben nachzuschlagen, erst danach korrigieren.",
-   "Suche die Gegenposition: Was ist an {T} umstritten, wo irren sich Anfänger typischerweise? 3 Punkte notieren.",
-   "Wende {T} auf einen echten Fall an: Analysiere ein aktuelles Beispiel aus Nachrichten oder deinem Alltag mit dem, was du gelernt hast.",
-   "Feedback holen: Poste eine These zu {T} in einem Fachforum oder stell sie jemandem vom Fach — lass dich korrigieren.",
-   "Verbinde {T} mit etwas, das du schon gut kennst (Fußball, Fitness, IT, Geld): Schreib 5 Parallelen auf."],
-  job:["Finde heraus, wie {T} in deinem Umfeld (AOK, Studium) konkret eingesetzt wird — frag eine Person, die damit arbeitet.",
-   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an — dokumentiere Vorgehen und Ergebnis.",
-   "Lerne das wichtigste Werkzeug/Programm rund um {T} in einer 30-Minuten-Session kennen.",
-   "Feedback holen: Zeig deine Anwendung von {T} einem Kollegen oder Dozenten und frag: „Was würdest du anders machen?“",
-   "Notiere, wie {T} in deinem Lebenslauf/Jahresgespräch auftauchen könnte — mit deinem Praxisbeispiel als Beleg."]},
+   "Suche die Gegenposition: Was ist an {T} umstritten, wo irren sich Anfänger typischerweise? Google „{T} Mythen“ und „{T} Kritik“, 3 Punkte notieren.",
+   "Wende {T} auf einen echten Fall an: Analysiere ein aktuelles Beispiel aus Nachrichten oder deinem Alltag mit dem, was du gelernt hast — schriftlich, 10 Sätze.",
+   "Feedback holen: Poste eine These zu {T} im passenden Subreddit oder Fachforum — oder stell sie jemandem vom Fach. Lass dich korrigieren.",
+   "Verbinde {T} mit etwas, das du schon gut kennst (Fußball, Fitness, IT, Geld): Schreib 5 Parallelen auf — so verankert sich Wissen."],
+  job:["Finde heraus, wie {T} in deinem Umfeld (AOK, Studium) konkret eingesetzt wird — frag diese Woche eine Person, die damit arbeitet.",
+   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an — dokumentiere Vorgehen und Ergebnis in 10 Sätzen.",
+   "Lerne das wichtigste Werkzeug rund um {T} kennen: 30-Minuten-Session mit einem kostenlosen Tutorial (Microsoft Learn, YouTube, Hersteller-Doku).",
+   "Feedback holen: Zeig deine Anwendung von {T} einem Kollegen oder Dozenten und frag wörtlich: „Was würdest du anders machen?“",
+   "Notiere, wie {T} in Lebenslauf und Jahresgespräch auftauchen kann — mit deinem Praxisbeispiel als Beleg."]},
   ["Teach-back: Erkläre {T} einer echten Person 10 Minuten lang frei — oder nimm ein 60-Sekunden-Video auf (TikTok-Synergie!).",
-   "Selbsttest: Beantworte die 10 wichtigsten Fragen zu {T} aus dem Gedächtnis, dann korrigieren. Unter 7 richtig? Lücken in die Karteikarten.",
-   "Wiederholungstermine setzen: Karteikarten-Wiederholung in 1 Woche, 1 Monat, 3 Monaten — jetzt in den Kalender.",
-   "Nächste Stufe definieren: Was wäre das nächste 4-Wochen-Ziel bei {T}, wenn du weitermachst? Aufschreiben — entscheiden kannst du später.",
+   "Selbsttest: Beantworte die 10 wichtigsten Fragen zu {T} aus dem Gedächtnis, dann korrigieren. Unter 7 richtig? Lücken zurück in die Anki-Karten.",
+   "Wiederholungstermine setzen: Anki-Wiederholung in 1 Woche, 1 Monat, 3 Monaten — jetzt in den Kalender eintragen.",
+   "Nächste Stufe definieren: Was wäre das nächste 4-Wochen-Ziel bei {T}? Aufschreiben — entscheiden kannst du später.",
    "Abschluss-Bilanz: Vergleiche dein Können mit deinem Satz aus Woche 1. Was hast du erreicht, was hat dich überrascht?"]]
 };
 function hubTasks(type){
@@ -1159,12 +1342,17 @@ const $=s=>document.querySelector(s);
 const LSKEY='momentum-v1';
 function load(){try{const r=localStorage.getItem(LSKEY);if(r)return JSON.parse(r)}catch(e){}return null}
 let S=load()||{};
-S.mode=S.mode||'normal';S.days=S.days||{};S.ru=S.ru||{cur:0};S.hi=S.hi||{cur:0};S.it=S.it||{cur:0};
+S.mode=S.mode||'normal';S.days=S.days||{};
+S.ru=S.ru||{cur:0};S.ru.stage=S.ru.stage||0;
+S.hi=S.hi||{cur:0};S.hi.stage=S.hi.stage||0;
+S.it=S.it||{cur:0};S.it.stage=S.it.stage||0;
 S.fin=S.fin||{};S.fin.done=S.fin.done||[];S.fin.inp=S.fin.inp||{};
 S.tt=S.tt||{niche:null,done:[]};S.shown=S.shown||{};
 S.plan=S.plan||PLAN_DEF.slice();S.known=S.known||{};
 S.goals=S.goals||{};S.travel=S.travel||[];S.exp=S.exp||[];S.hub=S.hub||{plans:[]};
+S.goalsCustom=S.goalsCustom||{};S.customGoals=S.customGoals||[];
 function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 
 /* ================= Datum ================= */
 const EPOCH=new Date(2026,6,13);
@@ -1177,6 +1365,19 @@ const MONTHS=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov'
 const WD=['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
 const WD_SHORT=['Mo','Di','Mi','Do','Fr','Sa','So'];
 const planIdxToday=(NOW.getDay()+6)%7;
+
+/* ================= Kurs-Stufen ================= */
+const STAGES={ru:[RU,RU2],hi:[HIST,HIST2],it:[IT,IT2]};
+function cData(k){
+ const st=S[k].stage, emb=STAGES[k];
+ return st<emb.length?emb[st]:genCycle(k,st-emb.length+1);
+}
+function stageName(k){
+ const st=S[k].stage, emb=STAGES[k].length;
+ return st<emb?'Stufe '+(st+1):'Zyklus '+(st-emb+1);
+}
+function courseDone(k){return S[k].cur>=cData(k).length}
+function unlockNext(k){S[k].stage++;S[k].cur=0;save()}
 
 /* ================= SVG-Ring ================= */
 function ring(pct,color,size,label){
@@ -1198,20 +1399,20 @@ const BONUS=[
  {id:'b6',t:'20 Minuten spazieren, Handy bleibt zu Hause',s:'Bestes Kopf-Reset-Tool, kostet nichts'},
  {id:'b7',t:'Kleinen Betrag aufs Tagesgeld überweisen',s:'Auch 10 € zählen — die Gewohnheit ist das Ziel'},
  {id:'b8',t:'15 Minuten deine nächste Reise recherchieren',s:'Flüge, Route, beste Zeit — Vorfreude zählt doppelt'},
- {id:'b9',t:'Plane deine Erfahrung des Monats',s:'Eine aus deiner Leben-Liste konkret terminieren'}];
+ {id:'b9',t:'Koch heute ein Gericht komplett selbst',s:'Ohne Lieferdienst — jedes selbst gekochte Gericht zählt für dein Repertoire'},
+ {id:'b10',t:'45+ Minuten Kardio draußen',s:'Rad, Laufen, strammer Spaziergang — Ausdauer ist die Basis'}];
 
+function courseMission(k,tag,tab,word){
+ if(courseDone(k))return{id:k==='hi'?'hi':k,tag:tag,tab:tab,t:stageName(k)+' geschafft — neue Stufe freischalten!',s:'Im '+tag+'-Tab wartet die nächste Vertiefung'};
+ const d=cData(k)[S[k].cur];
+ return{id:k,tag:tag,tab:tab,t:(S[k].stage>0?stageName(k)+' · ':'')+word+' '+(S[k].cur+1)+': '+d.t,s:d.q?'Lesen + Quiz (~3 Min.)':'Praxis-Auftrag — Details im Tab'};
+}
 function activeHubPlan(){return S.hub.plans.find(p=>p.done.some(x=>!x))}
 function missions(){
  const m=[];
- m.push({id:'ru',tag:'Russisch',tab:'lernen/ru',
-  t:S.ru.cur>=RU.length?'Blitz-Wiederholung: 5 Fragen':'Lektion '+(S.ru.cur+1)+': '+RU[Math.min(S.ru.cur,RU.length-1)].t,
-  s:'4 Sätze laut sprechen + Mini-Quiz (~5 Min.)'});
- const hiM={id:'hi',tag:'Geschichte',tab:'lernen/hist',
-  t:S.hi.cur>=HIST.length?'Wiederholung: ein altes Kapitel':'Kapitel '+(S.hi.cur+1)+': '+HIST[Math.min(S.hi.cur,HIST.length-1)].t,
-  s:'2 Minuten lesen + 1 Quizfrage'};
- const itM={id:'it',tag:'Informatik',tab:'lernen/it',
-  t:S.it.cur>=IT.length?'Wiederholung: eine alte Lektion':'Lektion '+(S.it.cur+1)+': '+IT[Math.min(S.it.cur,IT.length-1)].t,
-  s:'2 Minuten lesen + 1 Quizfrage'};
+ m.push(Object.assign(courseMission('ru','Russisch','lernen/ru','Lektion'),{s:'Sätze laut sprechen + Quiz (~5 Min.)'}));
+ const hiM=courseMission('hi','Geschichte','lernen/hist','Kapitel');
+ const itM=courseMission('it','Informatik','lernen/it','Lektion');
  const ttTotal=TT.reduce((a,p)=>a+p.d.length,0);
  const ttM={id:'tt',tag:'TikTok',tab:'tt',
   t:S.tt.niche===null?'Schritt 0: Wähle deine Nische':(S.tt.done.length>=ttTotal?'Dein Wochenrhythmus: heutigen Task machen':'Playbook Tag '+(S.tt.done.length+1)),
@@ -1310,10 +1511,10 @@ $('#modeRow').addEventListener('click',e=>{
 /* ================= Ringe + Heatmap ================= */
 function renderRings(){
  const items=[
-  ['Russisch',S.ru.cur/RU.length,'var(--c-ru)'],
-  ['Geschichte',S.hi.cur/HIST.length,'var(--c-hi)'],
-  ['Informatik',S.it.cur/IT.length,'var(--c-it)'],
-  ['TikTok',S.tt.done.length/30,'var(--c-tt)'],
+  ['Russisch',S.ru.cur/cData('ru').length,'var(--c-ru)'],
+  ['Geschichte',S.hi.cur/cData('hi').length,'var(--c-hi)'],
+  ['Informatik',S.it.cur/cData('it').length,'var(--c-it)'],
+  ['TikTok',Math.min(1,S.tt.done.length/30),'var(--c-tt)'],
   ['Geld',S.fin.done.length/FIN.length,'var(--c-fin)']];
  $('#ringsRow').innerHTML=items.map(([l,p,c])=>
   '<div class="ring-item">'+ring(p,c,56,l)+'<span>'+l+'</span></div>').join('');
@@ -1321,7 +1522,7 @@ function renderRings(){
 function renderHeat(){
  const cells=[];
  const start=new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate());
- start.setDate(start.getDate()-((NOW.getDay()+6)%7)-49); // Montag vor 7 Wochen
+ start.setDate(start.getDate()-((NOW.getDay()+6)%7)-49);
  for(let w=0;w<8;w++)for(let d=0;d<7;d++){
   const dt=new Date(start);dt.setDate(start.getDate()+w*7+d);
   const k=dkey(dt);
@@ -1383,36 +1584,58 @@ function bindQuiz(el,onPass){
   }
  });
 }
+function completionHTML(k,label){
+ return '<div style="text-align:center;padding:26px 8px">'
+  +'<div style="font-size:38px">🎉</div>'
+  +'<h2 class="mt">'+stageName(k)+' komplett!</h2>'
+  +'<p class="sub mt">Hier ist nie Schluss: Die nächste Runde geht tiefer — '+label+'</p>'
+  +'<button class="btn mt" data-unlock="'+k+'">'+(S[k].stage+1<STAGES[k].length?'Stufe '+(S[k].stage+2)+' starten →':'Nächsten Zyklus starten →')+'</button></div>';
+}
+function nextStageLabel(k){
+ if(S[k].stage+1<STAGES[k].length)return k==='ru'?'Stufe 2: Grammatik & Ausdruck (12 Lektionen).':k==='hi'?'Stufe 2: Themen-Vertiefungen (12 Kapitel).':'Stufe 2: Praxis & Tiefe (12 Lektionen).';
+ return 'selbstständige Vertiefungs-Zyklen mit Praxis-Aufträgen, endlos generiert.';
+}
 
 /* ================= RUSSISCH ================= */
-let ruView=Math.min(S.ru.cur,RU.length-1);
+let ruView=Math.min(S.ru.cur,Math.max(0,cData('ru').length-1));
 function renderRu(){
- const L=RU[ruView];
+ const data=cData('ru');
+ $('#ruProgLbl').textContent=stageName('ru')+' · '+Math.min(S.ru.cur+1,data.length)+' / '+data.length;
+ $('#ruProgBar').style.width=(Math.min(S.ru.cur,data.length)/data.length*100)+'%';
+ if(courseDone('ru')){$('#ruLesson').innerHTML=completionHTML('ru',nextStageLabel('ru'));return}
+ const L=data[ruView];
  const isCur=ruView===S.ru.cur, passed=ruView<S.ru.cur;
- $('#ruProgLbl').textContent='Lektion '+(ruView+1)+' / '+RU.length;
- $('#ruProgBar').style.width=(Math.min(S.ru.cur,RU.length)/RU.length*100)+'%';
+ if(L.x!==undefined){ /* Zyklus-Auftrag */
+  $('#ruLesson').innerHTML='<span class="pill amber">'+L.e+'</span><h2 class="mt">'+L.t+'</h2>'
+   +'<p class="mt" style="font-size:15px">'+L.x+'</p>'
+   +(L.m?'<div class="action-box"><b>Merk dir:</b> '+L.m+'</div>':'')
+   +(isCur?'<button class="btn mt" id="ruCyc">Erledigt ✓</button>':'<p class="sub mt">Schon erledigt ✓</p>');
+  const b=$('#ruCyc');
+  if(b)b.addEventListener('click',()=>{S.ru.cur++;save();completeMission('ru');ruView=Math.min(S.ru.cur,cData('ru').length-1);renderRu()});
+  return;
+ }
  $('#ruLesson').innerHTML=
-  '<div class="eyebrow">Lektion '+(ruView+1)+(passed?' · geschafft ✓':'')+'</div>'
+  '<div class="eyebrow">'+stageName('ru')+' · Lektion '+(ruView+1)+(passed?' · geschafft ✓':'')+'</div>'
   +'<h2>'+L.t+'</h2><p class="sub">'+L.f+'</p>'
   +'<div class="mt">'+L.p.map(p=>'<div class="ru-item"><div class="ru-phrase">'+p[0]+'</div><div class="ru-de">'+p[1]+'</div><div class="ru-cyr">'+p[2]+'</div></div>').join('')+'</div>'
   +'<div class="speak"><b>Sprech-Auftrag</b>'+L.s+'</div>'
   +quizHTML(L.q)
   +(passed?'<p class="sub mt">Schon abgeschlossen — Wiederholen schadet nie.</p>':'');
  bindQuiz($('#ruLesson .quiz'),()=>{
-  if(isCur){S.ru.cur=Math.min(S.ru.cur+1,RU.length);save();completeMission('ru');
-   $('#ruLesson .qstate').insertAdjacentHTML('beforeend','<button class="btn mt" id="ruAdv">Nächste Lektion →</button>');
-   const a=$('#ruAdv');if(a)a.addEventListener('click',()=>{ruView=Math.min(S.ru.cur,RU.length-1);renderRu()});
+  if(isCur){S.ru.cur++;save();completeMission('ru');
+   $('#ruLesson .qstate').insertAdjacentHTML('beforeend','<button class="btn mt" id="ruAdv">Weiter →</button>');
+   const a=$('#ruAdv');if(a)a.addEventListener('click',()=>{ruView=Math.min(S.ru.cur,cData('ru').length-1);renderRu()});
   }
  });
 }
 $('#ruPrev').addEventListener('click',()=>{if(ruView>0){ruView--;renderRu()}});
-$('#ruNext').addEventListener('click',()=>{if(ruView<Math.min(S.ru.cur,RU.length-1)){ruView++;renderRu()}});
+$('#ruNext').addEventListener('click',()=>{if(ruView<Math.min(S.ru.cur,cData('ru').length-1)){ruView++;renderRu()}});
 $('#ruRevStart').addEventListener('click',startReview);
 function startReview(){
- const n=Math.min(S.ru.cur,RU.length);
- if(n===0){$('#ruReview').innerHTML='<p class="sub">Schließe erst Lektion 1 ab — dann gibt es hier Futter.</p>';return}
+ const learned=S.ru.stage>0?RU.concat(S.ru.stage>1?RU2:RU2.slice(0,S.ru.cur)):RU.slice(0,S.ru.cur);
  const pool=[];
- for(let i=0;i<n;i++)RU[i].q.forEach(q=>pool.push(q));
+ learned.forEach(l=>{if(l.q)l.q.forEach(q=>pool.push(q))});
+ if(!pool.length){$('#ruReview').innerHTML='<p class="sub">Schließe erst Lektion 1 ab — dann gibt es hier Futter.</p>';return}
  const pick=[];
  while(pick.length<Math.min(5,pool.length)){
   const q=pool[Math.floor(Math.random()*pool.length)];
@@ -1422,85 +1645,159 @@ function startReview(){
  bindQuiz($('#ruReview .quiz'),()=>{
   $('#ruReview .qstate').insertAdjacentHTML('beforeend','<button class="btn mt" id="ruRevAgain">Noch eine Runde</button>');
   const a=$('#ruRevAgain');if(a)a.addEventListener('click',startReview);
-  if(S.ru.cur>=RU.length)completeMission('ru');
  });
 }
+$('#sub-ru').addEventListener('click',e=>{
+ const u=e.target.closest('[data-unlock="ru"]');
+ if(u){unlockNext('ru');ruView=0;renderRu();renderMissions()}
+});
 
 /* ================= Kurse (Geschichte + Informatik) ================= */
-function makeCourse(cfg){
- let view=Math.min(cfg.state().cur,cfg.data.length-1);
+const courseRender={};
+function makeCourse(k,cfg){
+ let view=Math.min(S[k].cur,Math.max(0,cData(k).length-1));
  function render(){
-  const st=cfg.state();
-  const H=cfg.data[view];
-  const isCur=view===st.cur, passed=view<st.cur;
-  $(cfg.lbl).textContent=cfg.word+' '+(view+1)+' / '+cfg.data.length;
-  $(cfg.bar).style.width=(Math.min(st.cur,cfg.data.length)/cfg.data.length*100)+'%';
+  const data=cData(k);
+  $(cfg.lbl).textContent=stageName(k)+' · '+Math.min(S[k].cur+1,data.length)+' / '+data.length;
+  $(cfg.bar).style.width=(Math.min(S[k].cur,data.length)/data.length*100)+'%';
+  if(courseDone(k)){$(cfg.host).innerHTML=completionHTML(k,nextStageLabel(k));return}
+  const H=data[view];
+  const isCur=view===S[k].cur, passed=view<S[k].cur;
   $(cfg.host).innerHTML=
    '<span class="pill amber">'+H.e+'</span>'
    +'<h2 class="mt">'+H.t+'</h2>'
    +'<p class="mt" style="font-size:15px">'+H.x+'</p>'
-   +'<div class="action-box"><b>Merk dir:</b> '+H.m+'</div>'
-   +quizHTML([H.q])
-   +(passed?'<p class="sub mt">Schon gelesen ✓</p>':'');
-  bindQuiz($(cfg.host+' .quiz'),()=>{
-   if(isCur){st.cur=Math.min(st.cur+1,cfg.data.length);save();completeMission(cfg.mission);
-    $(cfg.host+' .qstate').insertAdjacentHTML('beforeend','<button class="btn mt" data-adv="1">Weiter →</button>');
-    const a=$(cfg.host+' [data-adv]');if(a)a.addEventListener('click',()=>{view=Math.min(st.cur,cfg.data.length-1);render()});
-   }
-  });
+   +(H.m?'<div class="action-box"><b>Merk dir:</b> '+H.m+'</div>':'')
+   +(H.q?quizHTML([H.q]):(isCur?'<button class="btn mt" data-cyc="1">Erledigt ✓</button>':''))
+   +(passed?'<p class="sub mt">Schon erledigt ✓</p>':'');
+  if(H.q){
+   bindQuiz($(cfg.host+' .quiz'),()=>{
+    if(isCur){S[k].cur++;save();completeMission(k);
+     $(cfg.host+' .qstate').insertAdjacentHTML('beforeend','<button class="btn mt" data-adv="1">Weiter →</button>');
+     const a=$(cfg.host+' [data-adv]');if(a)a.addEventListener('click',()=>{view=Math.min(S[k].cur,cData(k).length-1);render()});
+    }
+   });
+  }else{
+   const b=$(cfg.host+' [data-cyc]');
+   if(b)b.addEventListener('click',()=>{S[k].cur++;save();completeMission(k);view=Math.min(S[k].cur,cData(k).length-1);render()});
+  }
  }
  $(cfg.prev).addEventListener('click',()=>{if(view>0){view--;render()}});
- $(cfg.next).addEventListener('click',()=>{if(view<Math.min(cfg.state().cur,cfg.data.length-1)){view++;render()}});
+ $(cfg.next).addEventListener('click',()=>{if(view<Math.min(S[k].cur,cData(k).length-1)){view++;render()}});
+ $(cfg.sub).addEventListener('click',e=>{
+  const u=e.target.closest('[data-unlock="'+k+'"]');
+  if(u){unlockNext(k);view=0;render();renderMissions()}
+ });
+ courseRender[k]=render;
  render();
 }
 
-/* ================= ZIELE ================= */
+/* ================= ZIELE (anpassbar) ================= */
+function msRowHTML(done,txt,attr,delAttr){
+ return '<'+(attr?'button':'div')+' class="ms-row'+(done?' done':'')+'"'+(attr?' '+attr:'')+'>'
+  +'<span class="ms-check"></span><span class="ms-t">'+txt+'</span>'
+  +(delAttr?'<span class="bucket-x" '+delAttr+'>×</span>':'')
+  +(attr?'</button>':'</div>');
+}
 function renderGoals(){
- $('#goalList').innerHTML=GOALS.map(g=>{
+ let h=GOALS.map(g=>{
+  const custom=S.goalsCustom[g.id]||[];
   const states=g.ms.map((m,i)=>m.auto?!!m.auto():!!S.goals[g.id+i]);
-  const pct=states.filter(Boolean).length/g.ms.length;
+  const all=states.concat(custom.map(c=>c.done));
+  const pct=all.length?all.filter(Boolean).length/all.length:0;
   return '<div class="card goal" style="--area:'+g.c+'">'
    +'<div class="goal-head">'+ring(pct,g.c,62,g.t)
-   +'<div class="gh-txt"><h3>'+g.t+'</h3><span class="pill amber">'+g.h+'</span><div class="goal-d mt" style="margin-top:6px">'+g.d+'</div></div></div>'
-   +'<div class="ms-list">'+g.ms.map((m,i)=>{
-     const done=states[i];
-     return m.auto
-      ?'<div class="ms-row'+(done?' done':'')+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span><span class="ms-auto">auto</span></div>'
-      :'<button class="ms-row'+(done?' done':'')+'" data-ms="'+g.id+i+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span></button>';
-    }).join('')+'</div></div>';
+   +'<div class="gh-txt"><h3>'+g.t+'</h3><span class="pill amber">'+g.h+'</span><div class="goal-d" style="margin-top:6px">'+g.d+'</div></div></div>'
+   +'<div class="ms-list">'
+   +g.ms.map((m,i)=>m.auto
+     ?'<div class="ms-row'+(states[i]?' done':'')+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span><span class="ms-auto">auto</span></div>'
+     :'<button class="ms-row'+(states[i]?' done':'')+'" data-ms="'+g.id+i+'"><span class="ms-check"></span><span class="ms-t">'+m.t+'</span></button>').join('')
+   +custom.map((c,i)=>'<div class="ms-row'+(c.done?' done':'')+'"><button class="ms-check" data-cms="'+g.id+':'+i+'" aria-label="abhaken"></button><span class="ms-t">'+esc(c.t)+'</span><button class="bucket-x" data-cmx="'+g.id+':'+i+'" aria-label="löschen">×</button></div>').join('')
+   +'</div>'
+   +'<div class="bucket-add mt"><input data-msin="'+g.id+'" placeholder="Eigenen Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-msadd="'+g.id+'">+</button></div>'
+   +'</div>';
  }).join('');
+ h+=S.customGoals.map((g,gi)=>{
+  const pct=g.ms.length?g.ms.filter(m=>m.done).length/g.ms.length:0;
+  return '<div class="card goal" style="--area:var(--accent)">'
+   +'<div class="goal-head">'+ring(pct,'var(--accent)',62,g.t)
+   +'<div class="gh-txt"><h3>'+esc(g.t)+'</h3><span class="pill amber">Eigenes Ziel</span>'+(g.d?'<div class="goal-d" style="margin-top:6px">'+esc(g.d)+'</div>':'')+'</div>'
+   +'<button class="hub-del" data-cgdel="'+gi+'">Löschen</button></div>'
+   +'<div class="ms-list">'
+   +g.ms.map((m,i)=>'<div class="ms-row'+(m.done?' done':'')+'"><button class="ms-check" data-cgms="'+gi+':'+i+'" aria-label="abhaken"></button><span class="ms-t">'+esc(m.t)+'</span><button class="bucket-x" data-cgmx="'+gi+':'+i+'" aria-label="löschen">×</button></div>').join('')
+   +'</div>'
+   +'<div class="bucket-add mt"><input data-cgmsin="'+gi+'" placeholder="Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-cgmsadd="'+gi+'">+</button></div>'
+   +'</div>';
+ }).join('');
+ h+='<div class="card"><h3>Eigenes Ziel anlegen</h3>'
+  +'<div class="bucket-add mt"><input id="cgTitle" placeholder="Titel — z. B. Führerschein Motorrad" maxlength="50"></div>'
+  +'<div class="bucket-add mt"><input id="cgDesc" placeholder="Beschreibung (optional)" maxlength="90"><button class="btn small" id="cgAdd">+</button></div></div>';
+ $('#goalList').innerHTML=h;
 }
 $('#panel-ziele').addEventListener('click',e=>{
  const r=e.target.closest('[data-ms]');
  if(r){const k=r.dataset.ms;
   if(S.goals[k])delete S.goals[k];else S.goals[k]=true;
-  save();renderGoals();}
+  save();renderGoals();return}
+ const cms=e.target.closest('[data-cms]');
+ if(cms){const [g,i]=cms.dataset.cms.split(':');S.goalsCustom[g][+i].done=!S.goalsCustom[g][+i].done;save();renderGoals();return}
+ const cmx=e.target.closest('[data-cmx]');
+ if(cmx){const [g,i]=cmx.dataset.cmx.split(':');S.goalsCustom[g].splice(+i,1);save();renderGoals();return}
+ const ma=e.target.closest('[data-msadd]');
+ if(ma){const g=ma.dataset.msadd;const inp=document.querySelector('[data-msin="'+g+'"]');
+  const v=inp.value.trim();if(!v)return;
+  (S.goalsCustom[g]=S.goalsCustom[g]||[]).push({t:v,done:false});save();renderGoals();return}
+ const cgms=e.target.closest('[data-cgms]');
+ if(cgms){const [g,i]=cgms.dataset.cgms.split(':').map(Number);S.customGoals[g].ms[i].done=!S.customGoals[g].ms[i].done;save();renderGoals();return}
+ const cgmx=e.target.closest('[data-cgmx]');
+ if(cgmx){const [g,i]=cgmx.dataset.cgmx.split(':').map(Number);S.customGoals[g].ms.splice(i,1);save();renderGoals();return}
+ const cgma=e.target.closest('[data-cgmsadd]');
+ if(cgma){const g=+cgma.dataset.cgmsadd;const inp=document.querySelector('[data-cgmsin="'+g+'"]');
+  const v=inp.value.trim();if(!v)return;
+  S.customGoals[g].ms.push({t:v,done:false});save();renderGoals();return}
+ const cgd=e.target.closest('[data-cgdel]');
+ if(cgd){S.customGoals.splice(+cgd.dataset.cgdel,1);save();renderGoals();return}
+ if(e.target.closest('#cgAdd')){
+  const t=$('#cgTitle').value.trim();if(!t)return;
+  S.customGoals.push({t:t,d:$('#cgDesc').value.trim(),ms:[]});save();renderGoals();return}
 });
 
 /* ================= LERNHUB ================= */
 let hubType='skill';
+const hubOpen=new Set([0]);
+function linkify(u){
+ if(u.includes(' '))return '<span>'+u+'</span>';
+ return '<a href="https://'+u.replace(/^https?:\/\//,'')+'" target="_blank" rel="noopener">'+u+'</a>';
+}
 function renderHubTypes(){
  $('#hubTypes').innerHTML=HUB_TYPES.map(t=>
   '<button class="hub-type'+(hubType===t.k?' on':'')+'" data-ht="'+t.k+'">'+t.l+'<small>'+t.d.split('{T}').join('deinem Thema')+'</small></button>').join('');
 }
 function renderHubPlans(){
- if(!S.hub.plans.length){$('#hubPlans').innerHTML='<div class="card"><p class="sub">Noch kein Plan. Gib oben ein Thema ein — z. B. das, worüber du schon immer mehr wissen wolltest.</p></div>';return}
+ if(!S.hub.plans.length){$('#hubPlans').innerHTML='<div class="card"><p class="sub">Noch kein Plan. Gib oben ein Thema ein — du kannst beliebig viele Pläne parallel laufen lassen.</p></div>';return}
  $('#hubPlans').innerHTML=S.hub.plans.map((p,pi)=>{
   const tasks=hubTasks(p.type);
   const flat=tasks.flat();
   const done=p.done.filter(Boolean).length;
+  const open=hubOpen.has(pi);
+  const res=findResources(p.topic);
   let idx=0;
-  return '<div class="card" style="--area:var(--c-it)">'
-   +'<div class="hub-head">'+ring(done/flat.length,'var(--c-it)',56,p.topic)
-   +'<div class="gh-txt"><h3>'+p.topic+'</h3><span class="pill amber">'+HUB_TYPES.find(t=>t.k===p.type).l+'</span></div>'
-   +'<button class="hub-del" data-hubdel="'+pi+'">Löschen</button></div>'
-   +tasks.map((phase,phi)=>'<div class="hub-phase">'+HUB_PLAN.phases[phi]+'</div>'
+  let h='<div class="card" style="--area:var(--c-it)">'
+   +'<button class="hub-head" data-hubtoggle="'+pi+'" style="width:100%;text-align:left">'+ring(done/flat.length,'var(--c-it)',52,p.topic)
+   +'<div class="gh-txt"><h3>'+esc(p.topic)+'</h3><span class="pill amber">'+HUB_TYPES.find(t=>t.k===p.type).l+'</span> <span class="pill">'+done+' / '+flat.length+'</span></div>'
+   +'<span class="chev" style="color:var(--ink-faint);transform:rotate('+(open?90:0)+'deg)">▶</span></button>';
+  if(open){
+   h+='<div class="action-box mt"><b>Kostenlose Ressourcen für dich:</b>'
+    +res.map(r=>'<div class="res-row"><b>'+r[0]+'</b> — '+r[1]+'<br>'+linkify(r[2])+'</div>').join('')+'</div>';
+   h+=tasks.map((phase,phi)=>'<div class="hub-phase">'+HUB_PLAN.phases[phi]+'</div>'
      +phase.map(task=>{
       const i=idx++;
       const d=!!p.done[i];
-      return '<button class="ms-row'+(d?' done':'')+'" data-hubtask="'+pi+':'+i+'"><span class="ms-check"></span><span class="ms-t">'+task.split('{T}').join(p.topic)+'</span></button>';
-     }).join('')).join('')
-   +'</div>';
+      return '<button class="ms-row'+(d?' done':'')+'" data-hubtask="'+pi+':'+i+'"><span class="ms-check"></span><span class="ms-t">'+task.split('{T}').join(esc(p.topic))+'</span></button>';
+     }).join('')).join('');
+   h+='<button class="hub-del mt" data-hubdel="'+pi+'">Plan löschen</button>';
+  }
+  return h+'</div>';
  }).join('');
 }
 $('#sub-hub').addEventListener('click',e=>{
@@ -1511,9 +1808,15 @@ $('#sub-hub').addEventListener('click',e=>{
   if(!topic){$('#hubTopic').focus();return}
   const n=hubTasks(hubType).flat().length;
   S.hub.plans.unshift({topic:topic,type:hubType,done:Array(n).fill(false)});
+  hubOpen.clear();hubOpen.add(0);
   $('#hubTopic').value='';save();renderHubPlans();renderMissions();return}
+ const tg=e.target.closest('[data-hubtoggle]');
+ if(tg&&!e.target.closest('[data-hubtask]')){
+  const i=+tg.dataset.hubtoggle;
+  hubOpen.has(i)?hubOpen.delete(i):hubOpen.add(i);
+  renderHubPlans();return}
  const del=e.target.closest('[data-hubdel]');
- if(del){S.hub.plans.splice(+del.dataset.hubdel,1);save();renderHubPlans();renderMissions();return}
+ if(del){S.hub.plans.splice(+del.dataset.hubdel,1);hubOpen.clear();save();renderHubPlans();renderMissions();return}
  const tk=e.target.closest('[data-hubtask]');
  if(tk){const [pi,i]=tk.dataset.hubtask.split(':').map(Number);
   S.hub.plans[pi].done[i]=!S.hub.plans[pi].done[i];
@@ -1713,7 +2016,7 @@ function renderHooks(){
 /* ================= KÖRPER ================= */
 function renderPlan(){
  $('#planList').innerHTML=WD_SHORT.map((w,i)=>
-  '<div class="plan-row'+(i===planIdxToday?' today-row':'')+'"><b>'+w+(i===planIdxToday?' ●':'')+'</b><input data-plan="'+i+'" value="'+(S.plan[i]||'').replace(/"/g,'&quot;')+'" placeholder="frei"></div>').join('');
+  '<div class="plan-row'+(i===planIdxToday?' today-row':'')+'"><b>'+w+(i===planIdxToday?' ●':'')+'</b><input data-plan="'+i+'" value="'+esc(S.plan[i]||'')+'" placeholder="frei"></div>').join('');
 }
 $('#planList').addEventListener('input',e=>{
  const f=e.target.closest('[data-plan]');if(!f)return;
@@ -1752,11 +2055,11 @@ $('#panel-body').addEventListener('click',e=>{
 function renderBucket(listSel,suggSel,arr,suggs,suggLbl){
  $(listSel).innerHTML=arr.length?arr.map((x,i)=>
   '<div class="bucket-row'+(x.done?' done':'')+'"><button class="ms-check" data-bk="'+i+'" aria-label="abhaken"></button>'
-  +'<span class="bucket-t">'+x.t+'</span><button class="bucket-x" data-bx="'+i+'" aria-label="löschen">×</button></div>').join('')
+  +'<span class="bucket-t">'+esc(x.t)+'</span><button class="bucket-x" data-bx="'+i+'" aria-label="löschen">×</button></div>').join('')
  :'<p class="sub">Noch leer — füge eigene Einträge hinzu oder tipp unten auf einen Vorschlag.</p>';
  const remaining=suggs.filter(s=>!arr.some(x=>x.t===s));
  $(suggSel).innerHTML=remaining.length?'<div class="sugg-lbl">'+suggLbl+'</div><div class="sugg-wrap">'
-  +remaining.map(s=>'<button class="sugg" data-sg="'+s.replace(/"/g,'&quot;')+'">+ '+s+'</button>').join('')+'</div>':'';
+  +remaining.map(s=>'<button class="sugg" data-sg="'+esc(s)+'">+ '+s+'</button>').join('')+'</div>':'';
 }
 function renderLife(){
  renderBucket('#travelList','#travelSugg',S.travel,TRAVEL_SUGG,'Vorschläge — antippen zum Übernehmen');
@@ -1765,7 +2068,7 @@ function renderLife(){
 function bucketHandlers(subSel,arr){
  $(subSel).addEventListener('click',e=>{
   const c=e.target.closest('[data-bk]');
-  if(c){arr[+c.dataset.bk].done=!arr[+c.dataset.bk].done;save();renderLife();renderGoals();return}
+  if(c){arr[+c.dataset.bk].done=!arr[+c.dataset.bk].done;save();renderLife();return}
   const x=e.target.closest('[data-bx]');
   if(x){arr.splice(+x.dataset.bx,1);save();renderLife();return}
   const s=e.target.closest('[data-sg]');
@@ -1781,8 +2084,8 @@ $('#expInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#expAdd').cl
 
 /* ================= Init ================= */
 renderHeader();renderMissions();renderRu();
-makeCourse({data:HIST,state:()=>S.hi,mission:'hi',word:'Kapitel',lbl:'#hiProgLbl',bar:'#hiProgBar',host:'#hiLesson',prev:'#hiPrev',next:'#hiNext'});
-makeCourse({data:IT,state:()=>S.it,mission:'it',word:'Lektion',lbl:'#itProgLbl',bar:'#itProgBar',host:'#itLesson',prev:'#itPrev',next:'#itNext'});
+makeCourse('hi',{lbl:'#hiProgLbl',bar:'#hiProgBar',host:'#hiLesson',prev:'#hiPrev',next:'#hiNext',sub:'#sub-hist'});
+makeCourse('it',{lbl:'#itProgLbl',bar:'#itProgBar',host:'#itLesson',prev:'#itPrev',next:'#itNext',sub:'#sub-it'});
 renderGoals();renderHubTypes();renderHubPlans();
 renderFinSliders();simulate();renderZi();renderFinLessons();
 renderTT();renderHooks();renderPlan();renderKnow();renderLife();
