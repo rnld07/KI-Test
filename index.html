@@ -336,6 +336,8 @@ canvas.chart{width:100%;height:240px;display:block}
 .timer-btns{display:flex;gap:5px}
 .timer-row .mode-btn{padding:5px 11px;font-size:12.5px}
 #ftTime.ft-done{color:var(--save)}
+#ftCustom{width:64px;font:inherit;font-size:12.5px;color:var(--ink);background:var(--surface2);border:1.5px solid transparent;border-radius:99px;padding:5px 10px;text-align:center}
+#ftCustom:focus{outline:none;border-color:var(--area,var(--accent))}
 .leg-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 
 footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);font-size:12px;text-align:center}
@@ -429,6 +431,7 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
           <button class="mode-btn" data-ft="15">15</button>
           <button class="mode-btn on" data-ft="25">25</button>
           <button class="mode-btn" data-ft="45">45</button>
+          <input id="ftCustom" type="number" min="1" max="240" placeholder="min" aria-label="Eigene Dauer in Minuten">
         </div>
         <button class="btn small" id="ftStart">Start</button>
         <button class="btn ghost small" id="ftReset">↺</button>
@@ -530,6 +533,11 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
       <p class="sub">Stell die Regler ein und sieh sofort, ob dein Plan hält.</p>
       <div class="mt" id="finSliders"></div>
       <div id="finVerdict"></div>
+      <div class="action-box mt"><b>Dein echtes Vermögen:</b> Trag regelmäßig deinen Ist-Stand ein — er erscheint als eigene Linie neben dem Plan.
+        <div class="bucket-add mt"><input id="wlIn" type="number" min="0" step="50" placeholder="Aktueller Stand in € …"><button class="btn small" id="wlAdd">Für <span id="wlMonth"></span> speichern</button></div>
+        <div class="sugg-wrap" id="wlChips"></div>
+      </div>
+      <div class="leg-row"><span><i class="leg-dot" style="background:var(--chart1)"></i>Plan</span><span><i class="leg-dot" style="background:var(--chart2)"></i>Dein echtes Vermögen</span></div>
       <div class="chart-wrap">
         <canvas class="chart" id="finChart"></canvas>
         <div class="tip" id="finTip"></div>
@@ -1747,7 +1755,6 @@ const KNOW_TRA2=[
 {t:"Wie Locals reisen: Geheimtipp-Recherche",x:"Die Touristen-Falle vermeiden: (1) Reddit ist Gold — Subreddits wie r/JapanTravel oder r/askTokyo beantworten konkrete Fragen ehrlicher als jeder Reiseblog mit Affiliate-Links. (2) Google Maps: Restaurants nach 4,3–4,6 Sternen mit VIELEN Bewertungen in Nicht-Touristen-Vierteln filtern — 4,9 mit 12 Bewertungen ist Familie, 4,0 direkt am Dom ist Falle. (3) Free Walking Tours am ersten Tag: Orientierung + Fragen an einen echten Local. (4) Ein Abend ohne Plan pro Stadt: einfach in ein belebtes Nicht-Zentrum-Viertel fahren und treiben lassen."}];
 
 /* ============ LERNHUB: Crashkurse (Direktwissen) ============ */
-const CRASH_GENERIC=["Das 80/20 jedes Fachgebiets: Ein kleiner Kern aus 15–20 Konzepten erklärt den Großteil der Praxis. Deine erste Aufgabe ist immer, diesen Kern zu finden — nicht alles zu lesen.","Lernen = Abrufen, nicht Wiederlesen: Der Testing-Effekt ist der am besten belegte Lern-Fakt überhaupt. Sich selbst abfragen (Anki, Selbsttest) schlägt Markieren und Zusammenfassen deutlich.","Spaced Repetition: Wiederhole nach 1 Tag, 3 Tagen, 1 Woche, 1 Monat — genau dann, wenn du fast vergessen hast. So wandert Wissen ins Langzeitgedächtnis.","Feynman-Technik: Was du nicht einfach erklären kannst, hast du nicht verstanden. Laut erklären deckt Lücken schneller auf als jeder Test.","Projekte verankern Wissen: Eine echte Anwendung (etwas bauen, durchführen, anwenden) verankert mehr als 10 Stunden Theorie.","Experten-Shortcut: Ein Praktiker-Interview oder „Day in the life“-Video zeigt dir in 20 Minuten, was wirklich zählt — und was nur Lehrbuch-Folklore ist."];
 const CRASH={
 "physio":["Grundprinzip Belastung & Anpassung: Gewebe (Muskel, Sehne, Knochen) wird stärker, wenn es dosiert belastet wird, und schwächer, wenn es ruhiggestellt wird. Moderne Therapie belastet deshalb früh und gezielt — „Schonung“ ist selten der Plan.","Schmerz ≠ Schaden: Schmerz ist ein Alarmsystem, das auch von Stress, Angst und Erwartung moduliert wird (biopsychosoziales Modell). Chronischer Schmerz kann bestehen, wenn das Gewebe längst geheilt ist.","RICE ist veraltet: Bei akuten Verletzungen gilt heute PEACE & LOVE — u. a. wenig Entzündungshemmer, früh optimal belasten statt komplett pausieren.","Aktiv schlägt passiv: Die Evidenz ist eindeutig — Übungstherapie (Kraft, Mobilität) wirkt bei den meisten Beschwerden besser und nachhaltiger als Massage, Ultraschall & Co. Passives ist Ergänzung, nicht Kern.","Die großen Baustellen der Praxis: unspezifischer Rückenschmerz (häufigste Diagnose, meist ohne strukturellen Befund), Schulter-Impingement, Knie (Patellaspitzensyndrom, Kreuzband-Reha), Sprunggelenk.","Berufswege in DE: 3-jährige Ausbildung oder Studium (zunehmend akademisiert); Sportphysiotherapie ist eine gefragte Spezialisierung mit Zusatzfortbildungen."],
 "sql":["SELECT spalten FROM tabelle WHERE bedingung — dieses Muster ist 70 % aller SQL-Abfragen. ORDER BY sortiert, LIMIT begrenzt.","JOIN verknüpft Tabellen über Schlüssel: FROM kunden JOIN auftraege ON kunden.id = auftraege.kunden_id. INNER = nur Treffer beider Seiten, LEFT = alle links, auch ohne Treffer.","GROUP BY fasst zusammen: SELECT region, AVG(kosten) FROM faelle GROUP BY region — eine Zeile pro Gruppe. Filter auf Gruppen heißt HAVING, nicht WHERE.","Primärschlüssel = eindeutige ID jeder Zeile; Fremdschlüssel = Verweis auf eine ID in anderer Tabelle. Das ist das ganze Geheimnis relationaler Datenbanken.","NULL ist nicht 0 und nicht leer — es heißt „unbekannt“. Vergleiche mit NULL brauchen IS NULL / IS NOT NULL, sonst bekommst du stillschweigend falsche Ergebnisse.","Indexe machen Abfragen schnell (wie ein Buchregister), kosten aber Schreibgeschwindigkeit — deshalb nicht auf jede Spalte."],
@@ -1766,29 +1773,36 @@ function findCrash(topic){
  const t=topic.toLowerCase();
  const map=[["physio",["physio","anatomie","reha","massage"]],["sql",["sql","datenbank"]],["programmier",["python","programmier","coding","informatik","code","javascript","web"]],["foto",["foto","kamera","video"]],["sprach",["sprache","spanisch","englisch","französisch","russisch","italienisch"]],["fitness",["fitness","training","kraft","muskel","gym"]],["koch",["koch","küche","rezept","backen"]],["geschicht",["geschichte","history","antike"]],["finanz",["finanz","geld","etf","invest","aktien","steuer"]],["psycho",["psycho","gewohnheit","habit","mental","meditation"]],["excel",["excel","power bi","tabellen"]],["ki",["ki","ai","machine learning","llm","prompt"]],["rad",["rad","bike","gravel","fahrrad"]]];
  for(const [key,ks] of map){if(ks.some(k=>t.includes(k)))return {c:CRASH[key],matched:true}}
- return {c:CRASH_GENERIC,matched:false};
+ const q=encodeURIComponent(topic);
+ return {c:[
+  'Zu diesem Thema habe ich kein eingebautes Fachwissen — dafür dein konkretes Startmaterial (alles kostenlos):',
+  '<a href="https://de.wikipedia.org/wiki/'+q+'" target="_blank" rel="noopener">Wikipedia-Artikel</a> — lies Einleitung + Inhaltsverzeichnis: Das ist die Landkarte des Themas, die Kapitel sind deine Teilgebiete.',
+  '<a href="https://www.youtube.com/results?search_query='+q+'+erkl%C3%A4rt" target="_blank" rel="noopener">YouTube: Einführungsvideos</a> — die 2 meistgeklickten Videos sind dein Crashkurs in Videoform.',
+  '<a href="https://www.youtube.com/results?search_query='+q+'+doku" target="_blank" rel="noopener">YouTube: Doku/Deep-Dive</a> — eine längere Doku gibt dir Kontext, den kurze Videos nicht liefern.',
+  '<a href="https://www.google.com/search?q='+q+'+kostenloser+kurs" target="_blank" rel="noopener">Kostenlosen Kurs suchen</a> — für viele Themen gibt es freie Kurse (Volkshochschul-Niveau bis Uni).'
+ ],matched:false};
 }
 /* Lernhub-Aufgaben v2: 12 Aufgaben, Wissen steckt im Crashkurs */
 const HUB_PLAN2={
- phases:["Woche 1 · Fundament","Woche 2 · Vertiefen","Woche 3 · Anwenden","Woche 4 · Festigen"],
- w1:["Lies den Crashkurs oben zweimal in Ruhe. Erkläre danach laut in 60 Sekunden, worum es bei {T} im Kern geht — ohne hinzusehen.",
-  "Leg 15 Anki-Karten (apps.ankiweb.net) aus den Crashkurs-Punkten an: Vorderseite Frage, Rückseite Kernaussage. Erste Abfragerunde direkt.",
-  "Schreib dein 4-Wochen-Ziel in einem Satz auf: „Nach 4 Wochen kann ich bei {T} konkret …“ — messbar und ehrlich."],
- w2:["Arbeite die Hauptressource aus der Box oben durch — über die Woche verteilt, 25 Minuten pro Tag reichen.",
-  "Feynman-Check: Erkläre {T} laut, als wäre dein Zuhörer 12. Jede Stelle, an der du stockst, wird eine neue Anki-Karte.",
-  "Schau einem Praktiker über die Schulter (Ressourcen-Box oder YouTube „{T} day in the life“) und notiere 3 Dinge, die im Crashkurs NICHT standen."],
- w3:{skill:["Führe die grundlegendste Tätigkeit von {T} einmal selbst aus — klein, unperfekt, real. Der Crashkurs sagt dir, worauf es dabei ankommt.",
-   "Wiederhole die Kernübung ein zweites Mal und führe eine Fehlerliste: Was lief anders als beim Profi-Video?",
-   "Hol dir eine ehrliche Rückmeldung von jemandem, der {T} kann (Bekannte, Verein, passendes Subreddit) — stell 2 konkrete Fragen."],
- know:["Schreib eine 1-Seiten-Zusammenfassung von {T} aus dem Kopf, korrigiere danach mit deinen Quellen.",
-   "Wende {T} auf einen echten Fall aus deinem Alltag oder den Nachrichten an — 10 Sätze, schriftlich.",
-   "Vertritt eine These zu {T} gegenüber einem Menschen oder im Fachforum und lass dich korrigieren."],
- job:["Finde heraus, wie {T} bei AOK/Studium konkret eingesetzt wird — frag eine Person, die täglich damit arbeitet.",
-   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an und dokumentiere das Ergebnis kurz.",
-   "Zeig deine Anwendung einem Kollegen/Dozenten und frag wörtlich: „Was würdest du anders machen?“"]},
- w4:["Teach-back: Erkläre {T} einer echten Person 10 Minuten frei — oder mach ein 60-Sekunden-Video daraus (Content!).",
-  "Selbsttest: Beantworte die 10 wichtigsten Fragen zu {T} aus dem Gedächtnis (deine Anki-Karten sind der Fragenkatalog). Unter 7? Nachlegen.",
-  "Bilanz + nächste Stufe: Vergleiche dein Können mit dem Satz aus Woche 1 und definiere, was Stufe 2 wäre — entscheiden kannst du später."]};
+ phases:["Woche 1 · Kernwissen","Woche 2 · Hauptmaterial","Woche 3 · Anwenden","Woche 4 · Abschluss"],
+ w1:["Lerne den Crashkurs oben — das sind die Kernkonzepte von {T}. Ziel: Du kannst jeden Punkt in einem eigenen Satz wiedergeben, ohne hinzusehen.",
+  "Lies den Wikipedia-Artikel zu {T} (Einleitung + die drei wichtigsten Kapitel) und schau das meistgesehene „{T} erklärt“-Video auf YouTube.",
+  "Lerne die 15 wichtigsten Fachbegriffe von {T} auswendig — sie stehen im Crashkurs und im Wikipedia-Artikel. Karteikarten (Anki) oder handschriftliche Liste."],
+ w2:["Starte deine Hauptressource {R1}: Arbeite die ersten Lektionen/Videos durch — insgesamt etwa 2 Stunden, über die Woche verteilt.",
+  "Arbeite {R1} bis zur Hälfte durch. Gleiche jedes neue Konzept mit dem Crashkurs ab: Was ist neu, was kanntest du schon?",
+  "Zieh {R2} hinzu: Schau dir dort gezielt das Teilgebiet an, das dir bisher am schwersten fällt — zweite Erklärung, anderer Blickwinkel."],
+ w3:{skill:["Führe die Grundtechnik von {T} zum ersten Mal selbst aus — genau so, wie {R1} sie zeigt. Klein und unperfekt zählt.",
+   "Übe die Grundtechnik ein zweites und drittes Mal. Vergleiche deine Ausführung mit einem Profi-Video von {R3} — notiere 3 Unterschiede.",
+   "Zeig dein Ergebnis einem Menschen, der {T} kann (Bekannte, Verein, Fach-Community) und lass dir die 2 wichtigsten Korrekturen geben."],
+ know:["Schreibe aus dem Gedächtnis eine 1-Seiten-Zusammenfassung von {T} — danach mit Crashkurs und {R1} abgleichen und Lücken markieren.",
+   "Wende {T} auf einen echten Fall an: ein aktuelles Beispiel aus Nachrichten oder Alltag, analysiert mit dem Gelernten — 10 Sätze schriftlich.",
+   "Vertiefe bei {R2} ein Fortgeschrittenen-Thema, das im Grundmaterial nur gestreift wurde."],
+ job:["Finde heraus, wie {T} bei AOK/Studium konkret eingesetzt wird — frag eine Person, die täglich damit arbeitet, und notiere die Praxis-Unterschiede zum Gelernten.",
+   "Wende {T} auf einen echten Fall aus deinem Arbeitsalltag an — dokumentiere Vorgehen und Ergebnis kurz.",
+   "Lerne das wichtigste Werkzeug zu {T} über die Hersteller-Doku oder {R2} — 30 Minuten Hands-on."]},
+ w4:["Schließe {R1} ab: die restlichen Lektionen/Videos, gern im Schnelldurchlauf für bereits Bekanntes.",
+  "Selbsttest: Beantworte 10 Fragen zu {T} aus dem Gedächtnis — Crashkurs-Punkte und {R1}-Kapitel sind dein Fragenkatalog. Unter 7 richtig? Die Lücken nochmal ansehen.",
+  "Erkläre {T} einer echten Person 10 Minuten frei — oder nimm ein 60-Sekunden-Video auf. Danach entscheide: Stufe 2 mit neuem Plan oder abschließen?"]};
 function hubTasks2(type){return [HUB_PLAN2.w1,HUB_PLAN2.w2,HUB_PLAN2.w3[type],HUB_PLAN2.w4]}
 </script>
 
@@ -1998,6 +2012,8 @@ S.finStage=S.finStage||0;S.knowStage=S.knowStage||{};
 S.countries=S.countries||['de','nl','es','pt','at','fr','lu','pl','us','do','gr'];
 S.tt.hidden=S.tt.hidden||[];S.tt.showN=S.tt.showN||4;S.suggSeed=S.suggSeed||1;
 if(!S.migTra2){for(const k in S.known)if(/^tra\d/.test(k))delete S.known[k];S.migTra2=1}
+S.fin.log=S.fin.log||{};
+if(S.fin.inp.act!==undefined){if(!Object.keys(S.fin.log).length)S.fin.log[Math.max(0,(NOW.getFullYear()-2026)*12+(NOW.getMonth()-6))]=S.fin.inp.act;delete S.fin.inp.act}
 function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 
@@ -2485,7 +2501,9 @@ function renderHubPlans(){
      +phase.map(task=>{
       const i=idx++;
       const d=!!p.done[i];
-      return '<button class="ms-row'+(d?' done':'')+'" data-hubtask="'+pi+':'+i+'"><span class="ms-check"></span><span class="ms-t">'+task.split('{T}').join(esc(p.topic))+'</span></button>';
+      let txt=task.split('{T}').join(esc(p.topic));
+      [0,1,2].forEach(ri=>{txt=txt.split('{R'+(ri+1)+'}').join(res[ri]?'<b>'+res[ri][0]+'</b>':'deiner Hauptressource')});
+      return '<button class="ms-row'+(d?' done':'')+'" data-hubtask="'+pi+':'+i+'"><span class="ms-check"></span><span class="ms-t">'+txt+'</span></button>';
      }).join('')).join('');
    h+='<button class="hub-del mt" data-hubdel="'+pi+'">Plan löschen</button>';
   }
@@ -2518,7 +2536,6 @@ $('#sub-hub').addEventListener('click',e=>{
 
 /* ================= GELD ================= */
 const FININP=[
- {k:'act',l:'Ist-Stand heute (dein echtes Vermögen)',min:2000,max:40000,step:250,def:14000,fmt:v=>fmtE(v)},
  {k:'sA',l:'Sparrate bis Studienende (von 1.300 €)',min:0,max:900,step:50,def:500,fmt:v=>v+' €/M'},
  {k:'car',l:'Autopreis',min:5000,max:14000,step:500,def:10000,fmt:v=>fmtE(v)},
  {k:'carM',l:'Auto-Kauf',min:6,max:17,step:1,def:12,fmt:v=>mLabel(v)},
@@ -2542,12 +2559,15 @@ function renderFinSliders(){
 const NMONTHS=30;
 const NOWI=Math.min(NMONTHS-1,Math.max(0,(NOW.getFullYear()-2026)*12+(NOW.getMonth()-6)));
 let SIM=[];
+function latestLog(){
+ const ks=Object.keys(S.fin.log||{}).map(Number).sort((a,b)=>a-b);
+ return ks.length?{i:ks[ks.length-1],v:S.fin.log[ks[ks.length-1]]}:null;
+}
 function simulate(){
  SIM=[];let bal=14000;
  const sA=inp('sA'),sB=inp('sB');
  for(let i=0;i<NMONTHS;i++){
   if(i>0)bal+=(i<=13?sA:sB);
-  if(i===NOWI)bal=inp('act');
   if(i===inp('carM'))bal-=inp('car');
   if(i===inp('mvM'))bal-=inp('mv');
   SIM.push(bal);
@@ -2555,8 +2575,9 @@ function simulate(){
  const NOT=5000;
  const fut=SIM.slice(NOWI);
  const minV=Math.min(...fut),minI=NOWI+fut.indexOf(minV),endV=SIM[NMONTHS-1];
+ const ll=latestLog();
  $('#finTiles').innerHTML=
-  '<div class="stile"><b class="num">'+fmtE(inp('act'))+'</b><span>Ist-Stand heute</span></div>'
+  '<div class="stile"><b class="num">'+(ll?fmtE(ll.v):fmtE(14000))+'</b><span>'+(ll?'Letzter Ist-Wert ('+mLabel(ll.i)+')':'Start Jul 26')+'</span></div>'
   +'<div class="stile"><b class="num" style="color:'+(minV<NOT?'var(--danger)':'var(--save)')+'">'+fmtE(minV)+'</b><span>Tiefster Punkt ('+mLabel(minI)+')</span></div>'
   +'<div class="stile"><b class="num">'+fmtE(endV)+'</b><span>Stand Ende 2028</span></div>';
  $('#finVerdict').innerHTML=minV>=NOT
@@ -2605,6 +2626,24 @@ function drawChart(){
  x2.beginPath();x2.arc(X(NMONTHS-1),Y(ev),4,0,7);x2.fillStyle=green;x2.fill();
  x2.fillStyle=cssVar('--ink');x2.font='600 12px Outfit,system-ui';
  x2.fillText(fmtE(ev),X(NMONTHS-1)-70,Y(ev)-8);
+ // Echte Vermögens-Linie (eigene Einträge)
+ const amber=cssVar('--chart2');
+ const pts=Object.keys(S.fin.log||{}).map(Number).sort((a,b)=>a-b);
+ if(pts.length){
+  x2.beginPath();
+  pts.forEach((i,n)=>{const y=Y(Math.min(maxV,Math.max(0,S.fin.log[i])));n?x2.lineTo(X(i),y):x2.moveTo(X(i),y)});
+  x2.strokeStyle=amber;x2.lineWidth=2;x2.stroke();
+  pts.forEach(i=>{x2.beginPath();x2.arc(X(i),Y(Math.min(maxV,Math.max(0,S.fin.log[i]))),4,0,7);x2.fillStyle=amber;x2.fill()});
+  const li=pts[pts.length-1];
+  x2.fillStyle=amber;x2.font='600 11px Outfit,system-ui';
+  x2.fillText(fmtE(S.fin.log[li]),Math.min(X(li)+8,W-78),Y(S.fin.log[li])+14);
+ }
+}
+function renderWl(){
+ $('#wlMonth').textContent=mLabel(NOWI);
+ const pts=Object.keys(S.fin.log||{}).map(Number).sort((a,b)=>a-b);
+ $('#wlChips').innerHTML=pts.map(i=>
+  '<button class="sugg" data-wldel="'+i+'" style="border-style:solid">'+mLabel(i)+': '+fmtE(S.fin.log[i])+' ×</button>').join('');
 }
 $('#finChart').addEventListener('mousemove',e=>{
  const cv=$('#finChart'),r=cv.getBoundingClientRect();
@@ -2612,7 +2651,7 @@ $('#finChart').addEventListener('mousemove',e=>{
  const i=Math.round((e.clientX-r.left-padL)/(r.width-padL-padR)*(NMONTHS-1));
  if(i<0||i>=NMONTHS){$('#finTip').style.display='none';return}
  const tip=$('#finTip');
- tip.innerHTML=mLabel(i)+' · <b>'+fmtE(SIM[i])+'</b>';
+ tip.innerHTML=mLabel(i)+' · Plan <b>'+fmtE(SIM[i])+'</b>'+(S.fin.log&&S.fin.log[i]!==undefined?' · Echt <b>'+fmtE(S.fin.log[i])+'</b>':'');
  tip.style.display='block';tip.style.left=(e.clientX-r.left)+'px';tip.style.top=(e.clientY-r.top)+'px';
 });
 $('#finChart').addEventListener('mouseleave',()=>$('#finTip').style.display='none');
@@ -2722,7 +2761,14 @@ $('#panel-fin').addEventListener('click',e=>{
  if(u){const k=isNaN(+u.dataset.finundo)?u.dataset.finundo:+u.dataset.finundo;
   S.fin.done=S.fin.done.filter(x=>x!==k);save();renderFinLessons();return}
  if(e.target.closest('#finMore')){S.finStage++;save();renderFinLessons();renderMissions();return}
- if(e.target.closest('#finArch')){finArchOpen=!finArchOpen;renderFinLessons()}
+ if(e.target.closest('#finArch')){finArchOpen=!finArchOpen;renderFinLessons();return}
+ if(e.target.closest('#wlAdd')){
+  const v=parseInt($('#wlIn').value,10);
+  if(isNaN(v)||v<0)return;
+  S.fin.log[NOWI]=v;$('#wlIn').value='';
+  save();renderWl();simulate();drawChart();return}
+ const wd=e.target.closest('[data-wldel]');
+ if(wd){delete S.fin.log[+wd.dataset.wldel];save();renderWl();simulate();drawChart()}
 });
 
 /* ================= TIKTOK ================= */
@@ -2959,10 +3005,19 @@ $('#ftReset').addEventListener('click',()=>{
 });
 document.querySelectorAll('[data-ft]').forEach(b=>b.addEventListener('click',()=>{
  document.querySelectorAll('[data-ft]').forEach(x=>x.classList.toggle('on',x===b));
+ $('#ftCustom').value='';
  ftDur=+b.dataset.ft*60;
  clearInterval(ftInt);ftInt=null;ftEnd=null;ftLeft=ftDur;
  $('#ftTime').classList.remove('ft-done');$('#ftStart').textContent='Start';ftShow();
 }));
+$('#ftCustom').addEventListener('input',()=>{
+ const m=parseInt($('#ftCustom').value,10);
+ if(isNaN(m)||m<1||m>240)return;
+ document.querySelectorAll('[data-ft]').forEach(x=>x.classList.remove('on'));
+ ftDur=m*60;
+ clearInterval(ftInt);ftInt=null;ftEnd=null;ftLeft=ftDur;
+ $('#ftTime').classList.remove('ft-done');$('#ftStart').textContent='Start';ftShow();
+});
 
 /* ================= Backup & Sync ================= */
 $('#bkDown').addEventListener('click',()=>{
@@ -2999,7 +3054,7 @@ renderHeader();renderMissions();renderRu();
 makeCourse('hi',{lbl:'#hiProgLbl',bar:'#hiProgBar',host:'#hiLesson',prev:'#hiPrev',next:'#hiNext',sub:'#sub-hist'});
 makeCourse('it',{lbl:'#itProgLbl',bar:'#itProgBar',host:'#itLesson',prev:'#itPrev',next:'#itNext',sub:'#sub-it'});
 renderGoals();renderHubTypes();renderHubPlans();
-renderFinSliders();simulate();renderZi();renderFinLessons();
+renderFinSliders();renderWl();simulate();renderZi();renderFinLessons();
 renderTT();renderHooks();renderPlan();renderKnow();renderLife();renderMap();
 drawChart();
 window.addEventListener('resize',()=>{simulate();drawChart();drawZi()});
