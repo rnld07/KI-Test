@@ -329,6 +329,13 @@ canvas.chart{width:100%;height:240px;display:block}
 .wmap path:hover,.wmap g:hover path{opacity:.7}
 .wmap path.visited,.wmap g.visited path{fill:var(--area);opacity:1}
 .leg-row{display:flex;gap:14px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--ink-dim);flex-wrap:wrap}
+
+/* ---------- Fokus-Timer ---------- */
+.timer-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#ftTime{font-weight:800;font-size:28px;letter-spacing:-.01em;min-width:86px}
+.timer-btns{display:flex;gap:5px}
+.timer-row .mode-btn{padding:5px 11px;font-size:12.5px}
+#ftTime.ft-done{color:var(--save)}
 .leg-dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 
 footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);font-size:12px;text-align:center}
@@ -392,6 +399,14 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
       <div class="heat-wrap"><div class="heatmap" id="heatmap"></div></div>
       <p class="sub">Jede Zelle ist ein Tag — je kräftiger, desto mehr Missionen erledigt.</p>
     </div>
+    <div class="card">
+      <div class="eyebrow">Sicherung</div>
+      <h3>Backup &amp; Sync</h3>
+      <p class="sub">Dein Fortschritt liegt nur in diesem Browser. Sichere ihn regelmäßig — und spiel ihn auf einem anderen Gerät über den Backup-Code wieder ein.</p>
+      <div class="mode-row"><button class="btn small" id="bkDown">Backup herunterladen</button><button class="btn ghost small" id="bkCopy">Code kopieren</button></div>
+      <div class="bucket-add mt"><input id="bkIn" placeholder="Backup-Code hier einfügen …"><button class="btn small" id="bkLoad">Laden</button></div>
+      <p class="sub" id="bkMsg"></p>
+    </div>
   </section>
 
   <!-- ================= ZIELE ================= -->
@@ -406,6 +421,19 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
 
   <!-- ================= LERNEN ================= -->
   <section class="panel" id="panel-lernen">
+    <div class="card" style="padding:14px 18px">
+      <div class="timer-row">
+        <span class="eyebrow" style="margin:0">Fokus</span>
+        <b class="num" id="ftTime">25:00</b>
+        <div class="timer-btns">
+          <button class="mode-btn" data-ft="15">15</button>
+          <button class="mode-btn on" data-ft="25">25</button>
+          <button class="mode-btn" data-ft="45">45</button>
+        </div>
+        <button class="btn small" id="ftStart">Start</button>
+        <button class="btn ghost small" id="ftReset">↺</button>
+      </div>
+    </div>
     <div class="subnav" id="lernNav">
       <button class="sub-chip on" data-sub="ru" style="--sc:var(--c-ru)">Russisch</button>
       <button class="sub-chip" data-sub="hist" style="--sc:var(--c-hi)">Geschichte</button>
@@ -532,6 +560,7 @@ footer{max-width:760px;margin:0 auto;padding:0 16px 30px;color:var(--ink-faint);
     <div class="card"><h3>Belastung</h3><div class="mt" id="knowBel"></div></div>
     <div class="card"><h3>Erholung</h3><div class="mt" id="knowErh"></div></div>
     <div class="card"><h3>Ernährung</h3><div class="mt" id="knowErn"></div></div>
+    <div class="card"><h3>Selbstpflege</h3><p class="sub">Aussehen, Pflege, Termine, Grenzen — die Wartung, die dich langfristig trägt.</p><div class="mt" id="knowSel"></div></div>
   </section>
 
   <!-- ================= LEBEN ================= -->
@@ -1681,11 +1710,27 @@ function genKnowCycle(key,n){
  const P={bel:[["Technik-Video-Analyse","Film dich bei deiner wichtigsten Übung von der Seite und vergleiche mit einem Referenzvideo (z. B. Jeff Nippard). Notiere 2 Korrekturen und wende sie in der nächsten Einheit an."],["Schwachstellen-Audit","Welche Muskelgruppe oder Bewegung hinkt hinterher? Wähle EINE gezielte Übung dafür und plane sie für die nächsten 4 Wochen fest ein."],["Neuer Reiz","Probiere in einer Einheit eine dir unbekannte Übungsvariante (aus einem seriösen Kanal) und entscheide danach bewusst: übernehmen oder verwerfen."]],
  erh:[["Schlaf-Experiment","Wähle EINEN Schlaf-Hebel (feste Aufstehzeit, kühleres Zimmer, Bildschirm-Stopp) und teste ihn 7 Nächte. Bewerte danach ehrlich den Effekt."],["Regenerations-Check","Miss eine Woche deinen Morgenpuls und notiere daneben dein Energielevel (1–10). Erkenne dein Muster."],["Stress-Inventur","Schreib deine 3 größten Energiefresser auf und für jeden eine konkrete Mini-Gegenmaßnahme. Setz eine davon um."]],
  ern:[["Protein-Stichprobe","Tracke 3 ehrliche Tage dein Protein (App). Liegst du unter dem Ziel: plane die eine fehlende Portion konkret ein."],["Neues Rezept-Level","Koche ein Gericht mit einer Technik, die du noch nie gemacht hast (schmoren, dünsten, richtig anbraten). Es zählt für dein Repertoire."],["Einkaufs-Systematik","Erstelle eine Standard-Einkaufsliste, mit der dein Kühlschrank IMMER 3 schnelle proteinreiche Mahlzeiten hergibt."]],
+sel:[["Pflege-Inventur","Geh dein Bad durch: Was benutzt du wirklich, was fehlt (Feuchtigkeitscreme? Zahnseide?)? Erstelle eine Kauf-/Wegwerfliste und setz sie um."],["Termin-Offensive","Buche EINEN aufgeschobenen Gesundheits-/Pflegetermin: Zahnreinigung, Hautcheck, Friseur-Serie oder Physio-Check."],["Abend-Experiment","Teste 7 Tage eine feste Bildschirm-aus-Zeit und bewerte danach ehrlich Schlaf und Morgen-Energie."]],
  tra:[["Ziel-Dossier","Nimm ein Ziel von deiner Bucketlist und erstelle ein Mini-Dossier: beste Reisezeit, Flugpreis-Spanne, 3 Highlights, grobes Tagesbudget. 30 Minuten."],["Preis-Radar","Richte für dein Top-Ziel einen Preisalarm ein (Google Flights) — buchen musst du nichts, aber du bekommst ein Gefühl für gute Preise."],["Micro-Adventure","Plane ein Wochenend-Abenteuer in unter 2 h Entfernung (Zug oder Rad) — Reisen beginnt vor der Haustür."]]};
  const set=P[key];
  const t=set[(n-1)%set.length];
  return [{t:"Auftrag "+n+": "+t[0],x:t[1]}];
 }
+
+
+/* ============ KÖRPER: Selbstpflege (auf dich angepasst) ============ */
+const KNOW_SELF=[
+{t:"Hautpflege in 3 Schritten — mehr braucht kein Mann",x:"Du duschst durch Gym und Sauna öfter als die meisten — genau deshalb reicht ein Minimal-System: (1) Milde Waschcreme fürs Gesicht (kein Duschgel — das trocknet aus), morgens und nach dem Training. (2) Feuchtigkeitscreme danach, 10 Sekunden Aufwand. (3) Bei unreiner Haut: Der Wirkstoff heißt BPO (Benzoylperoxid, Apotheke, rezeptfrei) oder Salicylsäure — punktuell, nicht großflächig. Alles über diese 3 Schritte hinaus ist Marketing. Wichtigster Anti-Aging-Faktor bleibt sowieso: Schlaf, kein Rauchen, Sonnenschutz."},
+{t:"Vielduscher-Probleme lösen",x:"Wer 8–10× pro Woche duscht (Training! Sauna!), ruiniert sich mit heißem Wasser und aggressivem Duschgel die Hautbarriere — Jucken und trockene Stellen sind das Signal. Fixes: lauwarm statt heiß (nach der Sauna sowieso besser), pH-neutrales Duschgel nur dort, wo es nötig ist (Achseln, Leiste, Füße — der Rest braucht meist nur Wasser), nach dem Sport schnell raus aus nasser Kleidung (Pilz-Prävention), und 2–3× pro Woche nach dem Duschen eincremen. Fußpflege für Sportler: Zehennägel gerade schneiden (nicht rund — Einwachsen), Sporthallen nie barfuß."},
+{t:"Zähne: Das 2-Minuten-Upgrade mit Lebenswirkung",x:"Zähne sind Gesundheits- UND Auftritts-Thema. Das Upgrade-Paket: elektrische Schallzahnbürste (ab 30 €, putzt nachweislich besser), Zahnseide oder Interdentalbürsten VOR dem Putzen (die Stellen, die Karies wirklich bekommen), abends nach dem Putzen nichts mehr essen. Und der Termin, den fast jeder aufschiebt: professionelle Zahnreinigung 1–2× im Jahr — als AOK-Mitarbeiter weißt du, dass viele Kassen (auch deine) das bezuschussen. Karies-Löcher sind irreversibel; Prophylaxe ist der einzige Zeitpunkt, an dem Zähne billig sind."},
+{t:"Haltung: Der Schreibtisch-Ausgleich",x:"Studium + künftig Homeoffice = viele Sitzstunden, und die formen dich messbar (vorgezogene Schultern, verkürzte Hüftbeuger — als Sportler spürst du das zuerst im Training). Die 3 wirksamsten Gegenmittel: (1) Bildschirm auf Augenhöhe (Laptop-Ständer oder Bücherstapel + externe Tastatur, 20 €). (2) Alle 45 Minuten aufstehen — koppel es an etwas (jedes Mal wenn du Wasser holst). (3) Dein Gym-Programm zieht schon dagegen: Rudern und Face Pulls sind Anti-Schreibtisch-Übungen — priorisiere Zug- über Drückvolumen, mindestens 1:1."},
+{t:"Der Abend gehört dir: Digital-Sonnenuntergang",x:"Selbstpflege ist auch, den Tag bewusst zu beenden statt ihn ins Scrollen ausfransen zu lassen. Das System: eine feste „Bildschirm-aus“-Zeit 45–60 Minuten vor dem Schlafen (Wecker stellen!), Handy lädt außerhalb des Schlafzimmers oder außer Reichweite, und die letzte Stunde gehört analogen Dingen — Dehnen, Lesen, Russisch-Sätze, Gespräch. Klingt banal, ist aber der einzelne Hebel mit dem größten Effekt auf Schlafqualität UND darauf, wie dein nächster Morgen startet."},
+{t:"Auftreten: Die Basics, die man sieht",x:"Kein Style-Guide, nur die Dinge mit dem besten Aufwand-Nutzen-Verhältnis: (1) Ein fester Friseur-Rhythmus (alle 3–4 Wochen Termin direkt nachbuchen — gepflegt aussehen ist ein Termin-Problem, kein Geschmacks-Problem). (2) Klamotten, die passen, schlagen Klamotten, die teuer sind — als Sportler mit V-Form lohnt sich Anprobieren doppelt. (3) Schuhe sauber, Nägel kurz, Bart-Kanten definiert oder glatt — die drei Dinge, die Menschen unbewusst scannen. (4) Ein Duft, dezent dosiert (2 Sprüher). Das komplette Paket kostet 20 Minuten pro Woche."}];
+const KNOW_SELF2=[
+{t:"Sonnenschutz — der unterschätzte Gamechanger",x:"UV-Strahlung ist für den Großteil der sichtbaren Hautalterung verantwortlich — und für dich als Outdoor-Sportler (Fußball, Gravel-Touren) relevanter als für Büromenschen. Praktisch: Sonnencreme LSF 30–50 fürs Gesicht an Trainings- und Radtagen von April bis September, Nacken nicht vergessen. Es gibt leichte Sport-Formulierungen, die nicht in den Augen brennen. Der Krebs-Aspekt ist real (heller Hauttyp + Sonnenbrände in der Jugend sind DER Risikofaktor) — und die Vorsorge dazu: Hautkrebs-Screening zahlt die Kasse ab 35, auffällige Muttermale vorher zeigen."},
+{t:"Grenzen setzen — Selbstpflege für den Kalender",x:"Mit Studium, Arbeit, Fußball, Gym, TikTok und Familie ist dein Engpass nicht Motivation, sondern Kapazität. Die zwei Werkzeuge: (1) Das „Nein-Budget“: Jede Woche mindestens ein bewusstes Nein zu etwas, das nicht auf deine Ziele einzahlt — Nein sagen ist ein Skill, der trainiert werden muss wie alles andere. (2) Der leere Abend: Ein Abend pro Woche komplett unverplant — kein Training, keine Mission, kein Content. Erholung, die im Kalender steht, findet statt; Erholung, die „irgendwann“ passieren soll, nie."},
+{t:"Krankenkassen-Benefits ausschöpfen (du arbeitest an der Quelle)",x:"Ironie: Die meisten AOK-Mitarbeiter nutzen die eigenen Leistungen nicht. Dein Checkup-Paket: Zahnreinigung-Zuschuss, Hautkrebs-Screening, Sportkurs-Zuschüsse (auch Gym-Kooperationen), Bonusprogramme (Punkte für Vorsorge = echtes Geld), Reiseimpfungen-Zuschuss für deine Trips, Online-Präventionskurse (Stress, Rücken, Ernährung — oft 100 % erstattet). Setz dich einmal 30 Minuten mit der eigenen Leistungsübersicht hin — als Insider findest du schneller als jeder Kunde, was dir zusteht."},
+{t:"Die Jahres-Wartung deines Körpers",x:"Autos bekommen TÜV, Körper meist erst Aufmerksamkeit, wenn etwas kaputt ist. Dein jährlicher Wartungsplan (alles in Summe 3–4 Termine): Zahnarzt + Zahnreinigung, großes Blutbild beim Hausarzt (inkl. Vitamin D, Ferritin, Schilddrüse — als Sportler relevant), Hautcheck, und für dich als Fußballer sinnvoll: einmal Physio-Check für Sprunggelenke und Knie, BEVOR etwas wehtut. Alle Termine in eine Woche legen („Wartungswoche“), einmal im Jahr, fertig. Prävention ist der einzige Gesundheits-Deal mit garantierter Rendite."}];
 
 /* ============ REISE-WISSEN ============ */
 const KNOW_TRA=[
@@ -1750,19 +1795,19 @@ function hubTasks2(type){return [HUB_PLAN2.w1,HUB_PLAN2.w2,HUB_PLAN2.w3[type],HU
 <script>
 /* ============ REISEZIEL-WISSEN: Destination-Guides ============ */
 const TRA_DEST1=[
-{t:"Japan — Tokio & Kyoto",x:"Beste Zeit: März/April (Kirschblüte, voll) oder Oktober/November (Herbstfarben, angenehm). Budget: Flug 700–1.000 €, vor Ort moderater als der Ruf — 7-Eleven-Essen ist gut UND billig (3–6 €), der Japan Rail Pass lohnt ab 2 Städten. Highlights: Shibuya-Kreuzung bei Nacht, Fushimi-Inari-Schrein in Kyoto früh um 7 (vor den Massen), Tagesausflug Nara mit freilaufenden Rehen. Insider: Onsen (heiße Bäder) sind das Sauna-Upgrade deines Lebens — Tattoos vorher checken, viele Bäder erlauben sie nicht. Kaum Englisch außerhalb der Zentren: Google Translate Kamera-Modus ist dein Freund."},
-{t:"Island — Ringstraße",x:"Beste Zeit: Juni–August (Mitternachtssonne, alle Straßen offen) oder September/Oktober + Februar/März (Polarlichter). Budget: Flug ab 200 € (Play/Icelandair), ABER vor Ort teuerstes Land Europas — Supermarkt (Bónus) statt Restaurant spart 50 €+/Tag. Camper-Van ist Unterkunft + Auto in einem. Highlights: Golden Circle geht schnell, die Südküste (Seljalandsfoss, Skógafoss, Diamond Beach) ist der eigentliche Star; Westfjorde für Einsamkeit. Insider: Heiße Quellen abseits der Blue Lagoon (Reykjadalur-Tal: warmer Fluss, gratis). Wetter wechselt im 20-Minuten-Takt — Zwiebelprinzip immer."},
-{t:"Norwegen — Fjorde",x:"Beste Zeit: Mai–September; Juni ist perfekt (lange Tage, weniger Hochsaison als Juli). Budget: Flug billig (ab 60 € nach Oslo/Bergen), vor Ort teuer — Faustregel Island-Niveau. Zelten ist überall erlaubt (Jedermannsrecht!) — das macht Norwegen paradox günstig für Outdoor-Fans. Highlights: Trolltunga-Wanderung (10 h, machbar mit deiner Fitness), Geirangerfjord, Lofoten für das Postkarten-Norwegen. Insider: Die Bergen-Bahn + Nærøyfjord-Fähre („Norway in a Nutshell“ selbst zusammengebaut statt als Paket) spart die Hälfte. Für dich als Kardio-Fan: Fjord-Wanderungen sind Gym ohne Mitgliedschaft."},
-{t:"Kroatien — Segeln & Küste",x:"Beste Zeit: Mai/Juni oder September — Juli/August ist voll und heiß. Budget: eines der günstigeren Mittelmeerziele; Flug ab 50 €, Apartments fair. Segeltörn: ab ~350 €/Woche pro Person als Mitsegler (skippered) — als Gruppe mit Freunden unschlagbar. Highlights: Nationalpark Krka (schwimmen unter Wasserfällen — in Plitvice verboten), Altstadt Split am Abend, Insel Vis (unverbaut, Blaue Grotte). Insider: Autofähre statt Katamaran auf die Inseln — halber Preis, doppelte Aussicht. Straßen top: perfektes erstes Auto-Urlaubs-Ziel mit deinem künftigen Wagen."},
-{t:"Marokko — Marrakesch & Wüste",x:"Beste Zeit: März–Mai und Oktober/November (Sommer = 45 °C). Budget: Flug ab 40 € (!), vor Ort sehr günstig — gutes Essen für 5 €, Riad-Übernachtung ab 25 €. Highlights: Djemaa el-Fna bei Sonnenuntergang vom Café-Dach, 2-Tages-Tour in die Sahara (Erg Chebbi — Nacht im Wüstencamp unter Sternen), Chefchaouen die blaue Stadt. Insider: Handeln ist Sport, nicht Beleidigung — Startgebot halbieren, lächeln, gehen können. Taxis nur mit vorher vereinbartem Preis. Kulturschock-Level moderat: perfektes erstes „richtig anderes“ Reiseziel."},
-{t:"Thailand — Inseln & Norden",x:"Beste Zeit: November–Februar (trocken, 30 °C); Regenzeit variiert je Küste — Koh Samui-Seite ist im Juli/August okay. Budget: Flug 500–700 €, vor Ort legendär günstig: Streetfood 1,50 €, gutes Hotel 25 €. Highlights: Norden (Chiang Mai, Tempel, Kochkurse) schlägt für viele den Inselsüden; Koh Lanta für entspannte Insel ohne Party-Hölle. Insider: Nachtzug Bangkok→Chiang Mai (2. Klasse Schlafwagen) ist Erlebnis + spart Hotel. Roller nur mit Erfahrung UND Versicherung — Thailands Nr.1-Urlauberfalle. Respekt-Basics: Kopf ist heilig, Füße zeigen nie auf Menschen/Buddha."},
-{t:"Georgien — Kaukasus & Küche",x:"Beste Zeit: Mai/Juni und September/Oktober. Budget: Flug 150–250 €, vor Ort sehr günstig — Festessen mit Wein für 10 €. DER Geheimtipp für dich: Russisch wird fast überall verstanden (deine Sprach-Investition zahlt sich aus!), die Gastfreundschaft ist legendär, und die Küche (Chatschapuri, Chinkali) gilt als beste der Region. Highlights: Tiflis' Altstadt + Schwefelbäder, Kazbegi-Kirche vor 5.000er-Kulisse (Tagesausflug), Weinregion Kachetien — Georgien ist das älteste Weinland der Welt (8.000 Jahre). Insider: Marschrutkas (Minibusse) verbinden alles für Centbeträge."},
-{t:"Kasachstan — deine Wurzeln",x:"Beste Zeit: Mai/Juni und September (Sommer heiß, Winter -20 °C). Flug: 350–550 € nach Almaty. Die Heimatreise mit deinen Eltern wäre mehr als Urlaub: die Orte ihrer Kindheit sehen, Verwandte treffen, deine Lautschrift-Sätze im Ernstfall testen. Highlights um Almaty: Großer Almaty-See (2.500 m, türkis), Charyn-Canyon („kleiner Grand Canyon“), Medeu-Eisstadion + Shymbulak-Seilbahn; Astana als futuristischer Kontrast. Budget vor Ort günstig (Essen 3–8 €). Insider: Basare (Grüner Basar Almaty) sind Zeitreisen — geh mit deinen Eltern, sie werden Gerüche und Stände wiedererkennen. Das wird der emotionalste Trip deiner Liste."}];
+{t:"Japan",x:"Ort-Ideen: Tokio, Kyoto, Nara, Osaka. — Beste Zeit: März/April (Kirschblüte, voll) oder Oktober/November (Herbstfarben, angenehm). Budget: Flug 700–1.000 €, vor Ort moderater als der Ruf — 7-Eleven-Essen ist gut UND billig (3–6 €), der Japan Rail Pass lohnt ab 2 Städten. Highlights: Shibuya-Kreuzung bei Nacht, Fushimi-Inari-Schrein in Kyoto früh um 7 (vor den Massen), Tagesausflug Nara mit freilaufenden Rehen. Insider: Onsen (heiße Bäder) sind das Sauna-Upgrade deines Lebens — Tattoos vorher checken, viele Bäder erlauben sie nicht. Kaum Englisch außerhalb der Zentren: Google Translate Kamera-Modus ist dein Freund."},
+{t:"Island",x:"Ort-Ideen: Reykjavík, Südküste, Westfjorde, Ringstraße. — Beste Zeit: Juni–August (Mitternachtssonne, alle Straßen offen) oder September/Oktober + Februar/März (Polarlichter). Budget: Flug ab 200 € (Play/Icelandair), ABER vor Ort teuerstes Land Europas — Supermarkt (Bónus) statt Restaurant spart 50 €+/Tag. Camper-Van ist Unterkunft + Auto in einem. Highlights: Golden Circle geht schnell, die Südküste (Seljalandsfoss, Skógafoss, Diamond Beach) ist der eigentliche Star; Westfjorde für Einsamkeit. Insider: Heiße Quellen abseits der Blue Lagoon (Reykjadalur-Tal: warmer Fluss, gratis). Wetter wechselt im 20-Minuten-Takt — Zwiebelprinzip immer."},
+{t:"Norwegen",x:"Ort-Ideen: Bergen, Geirangerfjord, Lofoten, Trolltunga. — Beste Zeit: Mai–September; Juni ist perfekt (lange Tage, weniger Hochsaison als Juli). Budget: Flug billig (ab 60 € nach Oslo/Bergen), vor Ort teuer — Faustregel Island-Niveau. Zelten ist überall erlaubt (Jedermannsrecht!) — das macht Norwegen paradox günstig für Outdoor-Fans. Highlights: Trolltunga-Wanderung (10 h, machbar mit deiner Fitness), Geirangerfjord, Lofoten für das Postkarten-Norwegen. Insider: Die Bergen-Bahn + Nærøyfjord-Fähre („Norway in a Nutshell“ selbst zusammengebaut statt als Paket) spart die Hälfte. Für dich als Kardio-Fan: Fjord-Wanderungen sind Gym ohne Mitgliedschaft."},
+{t:"Kroatien",x:"Ort-Ideen: Split, Insel Vis, Krka-Nationalpark, Dubrovnik. — Beste Zeit: Mai/Juni oder September — Juli/August ist voll und heiß. Budget: eines der günstigeren Mittelmeerziele; Flug ab 50 €, Apartments fair. Segeltörn: ab ~350 €/Woche pro Person als Mitsegler (skippered) — als Gruppe mit Freunden unschlagbar. Highlights: Nationalpark Krka (schwimmen unter Wasserfällen — in Plitvice verboten), Altstadt Split am Abend, Insel Vis (unverbaut, Blaue Grotte). Insider: Autofähre statt Katamaran auf die Inseln — halber Preis, doppelte Aussicht. Straßen top: perfektes erstes Auto-Urlaubs-Ziel mit deinem künftigen Wagen."},
+{t:"Marokko",x:"Ort-Ideen: Marrakesch, Erg-Chebbi-Wüste, Chefchaouen, Essaouira. — Beste Zeit: März–Mai und Oktober/November (Sommer = 45 °C). Budget: Flug ab 40 € (!), vor Ort sehr günstig — gutes Essen für 5 €, Riad-Übernachtung ab 25 €. Highlights: Djemaa el-Fna bei Sonnenuntergang vom Café-Dach, 2-Tages-Tour in die Sahara (Erg Chebbi — Nacht im Wüstencamp unter Sternen), Chefchaouen die blaue Stadt. Insider: Handeln ist Sport, nicht Beleidigung — Startgebot halbieren, lächeln, gehen können. Taxis nur mit vorher vereinbartem Preis. Kulturschock-Level moderat: perfektes erstes „richtig anderes“ Reiseziel."},
+{t:"Thailand",x:"Ort-Ideen: Bangkok, Chiang Mai, Koh Lanta, Krabi. — Beste Zeit: November–Februar (trocken, 30 °C); Regenzeit variiert je Küste — Koh Samui-Seite ist im Juli/August okay. Budget: Flug 500–700 €, vor Ort legendär günstig: Streetfood 1,50 €, gutes Hotel 25 €. Highlights: Norden (Chiang Mai, Tempel, Kochkurse) schlägt für viele den Inselsüden; Koh Lanta für entspannte Insel ohne Party-Hölle. Insider: Nachtzug Bangkok→Chiang Mai (2. Klasse Schlafwagen) ist Erlebnis + spart Hotel. Roller nur mit Erfahrung UND Versicherung — Thailands Nr.1-Urlauberfalle. Respekt-Basics: Kopf ist heilig, Füße zeigen nie auf Menschen/Buddha."},
+{t:"Georgien",x:"Ort-Ideen: Tiflis, Kazbegi, Kachetien, Batumi. — Beste Zeit: Mai/Juni und September/Oktober. Budget: Flug 150–250 €, vor Ort sehr günstig — Festessen mit Wein für 10 €. DER Geheimtipp für dich: Russisch wird fast überall verstanden (deine Sprach-Investition zahlt sich aus!), die Gastfreundschaft ist legendär, und die Küche (Chatschapuri, Chinkali) gilt als beste der Region. Highlights: Tiflis' Altstadt + Schwefelbäder, Kazbegi-Kirche vor 5.000er-Kulisse (Tagesausflug), Weinregion Kachetien — Georgien ist das älteste Weinland der Welt (8.000 Jahre). Insider: Marschrutkas (Minibusse) verbinden alles für Centbeträge."},
+{t:"Kasachstan",x:"Ort-Ideen: Almaty, Großer Almaty-See, Charyn-Canyon, Astana. — Beste Zeit: Mai/Juni und September (Sommer heiß, Winter -20 °C). Flug: 350–550 € nach Almaty. Die Heimatreise mit deinen Eltern wäre mehr als Urlaub: die Orte ihrer Kindheit sehen, Verwandte treffen, deine Lautschrift-Sätze im Ernstfall testen. Highlights um Almaty: Großer Almaty-See (2.500 m, türkis), Charyn-Canyon („kleiner Grand Canyon“), Medeu-Eisstadion + Shymbulak-Seilbahn; Astana als futuristischer Kontrast. Budget vor Ort günstig (Essen 3–8 €). Insider: Basare (Grüner Basar Almaty) sind Zeitreisen — geh mit deinen Eltern, sie werden Gerüche und Stände wiedererkennen. Das wird der emotionalste Trip deiner Liste."}];
 const TRA_DEST2=[
-{t:"Schottland — Highlands",x:"Beste Zeit: Mai/Juni (lange Tage, VOR der Midge-Mücken-Saison ab Juli). Budget: Flug ab 40 € nach Edinburgh, vor Ort mittel — B&Bs ab 60 €, Wildcampen legal (wie Norwegen). Highlights: Isle of Skye (Old Man of Storr früh morgens), Glencoe-Tal, Edinburgh zur Fringe-Zeit (August, teuer aber einmalig). Insider: Linksverkehr + einspurige „Single Track Roads“ mit Passing Places — entspannter als es klingt, aber plane 30 km/h-Schnitt in den Highlands. West Highland Way (154 km) wäre ein Abenteuer für deine Erfahrungs-Liste."},
-{t:"Italien — Amalfiküste & Neapel",x:"Beste Zeit: April–Juni, September/Oktober — im August unbezahlbar und verstopft. Budget: Flug nach Neapel ab 60 €; Amalfi-Orte teuer ZUM SCHLAFEN — Trick: in Salerno oder Sorrent wohnen (Bahn/Fähre), Küste als Tagesausflüge. Highlights: Path of the Gods-Wanderung (gratis, beste Aussicht der Küste), Positano am frühen Abend, Pompeji + Vesuv-Kombi, und Neapel selbst: raueste, echteste Stadt Italiens mit der besten Pizza der Welt (4 €). Insider: Fähre statt Bus entlang der Küste — SITA-Busse sind Sardinenbüchsen, vom Wasser ist die Aussicht besser."},
-{t:"New York im Winter",x:"Beste Zeit für deinen Plan: Ende November–Dezember (Weihnachtsbeleuchtung, Schlittschuh, Vorweihnachts-Energie) — kalt, aber magisch; Januar ist am billigsten. Budget: Flug 350–500 €, Unterkunft ist der Kostentreiber (Hostel/Queens statt Manhattan spart 100 €+/Nacht). ESTA nicht vergessen (21 $, vorher online!). Highlights: Sonnenuntergang vom Top of the Rock (nicht Empire State — von dort siehst du es ja nicht), Staten Island Ferry gratis an der Freiheitsstatue vorbei, High Line + Chelsea Market. Insider: Broadway-Tickets am selben Tag über TKTS/Lotterie-Apps für die Hälfte; Bagel + Pizza-Slice halten das Food-Budget im Rahmen."},
-{t:"Schweiz — Alpen ohne Pleite",x:"Beste Zeit: Juni–September (Wandern) oder Winter (dann teuer). Die Schweiz mit kleinem Budget ist machbar mit System: Anreise mit dem eigenen Auto/Flixbus, Supermarkt-Verpflegung (Migros/Coop-Budget-Linien), Übernachten in Berghütten-Matratzenlagern oder auf Campingplätzen. Highlights mit maximalem Aussicht-pro-Euro: Lauterbrunnental (72 Wasserfälle, das Tal ist gratis), Oeschinensee bei Kandersteg, Aletschgletscher. Insider: Der Halbtax-Gästepass bzw. regionale Bahnpässe schlagen Einzeltickets deutlich; viele Seilbahnen haben Früh-/Spättarife. Als Gravel-Ziel später: Alpenpässe sind die Königsdisziplin."}];
+{t:"Schottland",x:"Ort-Ideen: Edinburgh, Isle of Skye, Glencoe, Highlands. — Beste Zeit: Mai/Juni (lange Tage, VOR der Midge-Mücken-Saison ab Juli). Budget: Flug ab 40 € nach Edinburgh, vor Ort mittel — B&Bs ab 60 €, Wildcampen legal (wie Norwegen). Highlights: Isle of Skye (Old Man of Storr früh morgens), Glencoe-Tal, Edinburgh zur Fringe-Zeit (August, teuer aber einmalig). Insider: Linksverkehr + einspurige „Single Track Roads“ mit Passing Places — entspannter als es klingt, aber plane 30 km/h-Schnitt in den Highlands. West Highland Way (154 km) wäre ein Abenteuer für deine Erfahrungs-Liste."},
+{t:"Italien",x:"Ort-Ideen: Neapel, Amalfiküste, Positano, Pompeji. — Beste Zeit: April–Juni, September/Oktober — im August unbezahlbar und verstopft. Budget: Flug nach Neapel ab 60 €; Amalfi-Orte teuer ZUM SCHLAFEN — Trick: in Salerno oder Sorrent wohnen (Bahn/Fähre), Küste als Tagesausflüge. Highlights: Path of the Gods-Wanderung (gratis, beste Aussicht der Küste), Positano am frühen Abend, Pompeji + Vesuv-Kombi, und Neapel selbst: raueste, echteste Stadt Italiens mit der besten Pizza der Welt (4 €). Insider: Fähre statt Bus entlang der Küste — SITA-Busse sind Sardinenbüchsen, vom Wasser ist die Aussicht besser."},
+{t:"USA",x:"Ort-Ideen: New York (Winter), Manhattan, Brooklyn, Top of the Rock. — Beste Zeit für deinen Plan: Ende November–Dezember (Weihnachtsbeleuchtung, Schlittschuh, Vorweihnachts-Energie) — kalt, aber magisch; Januar ist am billigsten. Budget: Flug 350–500 €, Unterkunft ist der Kostentreiber (Hostel/Queens statt Manhattan spart 100 €+/Nacht). ESTA nicht vergessen (21 $, vorher online!). Highlights: Sonnenuntergang vom Top of the Rock (nicht Empire State — von dort siehst du es ja nicht), Staten Island Ferry gratis an der Freiheitsstatue vorbei, High Line + Chelsea Market. Insider: Broadway-Tickets am selben Tag über TKTS/Lotterie-Apps für die Hälfte; Bagel + Pizza-Slice halten das Food-Budget im Rahmen."},
+{t:"Schweiz",x:"Ort-Ideen: Lauterbrunnental, Oeschinensee, Aletschgletscher. — Beste Zeit: Juni–September (Wandern) oder Winter (dann teuer). Die Schweiz mit kleinem Budget ist machbar mit System: Anreise mit dem eigenen Auto/Flixbus, Supermarkt-Verpflegung (Migros/Coop-Budget-Linien), Übernachten in Berghütten-Matratzenlagern oder auf Campingplätzen. Highlights mit maximalem Aussicht-pro-Euro: Lauterbrunnental (72 Wasserfälle, das Tal ist gratis), Oeschinensee bei Kandersteg, Aletschgletscher. Insider: Der Halbtax-Gästepass bzw. regionale Bahnpässe schlagen Einzeltickets deutlich; viele Seilbahnen haben Früh-/Spättarife. Als Gravel-Ziel später: Alpenpässe sind die Königsdisziplin."}];
 
 /* ============ ZIEL-VORSCHLÄGE ============ */
 const GOAL_SUGG=[
@@ -1776,6 +1821,23 @@ const GOAL_SUGG=[
 {t:"Investieren Level 2",d:"Vom ETF-Sparer zum Verständnis, was du da eigentlich besitzt.",ms:["Einen Geschäftsbericht (z. B. einer Lieblingsfirma) quergelesen","Ein gutes Finanzbuch durchgearbeitet","Eigene Anlagestrategie auf einer Seite schriftlich"]},
 {t:"Fokus & Ruhe",d:"Aufmerksamkeit ist die Währung deiner Ziele — trainierbar wie ein Muskel.",ms:["10 geführte Meditationen gemacht","Eine Woche handyfreien Morgen getestet","Ablenkungsfreies Arbeits-Setup eingerichtet"]},
 {t:"Fotografie-Auge",d:"Reisen + TikTok + Erinnerungen — ein Skill, der in alles einzahlt.",ms:["Belichtungsdreieck verstanden und angewendet","100 bewusst komponierte Fotos gemacht","Dein bestes Bild gedruckt und aufgehängt"]}];
+
+
+/* ============ ERFAHRUNGEN: erweiterter Vorschlags-Pool ============ */
+const EXP_SUGG_MORE=["Polarlichter sehen","Bei einem Bundesliga-Spiel live im Stadion","Einen Kurztrip nur mit dem Zug machen","Skifahren oder Snowboarden lernen","Ein eigenes Möbelstück bauen","Bei einer Wanderung auf einem Gipfel übernachten (Hüttentour)","Surfen ausprobieren","Ein Konzert deiner Lieblingsband","Gokart oder Rennstrecken-Tag","Escape Room mit Freunden schaffen","Beim Public Viewing ein großes Turnier erleben","Einen Monat vegetarisch testen","Stand-up-Paddling auf einem See","Ein Zeitkapsel-Brief an dein 30-jähriges Ich","In einem Podcast oder Interview zu Gast sein","Heißluftballon- oder Rundflug","Selbst Brot backen","Ein Wochenende komplett offline in der Natur"];
+
+/* ============ ZIELE: Meilenstein-Vorschläge pro Ziel ============ */
+const MS_SUGG={
+gh:["Eine Woche lang jeden Tag 8.000+ Schritte","Ersten 5-km-Lauf unter 30 Minuten","Beweglichkeits-Test bestanden: tiefe Hocke 60 Sekunden halten","Zahnreinigung + Hautcheck im selben Monat erledigt","Einen Monat ohne Energy-Drinks/Softdrinks"],
+gr:["Erste Sprachnachricht komplett auf Russisch verschickt","Ein russisches Lied verstanden und mitgesungen","Mit Oma/Opa 10 Minuten nur Russisch gesprochen","Russische Speisekarte ohne Hilfe bestellt","Einen kurzen Text in kyrillischer Schrift gelesen"],
+gj:["LinkedIn-Profil erstellt und gepflegt","Erste Zertifizierung abgeschlossen (z. B. Scrum, SQL)","Eigenes Projekt im Praxiseinsatz präsentiert","Mentor im Unternehmen gefunden","Eine Fortbildung selbst eingefordert"],
+gt:["Erstes Video mit 10.000+ Views","50 Videos veröffentlicht","Eigenes Thumbnail-/Branding-Template erstellt","Erste Kooperations-Anfrage erhalten","Content-Batch-Tag als feste Routine etabliert"],
+gf:["Erste 1.000 € im Depot","Haushaltsbuch einen Monat geführt und ausgewertet","Alle Verträge in einem Ordner digitalisiert","Ersten Sparplan erhöht statt Gehaltserhöhung zu verleben","10.000 € Depotwert erreicht"],
+gv:["Ersten Flug nur mit Handgepäck gemeistert","Eine Reise komplett selbst geplant (ohne Pauschalangebot)","Einen Local-Kontakt auf einer Reise gewonnen","Reise-Fotoalbum eines Trips erstellt","Ein Land zum zweiten Mal besucht, weil es so gut war"],
+gw:["Erstes Sachbuch-Genre außerhalb der Komfortzone gelesen","Eine Doku-Reihe komplett durchgearbeitet","Wikipedia-Artikel-Lücke selbst recherchiert","Ein Thema einem Freund in 5 Minuten erklärt","Museums- oder Gedenkstättenbesuch gemacht"],
+ge:["Eine Erfahrung gemacht, die dich nichts gekostet hat","Eine Erfahrung mit den Eltern geteilt","Etwas gemacht, das du seit Jahren aufschiebst","Eine spontane Zusage ohne Überdenken gegeben"],
+gs:["Einem alten Freund nach langer Zeit geschrieben","Ein tiefes Gespräch statt Small Talk geführt","Jemanden aktiv um Hilfe gebeten","Ein Kompliment gemacht, das du sonst nur gedacht hättest","Jemandem ohne Anlass etwas mitgebracht"],
+custom:["Ersten konkreten Schritt geplant und terminiert","Einer Person von diesem Ziel erzählt","Halbzeit-Bilanz gezogen und Kurs angepasst","Das Ziel gefeiert, als es erreicht war"]};
 
 /* ============ TIKTOK: 4 weitere Nischen ============ */
 const NICHES_EXTRA=[
@@ -1794,6 +1856,9 @@ const NICHES_EXTRA=[
 
 /* ============ LÄNDER für den Reisetracker ============ */
 const COUNTRIES=[["Deutschland","de"],["Niederlande","nl"],["Spanien","es"],["Portugal","pt"],["Österreich","at"],["Frankreich","fr"],["Luxemburg","lu"],["Polen","pl"],["USA","us"],["Dominikanische Republik","do"],["Griechenland","gr"],["Italien","it"],["Kroatien","hr"],["Schweiz","ch"],["Belgien","be"],["Dänemark","dk"],["Schweden","se"],["Norwegen","no"],["Island","is"],["Großbritannien","gb"],["Irland","ie"],["Tschechien","cz"],["Ungarn","hu"],["Türkei","tr"],["Marokko","ma"],["Ägypten","eg"],["Kasachstan","kz"],["Georgien","ge"],["Japan","jp"],["Thailand","th"],["Vietnam","vn"],["Indonesien","id"],["Australien","au"],["Kanada","ca"],["Mexiko","mx"],["Brasilien","br"],["Argentinien","ar"],["Südafrika","za"],["Kenia","ke"],["China","cn"],["Südkorea","kr"],["Indien","in"],["Malaysia","my"],["Singapur","sg"],["Philippinen","ph"],["Neuseeland","nz"],["Finnland","fi"],["Estland","ee"],["Lettland","lv"],["Litauen","lt"],["Slowakei","sk"],["Slowenien","si"],["Rumänien","ro"],["Bulgarien","bg"],["Serbien","rs"],["Bosnien","ba"],["Albanien","al"],["Montenegro","me"],["Nordmazedonien","mk"],["Zypern","cy"],["Malta","mt"],["Israel","il"],["Jordanien","jo"],["VAE / Dubai","ae"],["Katar","qa"],["Usbekistan","uz"],["Kirgistan","kg"],["Russland","ru"],["Ukraine","ua"],["Kolumbien","co"],["Peru","pe"],["Chile","cl"],["Costa Rica","cr"],["Kuba","cu"],["Tunesien","tn"]];
+NICHES_EXTRA.push({t:"Informatik- & Tech-Quiz",short:"IT-Quiz",d:"Quiz-Format: „Bist du schlauer als ein Informatiker?“ — 3 Fragen pro Video, Auflösung am Ende. Interaktiv (Kommentare raten mit), faceless-perfekt, und dein Studium liefert endlos Fragen.",m:"Monetarisierung: ○●●",k:"Konkurrenz: niedrig · Start-Tempo: schnell",
+ ideas:["3 IT-Fragen, die 90 % falsch beantworten — bist du dabei?","Was macht dieser eine Code-Befehl? (Auflösung in 3… 2… 1)","Echte Bewerbungsfragen von Tech-Konzernen — hättest du den Job?","Binär zählen in 30 Sekunden — kannst du es danach?","Welches Passwort knackt ein Hacker zuerst? Quiz!"],
+ study:"Suche auf TikTok nach „quiz deutsch“, „tech quiz“ — achte darauf, wie lange die Auflösung hinausgezögert wird (Watchtime-Trick)"});
 NICHES.push(...NICHES_EXTRA);
 </script>
 
@@ -1866,7 +1931,7 @@ const GOALS=[
  {t:'In einer glücklichen Beziehung'}]}];
 
 /* ============ REISEN & ERFAHRUNGEN: Startvorschläge ============ */
-const TRAVEL_SUGG=["Kasachstan — Heimatreise mit der Familie","Japan — Tokio & Kyoto","Island — Ringstraße","Norwegen — Fjorde","Italien — Amalfiküste","Kroatien — Segeltörn","Schottland — Highlands","Marokko — Marrakesch & Wüste","Thailand — Inseln","Schweiz — Alpenpanorama","Georgien — Kaukasus & Küche","New York im Winter"];
+const TRAVEL_SUGG=["Kasachstan","Japan","Island","Norwegen","Italien","Kroatien","Schottland","Marokko","Thailand","Schweiz","Georgien","USA","Vietnam","Südkorea","Portugal (Azoren)","Slowenien"];
 const EXP_SUGG=["Gravel-Tour zum Bauernhof — Milch & Honig direkt vom Hof","Halbmarathon laufen","Fallschirmsprung","Eisbaden im Winter","Blut spenden","Solo-Wochenendtrip","Mit Mama ein russisches Gericht kochen lernen","Vor Publikum sprechen","Auf ein Festival fahren","Sonnenaufgangs-Wanderung","24 Stunden komplett ohne Handy","Sprach-Tandempartner treffen","Einen Tag ehrenamtlich helfen","Sauna-Aufguss-Zeremonie erleben","Bouldern ausprobieren","Ein Buch an einem Wochenende durchlesen"];
 
 /* ============ LERNHUB: Plan-Vorlagen ============ */
@@ -1938,6 +2003,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
 
 /* ================= Datum ================= */
 const EPOCH=new Date(2026,6,13);
+const SEASON_START=new Date(2024,7,1); // Studienbeginn 01.08.2024
 const SEASON_END=new Date(2027,8,30);
 function dkey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 const NOW=new Date();
@@ -2042,8 +2108,7 @@ function renderHeader(){
  $('#stToday').textContent=done+'/'+ms.length;
  $('#boardDate').textContent=WD[NOW.getDay()]+', '+NOW.getDate()+'. '+MONTHS[NOW.getMonth()]+' '+NOW.getFullYear();
  $('#matchdayNo').textContent='#'+(dayIdx+1);
- const total=(SEASON_END-EPOCH)/864e5;
- const pct=Math.min(100,Math.max(0,Math.round((dayIdx/total)*100)));
+ const pct=Math.min(100,Math.max(0,Math.round((NOW-SEASON_START)/(SEASON_END-SEASON_START)*100)));
  $('#seasonFill').style.width=pct+'%';
  $('#seasonPct').textContent=pct+' % · Sep 2027';
 }
@@ -2301,7 +2366,7 @@ function renderGoals(){
      :'<div class="ms-row'+(states[vi]?' done':'')+'"><button class="ms-check" data-ms="'+g.id+i+'" aria-label="abhaken"></button><span class="ms-t">'+m.t+'</span><button class="bucket-x" data-msdel="'+g.id+':'+i+'" aria-label="entfernen">×</button></div>').join('')
    +custom.map((c,i)=>'<div class="ms-row'+(c.done?' done':'')+'"><button class="ms-check" data-cms="'+g.id+':'+i+'" aria-label="abhaken"></button><span class="ms-t">'+esc(c.t)+'</span><button class="bucket-x" data-cmx="'+g.id+':'+i+'" aria-label="löschen">×</button></div>').join('')
    +'</div>'
-   +'<div class="bucket-add mt"><input data-msin="'+g.id+'" placeholder="Eigenen Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-msadd="'+g.id+'">+</button></div>'
+   +'<div class="bucket-add mt"><input data-msin="'+g.id+'" placeholder="Eigenen Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-msadd="'+g.id+'">+</button><button class="btn small ghost" data-mssg="'+g.id+'" title="Meilenstein vorschlagen">💡</button></div>'
    +'</div>';
  }).join('');
  h+=S.customGoals.map((g,gi)=>{
@@ -2313,7 +2378,7 @@ function renderGoals(){
    +'<div class="ms-list">'
    +g.ms.map((m,i)=>'<div class="ms-row'+(m.done?' done':'')+'"><button class="ms-check" data-cgms="'+gi+':'+i+'" aria-label="abhaken"></button><span class="ms-t">'+esc(m.t)+'</span><button class="bucket-x" data-cgmx="'+gi+':'+i+'" aria-label="löschen">×</button></div>').join('')
    +'</div>'
-   +'<div class="bucket-add mt"><input data-cgmsin="'+gi+'" placeholder="Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-cgmsadd="'+gi+'">+</button></div>'
+   +'<div class="bucket-add mt"><input data-cgmsin="'+gi+'" placeholder="Meilenstein hinzufügen …" maxlength="70"><button class="btn small ghost" data-cgmsadd="'+gi+'">+</button><button class="btn small ghost" data-mssg="custom:'+gi+'" title="Meilenstein vorschlagen">💡</button></div>'
    +'</div>';
  }).join('');
  h+='<div class="card"><h3>Eigenes Ziel anlegen</h3>'
@@ -2367,6 +2432,21 @@ $('#panel-ziele').addEventListener('click',e=>{
   if(s){S.customGoals.push({t:s.t,d:s.d,ms:s.ms.map(m=>({t:m,done:false}))});save();renderGoals()}
   return}
  if(e.target.closest('#sgRefresh')){S.suggSeed++;save();renderGoals();return}
+ const mg=e.target.closest('[data-mssg]');
+ if(mg){
+  const key=mg.dataset.mssg;
+  if(key.startsWith('custom:')){
+   const gi=+key.split(':')[1];
+   const have=S.customGoals[gi].ms.map(m=>m.t);
+   const next=MS_SUGG.custom.find(s=>!have.includes(s));
+   if(next){S.customGoals[gi].ms.push({t:next,done:false});save();renderGoals()}
+  }else{
+   const g=GOALS.find(x=>x.id===key);
+   const have=g.ms.map(m=>m.t).concat((S.goalsCustom[key]||[]).map(m=>m.t));
+   const next=(MS_SUGG[key]||MS_SUGG.custom).find(s=>!have.includes(s));
+   if(next){(S.goalsCustom[key]=S.goalsCustom[key]||[]).push({t:next,done:false});save();renderGoals()}
+  }
+  return}
 });
 
 /* ================= LERNHUB ================= */
@@ -2719,8 +2799,8 @@ $('#planList').addEventListener('input',e=>{
  const f=e.target.closest('[data-plan]');if(!f)return;
  S.plan[+f.dataset.plan]=f.value;save();renderMissions();
 });
-const KNOW_BATCHES={bel:[KNOW_BEL,KNOW_BEL2],erh:[KNOW_ERH,KNOW_ERH2],ern:[KNOW_ERN,KNOW_ERN2],tra:[TRA_DEST1,TRA_DEST2.concat(KNOW_TRA,KNOW_TRA2)]};
-const KNOW_SECTIONS=[['bel','#knowBel'],['erh','#knowErh'],['ern','#knowErn'],['tra','#knowTra']];
+const KNOW_BATCHES={bel:[KNOW_BEL,KNOW_BEL2],erh:[KNOW_ERH,KNOW_ERH2],ern:[KNOW_ERN,KNOW_ERN2],sel:[KNOW_SELF,KNOW_SELF2],tra:[TRA_DEST1,TRA_DEST2.concat(KNOW_TRA,KNOW_TRA2)]};
+const KNOW_SECTIONS=[['bel','#knowBel'],['erh','#knowErh'],['ern','#knowErn'],['sel','#knowSel'],['tra','#knowTra']];
 const knowOpen={};
 function knowData(key){
  const st=S.knowStage[key]||0;
@@ -2766,21 +2846,28 @@ function knowClicks(e){
 $('#panel-body').addEventListener('click',knowClicks);
 
 /* ================= LEBEN: Reisen & Erfahrungen ================= */
-function renderBucket(listSel,suggSel,arr,suggs,suggLbl){
+function renderBucket(listSel,suggSel,arr,suggs,suggLbl,rot){
  $(listSel).innerHTML=arr.length?arr.map((x,i)=>
   '<div class="bucket-row'+(x.done?' done':'')+'"><button class="ms-check" data-bk="'+i+'" aria-label="abhaken"></button>'
   +'<span class="bucket-t">'+esc(x.t)+'</span><button class="bucket-x" data-bx="'+i+'" aria-label="löschen">×</button></div>').join('')
  :'<p class="sub">Noch leer — füge eigene Einträge hinzu oder tipp unten auf einen Vorschlag.</p>';
- const remaining=suggs.filter(s=>!arr.some(x=>x.t===s));
+ let remaining=suggs.filter(s=>!arr.some(x=>x.t===s));
+ let shuffleBtn='';
+ if(rot&&remaining.length>6){
+  const off=((S.expSeed||0)*5)%remaining.length;
+  remaining=remaining.slice(off).concat(remaining.slice(0,off)).slice(0,6);
+  shuffleBtn='<button class="arch-toggle" id="expShuffle">Neue Vorschläge generieren 🎲</button>';
+ }
  $(suggSel).innerHTML=remaining.length?'<div class="sugg-lbl">'+suggLbl+'</div><div class="sugg-wrap">'
-  +remaining.map(s=>'<button class="sugg" data-sg="'+esc(s)+'">+ '+s+'</button>').join('')+'</div>':'';
+  +remaining.map(s=>'<button class="sugg" data-sg="'+esc(s)+'">+ '+s+'</button>').join('')+'</div>'+shuffleBtn:'';
 }
 function renderLife(){
- renderBucket('#travelList','#travelSugg',S.travel,TRAVEL_SUGG,'Vorschläge — antippen zum Übernehmen');
- renderBucket('#expList','#expSugg',S.exp,EXP_SUGG,'Ideen — antippen zum Übernehmen');
+ renderBucket('#travelList','#travelSugg',S.travel,TRAVEL_SUGG,'Länder-Vorschläge — antippen zum Übernehmen');
+ renderBucket('#expList','#expSugg',S.exp,EXP_SUGG.concat(EXP_SUGG_MORE),'Ideen — antippen zum Übernehmen',true);
 }
 function bucketHandlers(subSel,arr){
  $(subSel).addEventListener('click',e=>{
+  if(e.target.closest('#expShuffle')){S.expSeed=(S.expSeed||0)+1;save();renderLife();return}
   const c=e.target.closest('[data-bk]');
   if(c){arr[+c.dataset.bk].done=!arr[+c.dataset.bk].done;save();renderLife();return}
   const x=e.target.closest('[data-bx]');
@@ -2831,6 +2918,81 @@ $('#travelAdd').addEventListener('click',()=>{const v=$('#travelInput').value.tr
 $('#expAdd').addEventListener('click',()=>{const v=$('#expInput').value.trim();if(v){S.exp.push({t:v,done:false});$('#expInput').value='';save();renderLife()}});
 $('#travelInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#travelAdd').click()});
 $('#expInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#expAdd').click()});
+
+/* ================= Fokus-Timer ================= */
+let ftDur=25*60, ftEnd=null, ftLeft=25*60, ftInt=null;
+function ftFmt(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function ftShow(){$('#ftTime').textContent=ftFmt(ftLeft)}
+function ftBeep(){
+ try{
+  const ac=new (window.AudioContext||window.webkitAudioContext)();
+  [0,0.5].forEach(t=>{
+   const o=ac.createOscillator(),g=ac.createGain();
+   o.frequency.value=880;o.connect(g);g.connect(ac.destination);
+   g.gain.setValueAtTime(.25,ac.currentTime+t);
+   g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+t+.35);
+   o.start(ac.currentTime+t);o.stop(ac.currentTime+t+.4);
+  });
+ }catch(e){}
+}
+function ftTick(){
+ ftLeft=(ftEnd-Date.now())/1000;
+ if(ftLeft<=0){
+  clearInterval(ftInt);ftInt=null;ftEnd=null;ftLeft=0;
+  $('#ftTime').classList.add('ft-done');
+  $('#ftStart').textContent='Start';
+  ftBeep();
+ }
+ ftShow();
+}
+$('#ftStart').addEventListener('click',()=>{
+ if(ftInt){clearInterval(ftInt);ftInt=null;ftEnd=null;$('#ftStart').textContent='Weiter';return}
+ $('#ftTime').classList.remove('ft-done');
+ if(ftLeft<=0)ftLeft=ftDur;
+ ftEnd=Date.now()+ftLeft*1000;
+ ftInt=setInterval(ftTick,500);
+ $('#ftStart').textContent='Pause';
+});
+$('#ftReset').addEventListener('click',()=>{
+ clearInterval(ftInt);ftInt=null;ftEnd=null;ftLeft=ftDur;
+ $('#ftTime').classList.remove('ft-done');$('#ftStart').textContent='Start';ftShow();
+});
+document.querySelectorAll('[data-ft]').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('[data-ft]').forEach(x=>x.classList.toggle('on',x===b));
+ ftDur=+b.dataset.ft*60;
+ clearInterval(ftInt);ftInt=null;ftEnd=null;ftLeft=ftDur;
+ $('#ftTime').classList.remove('ft-done');$('#ftStart').textContent='Start';ftShow();
+}));
+
+/* ================= Backup & Sync ================= */
+$('#bkDown').addEventListener('click',()=>{
+ const blob=new Blob([JSON.stringify(S)],{type:'application/json'});
+ const a=document.createElement('a');
+ a.href=URL.createObjectURL(blob);
+ a.download='momentum-backup-'+TODAY+'.json';
+ a.click();
+ URL.revokeObjectURL(a.href);
+ $('#bkMsg').textContent='Backup-Datei erstellt ✓ — sicher aufbewahren (Cloud, Messenger an dich selbst …).';
+});
+$('#bkCopy').addEventListener('click',()=>{
+ const code=JSON.stringify(S);
+ if(navigator.clipboard&&navigator.clipboard.writeText){
+  navigator.clipboard.writeText(code).then(
+   ()=>{$('#bkMsg').textContent='Backup-Code kopiert ✓ — z. B. per Messenger an dich selbst schicken.'},
+   ()=>{$('#bkIn').value=code;$('#bkMsg').textContent='Kopieren blockiert — Code steht jetzt im Feld, manuell kopieren.'});
+ }else{$('#bkIn').value=code;$('#bkMsg').textContent='Code steht im Feld — manuell kopieren.'}
+});
+$('#bkLoad').addEventListener('click',()=>{
+ const v=$('#bkIn').value.trim();
+ if(!v){$('#bkMsg').textContent='Füge zuerst einen Backup-Code ein.';return}
+ try{
+  const obj=JSON.parse(v);
+  if(typeof obj!=='object'||obj===null||(!obj.days&&!obj.ru))throw 0;
+  localStorage.setItem(LSKEY,JSON.stringify(obj));
+  $('#bkMsg').textContent='Backup geladen ✓ — Seite wird neu geladen …';
+  setTimeout(()=>location.reload(),600);
+ }catch(e){$('#bkMsg').textContent='Das sieht nicht nach einem gültigen Backup-Code aus.'}
+});
 
 /* ================= Init ================= */
 renderHeader();renderMissions();renderRu();
