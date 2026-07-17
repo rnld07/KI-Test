@@ -2013,7 +2013,7 @@ S.countries=S.countries||['de','nl','es','pt','at','fr','lu','pl','us','do','gr'
 S.tt.hidden=S.tt.hidden||[];S.tt.showN=S.tt.showN||4;S.suggSeed=S.suggSeed||1;
 if(!S.migTra2){for(const k in S.known)if(/^tra\d/.test(k))delete S.known[k];S.migTra2=1}
 S.fin.log=S.fin.log||{};
-if(S.fin.inp.act!==undefined){if(!Object.keys(S.fin.log).length)S.fin.log[Math.max(0,(NOW.getFullYear()-2026)*12+(NOW.getMonth()-6))]=S.fin.inp.act;delete S.fin.inp.act}
+if(S.fin.inp.act!==undefined){const _d=new Date();if(!Object.keys(S.fin.log).length)S.fin.log[Math.max(0,(_d.getFullYear()-2026)*12+(_d.getMonth()-6))]=S.fin.inp.act;delete S.fin.inp.act}
 function save(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
 
