@@ -80,34 +80,38 @@ burst /= np.abs(burst).max()
 add(boom * 0.9 + burst * 0.25, 41.0, 0.55)
 
 # ---------------- electron stage 41..48.2 ----------------
-t = tt(int(7.4 * SR))
+t = tt(int(6.8 * SR))
 drone = (np.sin(2 * np.pi * 55 * t) + 0.5 * np.sin(2 * np.pi * 82.4 * t) + 0.3 * np.sin(2 * np.pi * 110.3 * t)) * env_adsr(len(t), 1.0, 1.5)
 add(drone, 41.0, 0.08)
 for m in [69, 72, 76, 81, 84]:
-    s = note(mtof(m), 7.2, harm=2) * env_adsr(int(7.2 * SR), 1.5, 2.0)
+    s = note(mtof(m), 6.4, harm=2) * env_adsr(int(6.4 * SR), 1.5, 1.6)
     add(s, 41.2, 0.022, pan=rng.uniform(-0.6, 0.6))
 for i in range(70):
-    tb = 41.2 + rng.uniform(0, 6.8)
+    tb = 41.2 + rng.uniform(0, 6.2)
     f = rng.uniform(2500, 7000)
     t = tt(int(0.25 * SR)); s = np.sin(2 * np.pi * f * t) * np.exp(-t * 25)
     add(s, tb, 0.025, pan=rng.uniform(-0.9, 0.9))
-for k in range(5):
+for k in range(4):
     tb = 41.2 + k * 1.6
     t = tt(int(0.8 * SR)); s = np.sin(2 * np.pi * (70 + 30 * np.exp(-t * 5)) * t) * np.exp(-t * 5)
     add(s, tb, 0.18)
 
 # ---------------- whoosh zoom-out 47.9..49.2 ----------------
-d = 1.4; t = tt(int(d * SR))
+d = 1.7; t = tt(int(d * SR))
 nz = fft_filter(rng.standard_normal(len(t)), lo=150, hi=4000); nz /= np.abs(nz).max()
 e = np.sin(np.pi * t / d) ** 2
-add(nz * e, 47.9, 0.35)
+add(nz * e, 47.45, 0.38)
+# dive whoosh at the start
+d = 1.6; t = tt(int(d * SR))
+nz = fft_filter(rng.standard_normal(len(t)), lo=200, hi=3000); nz /= np.abs(nz).max()
+add(nz * np.sin(np.pi * t / d) ** 3, 5.0, 0.22)
 # soft hit on phone
 t = tt(int(2.5 * SR))
 hit = np.sin(2 * np.pi * 50 * t) * np.exp(-t * 4) + 0.3 * fft_filter(rng.standard_normal(len(t)), hi=1200) * np.exp(-t * 20) / 3
-add(hit, 49.15, 0.4)
+add(hit, 49.05, 0.4)
 for j, m in enumerate([45, 52, 57, 60, 64]):
     s = note(mtof(m), 2.6, harm=4) * env_adsr(int(2.6 * SR), 0.02, 1.5)
-    add(s, 49.15, 0.04, pan=(j - 2) * 0.2)
+    add(s, 49.05, 0.04, pan=(j - 2) * 0.2)
 
 # ---------------- cross-section 51.3..57.6 ----------------
 for j, m in enumerate([41, 48, 53, 57, 60]):
@@ -116,15 +120,15 @@ for j, m in enumerate([41, 48, 53, 57, 60]):
 t = tt(int(4.2 * SR))
 hum = (np.sin(2 * np.pi * 100 * t) + 0.4 * np.sin(2 * np.pi * 200 * t) + 0.2 * np.sin(2 * np.pi * 300 * t)) * (0.7 + 0.3 * np.sin(2 * np.pi * 6 * t))
 hum *= env_adsr(len(t), 0.8, 1.0)
-add(hum, 53.1, 0.03)
-for tb, f in [(52.65, 900), (53.85, 1320), (53.95, 1760), (55.4, 1047), (55.5, 1568)]:
+add(hum, 53.0, 0.03)
+for tb, f in [(52.7, 900), (53.75, 1320), (53.85, 1760), (55.6, 1047), (55.7, 1568)]:
     t = tt(int(0.5 * SR)); s = np.sin(2 * np.pi * f * t) * np.exp(-t * 9)
     add(s, tb, 0.09)
 
 # ---------------- typing outro ----------------
 for j, m in enumerate([43, 50, 55, 59, 62]):
     s = note(mtof(m), 4.4, harm=4) * env_adsr(int(4.4 * SR), 0.8, 1.0)
-    add(s, 57.4, 0.03, pan=(j - 2) * 0.25)
+    add(s, 57.2, 0.03, pan=(j - 2) * 0.25)
 for tb in ev['taps']:
     t = tt(int(0.05 * SR))
     clk = fft_filter(rng.standard_normal(len(t)), lo=1500, hi=9000) * np.exp(-t * 160)
@@ -133,10 +137,20 @@ for tb in ev['taps']:
 # final chord
 for j, m in enumerate([45, 52, 57, 59, 64, 71]):
     s = note(mtof(m), 2.6, harm=5) * env_adsr(int(2.6 * SR), 0.6, 1.4)
-    add(s, 61.6, 0.045, pan=(j - 2.5) * 0.2)
+    add(s, 61.95, 0.045, pan=(j - 2.5) * 0.2)
 t = tt(int(2.4 * SR)); s = np.sin(2 * np.pi * 1760 * t) * np.exp(-t * 2.5) + 0.5 * np.sin(2 * np.pi * 2637 * t) * np.exp(-t * 3)
-add(s, 61.7, 0.05)
+add(s, 62.05, 0.05)
 
+# ---------------- reverb ----------------
+def reverb(x, seed):
+    r = np.random.default_rng(seed); n = int(2.2 * SR); ti = np.arange(n) / SR
+    ir = r.standard_normal(n) * np.exp(-ti * 2.6); ir = fft_filter(ir, lo=120, hi=7000); ir[:int(0.012*SR)] = 0; ir /= np.sqrt((ir**2).sum())
+    m = 1 << int(np.ceil(np.log2(len(x) + n)))
+    y = np.fft.irfft(np.fft.rfft(x, m) * np.fft.rfft(ir, m), m)[:len(x)]
+    return y
+wet = 0.32
+L2 = L + wet * reverb(L, 11) * 3; R2 = R + wet * reverb(R, 12) * 3
+L, R = L2, R2
 # ---------------- master ----------------
 mix = np.stack([L, R], 1)
 fade = np.ones(N); nf = int(1.2 * SR); fade[-nf:] = np.linspace(1, 0, nf) ** 1.5

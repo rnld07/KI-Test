@@ -2,15 +2,13 @@
 precision highp float;
 out vec4 outColor;
 uniform vec2 uRes;
-uniform float uN;
-uniform float uT;
-uniform float uRipple;
-uniform float uRippleR;
+uniform float uN;       // view scale (halvings of 2.4 cm)
+uniform float uGap;     // real gap / view gap (1 = gap fills the frame)
+uniform float uT, uYaw, uAz, uRipple, uRippleR;
 uniform vec2 uDrift;
 uniform sampler2D uUI;
 uniform vec2 uKeyUV;
 
-const float YS = 0.253;
 const float CC = 0.016;
 const float FS = 0.546875;
 
@@ -24,8 +22,10 @@ vec4 voro(vec2 p, float jit, out vec2 rel){ vec2 i=floor(p), f=fract(p); float d
     if(d<d1){ d2=d1; d1=d; id=hash12(i+g+17.3); rel=r;} else if(d<d2){ d2=d;} }
   return vec4(sqrt(d1), sqrt(d2), id, 0.); }
 
+float gEps;
 float Sc(float lf){ return exp2(-6.3808 - uN - lf); }
-float Ws(float s, bool first, bool last){ float ls = log2(s); return (first?1.:smoothstep(4.9,3.4,ls))*(last?1.:smoothstep(-1.9,-0.8,ls)); }
+float Ws(float s, bool first, bool last){ float ls = log2(s); return (first?1.:smoothstep(4.0,2.8,ls))*(last?1.:smoothstep(-1.9,-0.8,ls)); }
+float AA(float s){ return smoothstep(2.0, 5.0, (1./s)/gEps); }
 
 float wR,wC,wW,wF,wM,wA, sR,sC,sW,sF,sM,sA;
 float lS,lK,lP,lC,lL,lA, tS,tK,tP,tC,tL,tA;
@@ -38,8 +38,8 @@ vec4 ridges(vec2 q){
   float crest = smoothstep(0.12,0.88,r);
   vec2 rel; vec4 v = voro(q*1.7+3.1, 1.0, rel);
   float pore = (1.-smoothstep(0.05,0.15,v.x))*step(0.5,v.z)*crest;
-  float h = crest*2.-1. - pore*1.8 + 0.1*vnoise(q*7.);
-  vec3 a = mix(vec3(0.60,0.26,0.20), vec3(0.95,0.57,0.41), crest);
+  float h = crest*2.-1. - pore*1.8 + 0.08*vnoise(q*7.);
+  vec3 a = mix(vec3(0.58,0.25,0.19), vec3(0.93,0.56,0.40), crest);
   a *= 1.-0.5*pore;
   return vec4(h, a);
 }
@@ -49,25 +49,28 @@ vec4 cells(vec2 q){
   float crack = 1.-smoothstep(0.015,0.08,edge);
   float ang = v.z*6.2832;
   float tilt = dot(-rel, vec2(cos(ang),sin(ang)));
-  float h = 0.3*(v.z*2.-1.) + 0.5*tilt - 1.1*crack + 0.14*fbm(q*5.,3);
-  vec3 a = vec3(0.95,0.62,0.45)*(0.86+0.18*v.z);
-  a = mix(a, vec3(0.50,0.24,0.18), crack*0.8);
+  float lip = smoothstep(0.10,0.03,edge)*smoothstep(0.0,0.4,tilt);
+  float h = 0.3*(v.z*2.-1.) + 0.5*tilt - 1.1*crack + 0.35*lip + 0.10*fbm(q*5.,3);
+  vec3 a = vec3(0.94,0.61,0.44)*(0.86+0.18*v.z);
+  a = mix(a, vec3(0.48,0.22,0.17), crack*0.8);
   return vec4(h,a);
 }
 vec4 wrinkles(vec2 q){
-  vec2 w = q + 0.7*vec2(fbm(q*0.4,3), fbm(q*0.4+7.7,3));
-  float r = 1.-abs(fbm(w,4));
+  vec2 w = q + 0.6*vec2(fbm(q*0.35,2), fbm(q*0.35+7.7,2));
+  float r = 1.-abs(fbm(w,3));
   r = r*r*r;
-  return vec4(r*2.-1., mix(vec3(0.72,0.42,0.32), vec3(0.97,0.70,0.54), r));
+  float bump = 0.15*fbm(q*3.,2);
+  return vec4(r*2.-1.+bump, mix(vec3(0.70,0.40,0.30), vec3(0.96,0.69,0.53), r));
 }
 vec4 fibers(vec2 q){
   vec2 w = q + 0.6*vec2(fbm(q*0.25,3), fbm(q*0.25+3.3,3));
   float id = floor(w.y);
   float l = fract(w.y)*2.-1.;
   float tube = sqrt(max(0.,1.-l*l));
+  float strand = 0.5+0.5*sin(l*9.42 + w.x*0.9 + hash12(vec2(id,2.))*6.28);
   float seg = 0.5+0.5*sin(w.x*1.4 + hash12(vec2(id,1.))*6.28);
-  float h = tube*(0.65+0.35*seg)*2.-1. + 0.15*vnoise(vec2(w.x*0.5, w.y*4.));
-  return vec4(h, mix(vec3(0.62,0.36,0.28), vec3(0.98,0.76,0.60), tube));
+  float h = tube*(0.70+0.18*seg+0.12*strand)*2.-1.;
+  return vec4(h, mix(vec3(0.60,0.34,0.27), vec3(0.97,0.75,0.59), tube*(0.85+0.15*strand)));
 }
 vec4 molecules(vec2 q){
   vec2 w = q + 0.5*vec2(fbm(q*0.2,2), fbm(q*0.2+9.1,2));
@@ -80,12 +83,15 @@ vec4 molecules(vec2 q){
   float t2 = sqrt(max(0., r*r - (l+y1)*(l+y1)))/r;
   float z1 = cos(ph)*0.25;
   float a1 = t1*(0.75+z1), a2 = t2*(0.75-z1);
-  vec3 c = a1>a2 ? vec3(0.98,0.80,0.64) : vec3(0.93,0.55,0.55);
+  vec3 c = a1>a2 ? vec3(0.97,0.79,0.63) : vec3(0.92,0.54,0.54);
   c *= 0.45 + 0.55*max(t1,t2);
   return vec4(max(a1,a2)*2.-1., c);
 }
-vec3 elemTop(float id){ return id<0.42? vec3(0.30,0.32,0.38) : id<0.68? vec3(0.95,0.95,0.97) : id<0.82? vec3(0.95,0.25,0.32) : id<0.95? vec3(0.25,0.42,0.98) : vec3(1.0,0.82,0.22); }
-vec3 elemBot(float id){ return id<0.5? vec3(0.35,0.92,0.72) : id<0.78? vec3(0.28,0.32,0.40) : id<0.9? vec3(0.95,0.35,0.42) : vec3(0.90,0.76,0.50); }
+// CPK colours: C grey, H white, O red, N blue, S yellow ; coating: F green, C grey, O red
+vec3 elemTop(float id){ return id<0.42? vec3(0.30,0.32,0.37) : id<0.68? vec3(0.94,0.94,0.96) : id<0.82? vec3(0.92,0.20,0.22) : id<0.95? vec3(0.22,0.38,0.95) : vec3(0.98,0.80,0.18); }
+vec3 elemBot(float id){ return id<0.58? vec3(0.45,0.88,0.40) : id<0.86? vec3(0.30,0.32,0.37) : vec3(0.92,0.20,0.22); }
+vec3 glowTop(float id){ return id<0.42? vec3(0.60,0.35,1.00) : id<0.68? vec3(1.00,0.55,0.85) : id<0.82? vec3(1.00,0.42,0.20) : id<0.95? vec3(0.45,0.40,1.00) : vec3(1.00,0.80,0.30); }
+vec3 glowBot(float id){ return id<0.58? vec3(0.15,1.00,0.70) : id<0.86? vec3(0.25,0.50,1.00) : vec3(0.15,0.85,1.00); }
 vec4 atoms(vec2 q, bool top){
   vec2 rel; vec4 v = voro(q, 0.35, rel);
   float r = 0.52;
@@ -106,51 +112,73 @@ vec4 smudge(vec2 q){
 vec4 scratches(vec2 q){
   float g = 0.;
   for(int j=0;j<3;j++){
-    float ang = float(j)*1.1 + 0.4;
+    float ang = float(j)*2.1 + 0.4 + 0.3*vnoise(q*0.02+float(j));
     vec2 d = vec2(cos(ang), sin(ang));
     vec2 rq = vec2(dot(q,d), dot(q, vec2(-d.y,d.x)));
     float row = floor(rq.y/3.);
     float hh = hash12(vec2(row, float(j)*13.));
-    if(hh>0.5){
+    if(hh>0.72){
       float y0 = row*3. + 3.*hash12(vec2(row,float(j)*7.+1.));
       float w = 0.05 + 0.1*hh;
       float along = smoothstep(0.2,0.6, 0.5+0.5*sin(rq.x*0.12 + hh*20.));
-      g = max(g, (1.-smoothstep(0., w, abs(rq.y-y0)))*along);
+      float x = abs(rq.y-y0)/w;
+      g = max(g, exp(-x*x*2.)*along);
     }
   }
-  return vec4(-g*1.0 + 0.12*fbm(q*2.,3), 0.,0.,0.);
+  return vec4(-g + 0.10*fbm(q*2.,3), 0.,0.,0.);
 }
 vec4 polish(vec2 q){ return vec4(fbm(q*0.8,3)*0.9,0.,0.,0.); }
 vec4 coating(vec2 q){ vec2 rel; vec4 v=voro(q,0.9,rel); float rad=0.42+0.12*v.z; float b = sqrt(max(0.,rad*rad-v.x*v.x))/rad; return vec4(b*1.6-0.6 + 0.1*vnoise(q*3.), 0.,0.,0.); }
 vec4 chains(vec2 q){ vec2 w = q + 0.9*vec2(fbm(q*0.3,3), fbm(q*0.3+5.,3)); float id=floor(w.y); float l=fract(w.y)*2.-1.; float tube=sqrt(max(0.,1.-l*l*1.5)); float bead = 0.75+0.25*sin(w.x*3.1+hash12(vec2(id,2.))*6.28); return vec4(tube*bead*2.-1., tube, 0.,0.); }
 
-void evalTop(vec2 P, out float h, out vec3 alb){
-  h = 0.; alb = vec3(0.); float ws = 0.;
-  vec4 r;
-  if(wR>0.001){ r = ridges(P*sR); h += wR*r.x*0.30/sR; alb += wR*r.yzw; ws += wR; }
-  if(wC>0.001){ r = cells(P*sC+1.7); h += wC*r.x*0.30/sC; alb += wC*r.yzw; ws += wC; }
-  if(wW>0.001){ r = wrinkles(P*sW+5.3); h += wW*r.x*0.22/sW; alb += wW*r.yzw; ws += wW; }
-  if(wF>0.001){ r = fibers(P*sF+2.2); h += wF*r.x*0.25/sF; alb += wF*r.yzw; ws += wF; }
-  if(wM>0.001){ r = molecules(P*sM+8.8); h += wM*r.x*0.30/sM; alb += wM*r.yzw; ws += wM; }
-  if(wA>0.001){ r = atoms(P*sA+4.4, true); h += wA*r.x*0.35/sA; alb += wA*r.yzw; ws += wA; }
-  alb /= max(ws, 1e-3);
+void evalTop(vec2 P, out float h, out vec3 alb, out float hr){
+  h = 0.; hr = 0.; alb = vec3(0.); float ws = 0.;
+  vec4 r; float k;
+  if(wR>0.001){ k=AA(sR); r = k>0.01? ridges(P*sR) : vec4(0.); h += wR*k*r.x*0.30/sR; hr += wR*k*r.x; alb += wR*mix(vec3(0.80,0.43,0.31), r.yzw, k); ws += wR; }
+  if(wC>0.001){ k=AA(sC); r = k>0.01? cells(P*sC+1.7) : vec4(0.); h += wC*k*r.x*0.30/sC; hr += wC*k*r.x; alb += wC*mix(vec3(0.86,0.56,0.40), r.yzw, k); ws += wC; }
+  if(wW>0.001){ k=AA(sW); r = k>0.01? wrinkles(P*sW+5.3) : vec4(0.); h += wW*k*r.x*0.22/sW; hr += wW*k*r.x; alb += wW*mix(vec3(0.82,0.54,0.41), r.yzw, k); ws += wW; }
+  if(wF>0.001){ k=AA(sF); r = k>0.01? fibers(P*sF+2.2) : vec4(0.); h += wF*k*r.x*0.25/sF; hr += wF*k*r.x; alb += wF*mix(vec3(0.82,0.58,0.46), r.yzw, k); ws += wF; }
+  if(wM>0.001){ k=AA(sM); r = k>0.01? molecules(P*sM+8.8) : vec4(0.); h += wM*k*r.x*0.30/sM; hr += wM*k*r.x; alb += wM*mix(vec3(0.70,0.52,0.45), r.yzw, k); ws += wM; }
+  if(wA>0.001){ k=AA(sA); r = k>0.01? atoms(P*sA+4.4, true) : vec4(0.); h += wA*k*r.x*0.35/sA; hr += wA*k*r.x; alb += wA*mix(vec3(0.55,0.52,0.58), r.yzw, k); ws += wA; }
+  alb /= max(ws, 1e-3); hr /= max(ws, 1e-3);
 }
-void evalBot(vec2 P, out float h, out float oil, out vec3 alb){
-  h = 0.; oil = 0.; alb = vec3(0.); float ws = 0.;
-  vec4 r;
-  if(lS>0.001){ r = smudge(P*tS+9.1); h += lS*r.x*0.25/tS; oil += lS*r.y; }
-  if(lK>0.001){ r = scratches(P*tK+3.3); h += lK*r.x*0.12/tK; alb += lK*vec3(0.46,0.53,0.65); ws += lK; }
-  if(lP>0.001){ r = polish(P*tP+1.1); h += lP*r.x*0.12/tP; alb += lP*vec3(0.48,0.55,0.67); ws += lP; }
-  if(lC>0.001){ r = coating(P*tC+6.6); h += lC*r.x*0.22/tC; alb += lC*vec3(0.50,0.57,0.70); ws += lC; }
-  if(lL>0.001){ r = chains(P*tL+2.9); h += lL*r.x*0.28/tL; alb += lL*mix(vec3(0.30,0.36,0.46), vec3(0.62,0.92,0.84), r.y); ws += lL; }
-  if(lA>0.001){ r = atoms(P*tA+7.7, false); h += lA*r.x*0.35/tA; alb += lA*r.yzw; ws += lA; }
+void evalBot(vec2 P, out float h, out float oil, out vec3 alb, out float hr){
+  h = 0.; oil = 0.; hr = 0.; alb = vec3(0.); float ws = 0.;
+  vec4 r; float k;
+  if(lS>0.001){ k=AA(tS); r = k>0.01? smudge(P*tS+9.1) : vec4(0.); h += lS*k*r.x*0.25/tS; oil += lS*k*r.y; }
+  if(lK>0.001){ k=AA(tK); r = k>0.01? scratches(P*tK+3.3) : vec4(0.); h += lK*k*r.x*0.12/tK; hr += lK*k*r.x; alb += lK*vec3(0.46,0.53,0.65); ws += lK; }
+  if(lP>0.001){ k=AA(tP); r = k>0.01? polish(P*tP+1.1) : vec4(0.); h += lP*k*r.x*0.12/tP; hr += lP*k*r.x; alb += lP*vec3(0.48,0.55,0.67); ws += lP; }
+  if(lC>0.001){ k=AA(tC); r = k>0.01? coating(P*tC+6.6) : vec4(0.); h += lC*k*r.x*0.22/tC; hr += lC*k*r.x; alb += lC*vec3(0.50,0.57,0.70); ws += lC; }
+  if(lL>0.001){ k=AA(tL); r = k>0.01? chains(P*tL+2.9) : vec4(0.,0.5,0.,0.); h += lL*k*r.x*0.28/tL; hr += lL*k*r.x; alb += lL*mix(vec3(0.30,0.36,0.46), vec3(0.56,0.86,0.62), r.y); ws += lL; }
+  if(lA>0.001){ k=AA(tA); r = k>0.01? atoms(P*tA+7.7, false) : vec4(0.); h += lA*k*r.x*0.35/tA; hr += lA*k*r.x; alb += lA*mix(vec3(0.42,0.62,0.42), r.yzw, k); ws += lA; }
   alb = ws>1e-3 ? alb/ws : vec3(0.46,0.53,0.65);
+  hr = ws>1e-3 ? hr/ws : 0.;
+}
+// electron clouds at the same positions as the atom layer
+vec3 eCloud(vec2 qa, bool top){
+  vec2 i0 = floor(qa), f0 = fract(qa); vec3 acc = vec3(0.);
+  for(int y=-2;y<=2;y++) for(int x=-2;x<=2;x++){
+    vec2 g = vec2(float(x),float(y));
+    vec2 o = hash22(i0+g)*0.35 + 0.325;
+    vec2 r = g + o - f0;
+    float id = hash12(i0+g+17.3);
+    acc += (top? glowTop(id) : glowBot(id)) * exp(-dot(r,r)*4.5);
+  }
+  return acc;
 }
 
-vec3 uiCm(vec2 cm){
-  vec2 uv = uKeyUV + vec2(cm.x/6.66, -cm.y/14.16);
-  return pow(texture(uUI, uv).rgb, vec3(2.2));
+vec3 uiAt(vec2 Pw, float Uv){
+  vec2 rel = Pw - vec2(0., 3.0);
+  float ca = cos(uAz), sa = sin(uAz);
+  vec2 w = vec2(rel.x*ca - rel.y*sa, -rel.x*sa - rel.y*ca)*Uv;   // cm on the phone (x right, z toward the bottom edge)
+  return pow(texture(uUI, uKeyUV + vec2(w.x/6.66, w.y/14.16)).rgb, vec3(2.2));
 }
+vec2 phoneCm(vec2 Pw, float Uv){
+  vec2 rel = Pw - vec2(0., 3.0);
+  float ca = cos(uAz), sa = sin(uAz);
+  return vec2(rel.x*ca - rel.y*sa, -rel.x*sa - rel.y*ca)*Uv;
+}
+vec3 uiCm(vec2 cm){ return pow(texture(uUI, uKeyUV + vec2(cm.x/6.66, cm.y/14.16)).rgb, vec3(2.2)); }
 
 vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.,1.); }
 
@@ -160,129 +188,155 @@ void main(){
   bool top = q.y > 0.;
   float ay = abs(q.y);
   float px = 1.0/(FS*uRes.y);
+  float Hs = 1.;
 
   sR = Sc(log2(4.7e-4)); sC = Sc(log2(3.5e-5)); sW = Sc(log2(2.5e-6)); sF = Sc(log2(1.6e-7)); sM = Sc(log2(8.0e-9)); sA = Sc(log2(4.0e-10));
   tS = Sc(log2(1.6e-5)); tK = Sc(log2(3.0e-6)); tP = Sc(log2(6.0e-7)); tC = Sc(log2(4.0e-8)); tL = Sc(log2(3.5e-9)); tA = Sc(log2(4.0e-10));
-  wR = Ws(sR,true,false); wC = Ws(sC,false,false); wW = Ws(sW,false,false); wF = Ws(sF,false,false); wM = Ws(sM,false,false); wA = Ws(sA,false,true);
-  lS = Ws(tS,false,false)*smoothstep(5.0,6.0,uN); lK = Ws(tK,false,false); lP = Ws(tP,false,false); lC = Ws(tC,false,false); lL = Ws(tL,false,false); lA = Ws(tA,false,true);
+  wR = Ws(sR,true,false); wC = Ws(sC,false,false); wW = Ws(sW,false,false); wF = Ws(sF,false,false); wM = Ws(sM,false,false); wA = smoothstep(21.6,23.0,uN);
+  lS = Ws(tS,false,false)*smoothstep(5.0,6.0,uN); lK = Ws(tK,false,false); lP = Ws(tP,false,false); lC = Ws(tC,false,false); lL = Ws(tL,false,false); lA = smoothstep(21.6,23.0,uN);
 
-  float dome = top ? 0.20*(1.-smoothstep(1.0,4.0,uN)) : 0.;
-  float ysE = YS + dome*q.x*q.x;
-  float ayc = max(ay, YS + 1e-4);
-  float t = (ayc - sqrt(max(ayc*ayc - 4.*CC, 0.)))/(2.*CC);
-  vec2 P = vec2(q.x*t, t + max(YS-ay,0.)*25.) + uDrift;
-  float eps = max(t*1.3*px, 1e-5);
+  float YSs = 2.*sqrt(CC*Hs);
+  float ts = sqrt(Hs/CC);
+  float dome = top ? 0.20*(1.-smoothstep(1.0,4.0,uN))*sqrt(Hs) : 0.;
+  float ysE = YSs*clamp(uGap,0.,1.) + dome*q.x*q.x;
+  float ayc = max(ay, YSs + 1e-5);
+  float sd = sqrt(max(ayc*ayc - 4.*CC*Hs, 0.));
+  float t = (ayc - sd)/(2.*CC);
+  float inGap = max(YSs - ay, 0.);
+  mat2 Ry = mat2(cos(uYaw), sin(uYaw), -sin(uYaw), cos(uYaw));
+  vec2 Pl = vec2(q.x*t, t + inGap*25.);
+  vec2 P = Ry*Pl + uDrift;
+  float dtday = (ayc/max(sd,1e-4) - 1.)/(2.*CC);
+  gEps = max(t*px, min(px*dtday, t*px*5.));
+  float eps = t*px;
 
-  vec3 V = -normalize(vec3(q.x, q.y, 1.));
+  vec3 I = normalize(vec3(q.x, q.y, 1.));
+  vec3 V = -I;
   vec3 N0 = top ? normalize(vec3(0., -1., 2.*CC*t)) : normalize(vec3(0., 1., 2.*CC*t));
   vec3 Tz = normalize(vec3(0., top? 2.*CC*t : -2.*CC*t, 1.));
   vec3 L = normalize(vec3(-0.45, top? -0.75 : 0.75, -0.5));
+  vec3 L2 = normalize(vec3(0.7, top? -0.3 : 0.3, -0.2));
 
   vec3 col; float h0;
-  float e = smoothstep(24.6, 25.9, uN);
+  float e = smoothstep(24.9, 25.95, uN);
+  float Uv = 1.2*exp2(-uN);          // cm per view unit
 
   if(top){
-    vec3 alb; evalTop(P, h0, alb);
-    float hx, hy; vec3 d1; evalTop(P+vec2(eps,0.), hx, d1); evalTop(P+vec2(0.,eps), hy, d1);
+    vec3 alb; float hr; evalTop(P, h0, alb, hr);
+    float hx, hy, d2; vec3 d1; evalTop(P+Ry*vec2(eps,0.), hx, d1, d2); evalTop(P+Ry*vec2(0.,eps), hy, d1, d2);
     vec2 g = vec2(hx-h0, hy-h0)/eps;
     vec3 N = normalize(N0 - g.x*vec3(1.,0.,0.) - g.y*Tz);
     float ndl = dot(N,L);
-    float wrap = max((ndl+0.25)/1.25, 0.);
-    float dif = max(ndl, 0.);
+    vec3 wrapc = mix(vec3(0.35,0.22,0.18), vec3(0.15), wA);
+    vec3 dif = clamp((vec3(ndl)+wrapc)/(1.+wrapc), 0., 1.);
     vec3 H = normalize(L+V);
-    float sp = pow(max(dot(N,H),0.), 36.);
-    float gl = 0.10 + 0.55*wA;
-    col = alb*(0.07 + 0.95*wrap) + vec3(0.55,0.10,0.04)*(wrap-dif)*0.6*(1.-wA) + sp*gl;
-    col += alb*vec3(0.25,0.3,0.45)*0.06;
+    float gl = 0.06 + 0.5*wA;
+    float sp = pow(max(dot(N,H),0.), mix(30., 70., wA))*gl;
+    float ao = 0.55 + 0.45*smoothstep(-1.0, 0.7, hr);
+    col = alb*(0.05 + 1.05*dif)*ao + sp;
+    col += alb*vec3(0.30,0.34,0.46)*0.12*clamp(dot(N,L2)+0.3,0.,1.);
+    col += alb*alb*vec3(0.45,0.10,0.05)*0.25*(1.-wA)*(1.-dif.g);
   } else {
-    float oil; vec3 alb; evalBot(P, h0, oil, alb);
-    float hx, hy, o2; vec3 d1; evalBot(P+vec2(eps,0.), hx, o2, d1); evalBot(P+vec2(0.,eps), hy, o2, d1);
+    float oil; vec3 alb; float hr; evalBot(P, h0, oil, alb, hr);
+    float hx, hy, o2, d2; vec3 d1; evalBot(P+Ry*vec2(eps,0.), hx, o2, d1, d2); evalBot(P+Ry*vec2(0.,eps), hy, o2, d1, d2);
     vec2 g = vec2(hx-h0, hy-h0)/eps;
     vec3 N = normalize(N0 - g.x*vec3(1.,0.,0.) - g.y*Tz);
     float ndl = dot(N,L);
-    float wrap = max((ndl+0.25)/1.25, 0.);
+    float wrap = clamp((ndl+0.2)/1.2, 0., 1.);
     vec3 H = normalize(L+V);
     float sp = pow(max(dot(N,H),0.), 60.);
     float glass = 1.-smoothstep(9.5, 13.5, uN);
-    float dcm = 2.4*exp2(-uN);
-    vec2 Prel = P - uDrift - vec2(0., 3.0) + g*0.25*oil;
-    vec2 cm = Prel*(dcm*0.5);
-    vec3 uiS = uiCm(cm)*2.2;
-    vec2 pc = cm/0.0055;
-    vec2 cell = floor(pc), f = fract(pc);
-    vec3 pcol = uiCm((cell+0.5)*0.0055)*2.2;
-    float sg = mix(0.075, 0.33, smoothstep(5.5, 9.0, uN));
-    float k = 1./(2.*sg*sg);
-    vec2 o;
-    o = fract(f - vec2(0.25,0.25) + 0.5) - 0.5; float G1 = exp(-dot(o,o)*k);
-    o = fract(f - vec2(0.75,0.75) + 0.5) - 0.5; float G2 = exp(-dot(o,o)*k);
-    o = fract(f - vec2(0.75,0.25) + 0.5) - 0.5; float R1 = exp(-dot(o,o)*k);
-    o = fract(f - vec2(0.25,0.75) + 0.5) - 0.5; float B1 = exp(-dot(o,o)*k*0.8);
-    float nrm = 1./(6.2832*sg*sg);
-    vec3 sub = 0.6*nrm*( R1*pcol.r*vec3(1.,0.08,0.04) + 0.5*(G1+G2)*pcol.g*vec3(0.12,1.,0.25) + B1*pcol.b*vec3(0.1,0.25,1.)/0.8 );
-    vec3 emis = mix(uiS, sub*0.75, smoothstep(2.8, 4.6, uN));
-    vec2 bq = q*vec2(1.6,1.6) + vec2(uT*0.01, 0.);
-    float b1 = smoothstep(0.1,0.9, 0.5+0.5*vnoise(bq*2.0+1.));
-    float b2 = smoothstep(0.1,0.9, 0.5+0.5*vnoise(bq*2.0+7.));
-    float b3 = smoothstep(0.1,0.9, 0.5+0.5*vnoise(bq*2.0+13.));
-    vec3 bok = (uiS*0.5+0.05)*(vec3(1.,0.15,0.1)*b1 + vec3(0.15,1.,0.3)*b2 + vec3(0.15,0.3,1.)*b3)*1.4;
-    emis = mix(emis, bok, smoothstep(8.5, 10.8, uN));
-    float trans = mix(1.0, 0.0, smoothstep(10.5, 14.0, uN));
-    float fr = 0.04 + 0.96*pow(1.-max(dot(N,V),0.), 5.);
-    vec3 env = vec3(0.62,0.33,0.24)*0.30*(0.7+0.3*vnoise(q*3.));
-    vec3 glassCol = emis*trans*(1.-fr) + env*fr + sp*vec3(1.0,0.95,0.9)*(0.6 + 0.9*oil);
-    glassCol = mix(glassCol, glassCol*vec3(1.05,0.95,0.75) + vec3(0.05,0.035,0.01)*wrap, oil*0.6);
-    vec3 matCol = alb*(0.06 + 0.95*wrap) + sp*0.45 + bok*0.10*(1.-smoothstep(-0.2,0.6,h0*tA));
+    float ao = 0.6 + 0.4*smoothstep(-1.0, 0.7, hr);
+    vec3 glassCol = vec3(0.);
+    if(glass > 0.001){
+      // --- pixels 0.7 mm below the glass surface, seen through it (refraction)
+      vec3 X = vec3(Pl.x, -(Hs + CC*t*t), Pl.y);
+      vec3 Rf = refract(I, N, 1./1.5);
+      float delta = 0.07/Uv;
+      vec2 off = Rf.xz*(delta/max(-Rf.y, 0.08));
+      vec2 Pp = Ry*(X.xz + off) + uDrift;
+      vec2 cm = phoneCm(Pp, Uv);
+      vec3 uiS = uiCm(cm)*2.4;
+      const float CELL = 0.0078;     // diamond PenTile repeat: 2 pixels at 460 ppi
+      vec2 pc = cm/CELL;
+      vec2 cell = floor(pc), f = fract(pc);
+      vec3 pcol = uiCm((cell+0.5)*CELL)*2.4;
+      float fpc = gEps*Uv/CELL;
+      float sg = clamp(0.065*exp2(0.55*(uN-4.6)), 0.065, 0.6);
+      sg = max(sg, fpc*0.6);
+      float k = 1./(2.*sg*sg);
+      vec2 o;
+      o = fract(f - vec2(0.25,0.25) + 0.5) - 0.5; float G1 = exp(-dot(o*vec2(1.,1.4),o*vec2(1.,1.4))*k*1.6);
+      o = fract(f - vec2(0.75,0.75) + 0.5) - 0.5; float G2 = exp(-dot(o*vec2(1.4,1.),o*vec2(1.4,1.))*k*1.6);
+      o = fract(f - vec2(0.75,0.25) + 0.5) - 0.5; float R1 = exp(-dot(o,o)*k*1.15);
+      o = fract(f - vec2(0.25,0.75) + 0.5) - 0.5; float B1 = exp(-dot(o,o)*k*0.8);
+      float nrm = 1./(6.2832*sg*sg);
+      vec3 sub = nrm*0.55*( R1*pcol.r*1.15*vec3(1.,0.06,0.03) + 0.5*(G1+G2)*pcol.g*2.24*vec3(0.10,1.,0.22) + B1*pcol.b*0.8*vec3(0.08,0.22,1.) );
+      float pm = smoothstep(1.2, 0.5, fpc);
+      vec3 emis = mix(uiS, mix(uiS, sub, pm), smoothstep(2.8, 4.4, uN));
+      float trans = 1. - smoothstep(10.5, 13.5, uN);
+      // --- mirror image of the fingertip in the glass
+      vec3 Rr = reflect(I, N);
+      float A = CC*Rr.z*Rr.z, B = 2.*CC*X.z*Rr.z - Rr.y, C = CC*X.z*X.z + Hs - X.y;
+      float disc = B*B - 4.*A*C;
+      vec3 refl = vec3(0.004);
+      if(disc > 0. && A > 1e-6){
+        float s = (-B - sqrt(disc))/(2.*A);
+        if(s > 0.){
+          vec3 Y = X + s*Rr;
+          float hh, hr2; vec3 at; evalTop(Ry*Y.xz + uDrift, hh, at, hr2);
+          refl = at*(0.10 + 0.5*clamp(-Rr.y,0.,1.))*(0.65+0.35*smoothstep(-1.,0.7,hr2));
+          refl *= exp(-s*0.08);
+        }
+      }
+      float fr = 0.04 + 0.96*pow(1.-max(dot(N,V),0.), 5.);
+      if(inGap > 0.) fr = min(fr, 0.45);
+      glassCol = emis*trans*(1.-fr) + refl*fr + sp*vec3(1.0,0.96,0.92)*(0.35 + 0.9*oil);
+      glassCol = mix(glassCol, glassCol*vec3(1.04,0.96,0.80) + vec3(0.04,0.03,0.01)*wrap, oil*0.5);
+    }
+    vec3 matCol = alb*(0.05 + 1.0*wrap)*ao + sp*mix(0.25, 0.55, lA);
+    matCol += alb*vec3(0.25,0.28,0.38)*0.10*clamp(dot(N,L2)+0.3,0.,1.);
     col = mix(matCol, glassCol, glass);
   }
 
+  // electron clouds (same centres as the atoms)
+  float cloudGap = 0.;
   if(e > 0.001){
-    float s = top ? sA : tA;
-    vec2 qa = P*s*1.1 + (top? 4.4 : 7.7) + vec2(uT*0.05, 0.);
-    vec2 i0 = floor(qa); vec2 f0 = fract(qa);
-    vec3 acc = vec3(0.);
-    for(int y=-2;y<=2;y++) for(int x=-2;x<=2;x++){
-      vec2 gg = vec2(float(x),float(y));
-      vec2 o = hash22(i0+gg)*0.6+0.2;
-      vec2 r = gg + o - f0;
-      float hh = hash12(i0+gg+5.1);
-      float rad = 0.35 + 0.35*hh;
-      float b = exp(-dot(r,r)/(rad*rad));
-      vec3 pal = top ? (hh<0.33? vec3(1.0,0.25,0.65) : hh<0.66? vec3(1.0,0.50,0.18) : vec3(0.55,0.30,1.0))
-                     : (hh<0.33? vec3(0.10,0.90,0.95) : hh<0.66? vec3(0.05,0.75,0.50) : vec3(0.25,0.40,1.0));
-      acc += pal*b;
-    }
-    float fl = 0.75 + 0.25*fbm(qa*1.3 + vec2(0., uT*0.2), 3);
-    vec3 cloud = acc*fl*0.9;
-    cloud += cloud*cloud*0.25;
-    col = mix(col, cloud, e);
+    vec2 Ps = P;
+    if(inGap > 0.) Ps = Ry*vec2(q.x*ts, ts) + uDrift;
+    vec3 cl = top ? eCloud(Ps*sA + 4.4, true) : eCloud(Ps*tA + 7.7, false);
+    float fl = 0.85 + 0.15*fbm(Ps*3.0 + vec2(uT*0.3, 0.), 2);
+    cl *= fl*1.15;
+    if(inGap > 0.){ float vd = inGap*ts; cloudGap = exp(-vd*vd*3.0); cl *= cloudGap; }
+    col = mix(col, cl, e);
   }
 
-  float jag = clamp(h0/7.9, -0.03, 0.03);
+  float jag = clamp(h0/max(ts,1.), -0.03, 0.03)*smoothstep(0.,0.3,uGap);
   float edge = ay - (ysE - jag);
-  float cov = smoothstep(-px*1.2, px*1.2, edge);
-  float soft = exp(-max(-edge,0.)*14.);
-  cov = mix(cov, max(cov, soft*0.9), e);
-  float depthDark = mix(1.0, 0.62, smoothstep(2.5, 7.9, t));
-  col *= depthDark;
-  col *= cov;
+  float cov = smoothstep(-px*1.0, px*1.0, edge);
+  cov = mix(cov, ay >= YSs ? 1. : cloudGap, e);
+  float depthDark = mix(1.0, 0.70, smoothstep(2.5, ts, t));
+  col *= depthDark*cov;
 
   if(e > 0.001){
-    vec2 cid = floor(fc/4.);
+    vec2 cid = floor(fc/5.);
     float hs = hash12(cid + 3.7);
-    if(hs > 0.985){
-      vec2 cp = (cid+0.5)*4.;
+    if(hs > 0.986){
+      vec2 cp = (cid+0.5)*5. + (hash22(cid)-0.5)*3.;
       float tw = 0.5+0.5*sin(uT*(2.+hs*5.)+hs*40.);
-      float sd = exp(-dot(fc-cp,fc-cp)*0.6);
-      col += vec3(0.9,0.95,1.0)*sd*tw*e*(0.35+0.65*smoothstep(0.0,0.3,ay));
+      float sdd = exp(-dot(fc-cp,fc-cp)*0.5);
+      col += vec3(0.9,0.95,1.0)*sdd*tw*e*0.8;
     }
     float rr = length(vec2(q.x*0.16, q.y*2.4));
     float ring = exp(-pow((rr-uRippleR)*30.,2.))*uRipple;
-    col += vec3(0.75,0.85,1.0)*ring*0.30;
+    col += vec3(0.75,0.85,1.0)*ring*0.14;
   }
 
-  col = aces(col*0.95);
+  col = aces(col*1.0);
   col = pow(col, vec3(1./2.2));
-  col += (hash12(fc + fract(uT)*100.)-0.5)*0.025;
-  outColor = vec4(col, 1.);
+  // depth of field: focus close to the gap edge
+  float tf = ts*0.82;
+  float coc = 3.6*abs(t - tf)/t + 3.*e;
+  if(ay < YSs) coc = 3.*e;
+  outColor = vec4(col, clamp(coc/24., 0., 1.));
 }
