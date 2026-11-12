@@ -1,0 +1,380 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;padding:0;background:#000;width:1080px;height:1920px;overflow:hidden}
+canvas{position:absolute;left:0;top:0;width:1080px;height:1920px}
+#phone{z-index:1}#macro{z-index:2}#ov{z-index:3}
+</style></head>
+<body>
+<canvas id="phone" width="720" height="1280"></canvas>
+<canvas id="macro" width="720" height="1280"></canvas>
+<canvas id="ov" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+const OW=1080, OH=1920;
+const FONT='Inter, "Inter Display", sans-serif';
+// ---------------------------------------------------------------- math
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const norm=a=>mul(a,1/Math.hypot(a[0],a[1],a[2]));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const lerp3=(a,b,u)=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const sstep=(a,b,x)=>{const u=clamp((x-a)/(b-a),0,1);return u*u*(3-2*u);};
+const ease=u=>{u=clamp(u,0,1);return u*u*(3-2*u);};
+const easeIO=u=>{u=clamp(u,0,1);return u<0.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;};
+
+// ---------------------------------------------------------------- UI (phone screen)
+const UIW=600, UIH=1276;
+const ui=document.createElement('canvas'); ui.width=UIW; ui.height=UIH;
+const uc=ui.getContext('2d');
+const KEYS={};
+(function layout(){
+  const r1='qwertzuiopü', r2='asdfghjklöä', r3='yxcvbnm';
+  const kw=48, gap=6, kh=84;
+  const ys=[852, 952, 1052, 1152];
+  for(let i=0;i<11;i++){ KEYS[r1[i]]={x:6+i*54, y:ys[0]-kh/2, w:kw, h:kh, label:r1[i].toUpperCase(), type:'l'}; }
+  for(let i=0;i<11;i++){ KEYS[r2[i]]={x:6+i*54, y:ys[1]-kh/2, w:kw, h:kh, label:r2[i].toUpperCase(), type:'l'}; }
+  KEYS['shift']={x:6,y:ys[2]-kh/2,w:72,h:kh,label:'⇧',type:'s'};
+  for(let i=0;i<7;i++){ KEYS[r3[i]]={x:114+i*54, y:ys[2]-kh/2, w:kw, h:kh, label:r3[i].toUpperCase(), type:'l'}; }
+  KEYS['back']={x:522,y:ys[2]-kh/2,w:72,h:kh,label:'⌫',type:'s'};
+  KEYS['123']={x:6,y:ys[3]-kh/2,w:104,h:kh,label:'123',type:'s'};
+  KEYS['emo']={x:116,y:ys[3]-kh/2,w:64,h:kh,label:'☺',type:'s'};
+  KEYS[' ']={x:186,y:ys[3]-kh/2,w:268,h:kh,label:'Leerzeichen',type:'sp'};
+  KEYS['ret']={x:460,y:ys[3]-kh/2,w:134,h:kh,label:'Return',type:'s'};
+  for(const k in KEYS){ const K=KEYS[k]; K.cx=K.x+K.w/2; K.cy=K.y+K.h/2; }
+})();
+function keyWorld(ch){ const K=KEYS[ch]||KEYS[ch.toLowerCase()]||KEYS[' ']; return [K.cx/UIW*6.66-3.33, 0, K.cy/UIH*14.16-7.08]; }
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function wrapLines(c, text, maxW){
+  const words=text.split(' '); const lines=[]; let cur='';
+  for(let i=0;i<words.length;i++){ const w=words[i]; const test=cur? cur+' '+w : w;
+    if(c.measureText(test).width>maxW && cur){ lines.push(cur); cur=w; } else cur=test; }
+  lines.push(cur); return lines;
+}
+const PRE='Wenn ich mein Display berühre, ';
+function drawUI(st){
+  const c=uc;
+  c.fillStyle='#0b0b0c'; c.fillRect(0,0,UIW,UIH);
+  // status bar
+  c.fillStyle='#fff'; c.font='600 27px '+FONT; c.textBaseline='middle'; c.textAlign='left';
+  c.fillText('9:41', 58, 50);
+  c.fillStyle='#000'; rr(c,205,24,190,54,27); c.fill();
+  c.strokeStyle='rgba(255,255,255,0.06)'; c.lineWidth=1; c.stroke();
+  // signal + battery
+  c.fillStyle='#fff'; for(let i=0;i<4;i++){ rr(c,438+i*9,58-8-i*5,6,8+i*5,1.5); c.fill(); }
+  c.strokeStyle='rgba(255,255,255,0.55)'; c.lineWidth=2; rr(c,486,40,46,22,6); c.stroke();
+  c.fillStyle='#fff'; rr(c,490,44,32,14,3); c.fill(); rr(c,534,47,3,8,1); c.fill();
+  // nav
+  c.fillStyle='#f2b33d'; c.font='500 30px '+FONT; c.fillText('‹ Notizen', 18, 122);
+  c.font='600 30px '+FONT; c.textAlign='right'; c.fillText('Fertig', 580, 122);
+  c.textAlign='center'; c.fillStyle='#8e8e93'; c.font='400 20px '+FONT; c.fillText('12. November 2026 um 09:41', 300, 182);
+  c.textAlign='left'; c.fillStyle='#fff'; c.font='700 42px '+FONT;
+  c.fillText('Berühren wir überhaupt', 30, 240); c.fillText('etwas?', 30, 292);
+  c.font='400 32px '+FONT; c.fillStyle='#e5e5ea';
+  const body=PRE+st.typed;
+  const lines=wrapLines(c, body, 540);
+  let y=372, lastX=30;
+  for(let i=0;i<lines.length;i++){ c.fillText(lines[i], 30, y+i*46); }
+  const ll=lines[lines.length-1]; lastX=30+c.measureText(ll).width+ (body.endsWith(' ')?c.measureText(' ').width:0);
+  const ly=y+(lines.length-1)*46;
+  if(Math.floor(st.t*2)%2===0 || st.typing){ c.fillStyle='#f2b33d'; c.fillRect(lastX+2, ly-20, 3, 40); }
+  // keyboard
+  c.fillStyle='#232325'; c.fillRect(0,790,UIW,UIH-790);
+  for(const k in KEYS){ const K=KEYS[k];
+    const pressed = st.pressed===k;
+    c.fillStyle='rgba(0,0,0,0.5)'; rr(c,K.x,K.y+2,K.w,K.h,9); c.fill();
+    c.fillStyle = K.type==='l'||K.type==='sp' ? (pressed?'#9a9aa0':'#5f5f64') : (pressed?'#8a8a90':'#3c3c3f');
+    rr(c,K.x,K.y,K.w,K.h,9); c.fill();
+    c.fillStyle='#fff'; c.textAlign='center';
+    c.font = K.type==='l' ? '400 34px '+FONT : (K.type==='sp'?'400 24px ':'500 24px ')+FONT;
+    if(K.type==='s' && (k==='shift'||k==='back'||k==='emo')) c.font='400 34px '+FONT;
+    c.fillText(K.label, K.cx, K.cy+2);
+  }
+  c.fillStyle='#8e8e93'; c.font='400 34px '+FONT; c.fillText('🌐', 46, 1236); c.fillText('🎙', 556, 1236);
+  c.fillStyle='rgba(255,255,255,0.85)'; rr(c,200,1258,200,8,4); c.fill();
+  // key popup
+  if(st.pressed && KEYS[st.pressed] && KEYS[st.pressed].type==='l'){
+    const K=KEYS[st.pressed];
+    const bw=76, bh=96, bx=K.cx-bw/2, by=K.y-bh+18;
+    c.fillStyle='rgba(0,0,0,0.45)'; rr(c,bx-1,by+3,bw+2,bh+K.h-14,12); c.fill();
+    c.fillStyle='#7c7c82'; rr(c,bx,by,bw,bh,12); c.fill(); rr(c,K.x,K.y+4,K.w,K.h-4,9); c.fill();
+    c.fillRect(K.x, by+bh-14, K.w, 30);
+    c.fillStyle='#fff'; c.font='400 50px '+FONT; c.textAlign='center'; c.fillText(K.label, K.cx, by+bh/2+4);
+  }
+}
+
+// ---------------------------------------------------------------- GL
+function makeGL(canvas, fsSrc){
+  const gl=canvas.getContext('webgl2',{preserveDrawingBuffer:true, antialias:false});
+  const vs='#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);
+    if(!gl.getShaderParameter(x,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x;}
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fsSrc));
+  gl.bindAttribLocation(pr,0,'p'); gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+  gl.useProgram(pr);
+  const bf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const U={}; const n=gl.getProgramParameter(pr,gl.ACTIVE_UNIFORMS);
+  for(let i=0;i<n;i++){ const a=gl.getActiveUniform(pr,i); U[a.name]=gl.getUniformLocation(pr,a.name); }
+  return {gl,pr,tex,U};
+}
+let G1,G2;
+function uploadUI(G){ const gl=G.gl; gl.bindTexture(gl.TEXTURE_2D,G.tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,ui); gl.generateMipmap(gl.TEXTURE_2D); }
+function drawGL(G, set){ const gl=G.gl; gl.viewport(0,0,gl.canvas.width,gl.canvas.height); gl.useProgram(G.pr); set(gl,G.U);
+  gl.uniform1i(G.U.uUI,0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,G.tex);
+  gl.drawArrays(gl.TRIANGLES,0,3); gl.finish(); }
+
+// ---------------------------------------------------------------- timeline
+const T_END=64;
+const D0=0.024; // m
+// macro n(t) for 6.5..41 with ease-out
+const MAC=(function(){ const N=4000, arr=[0]; let s=0; const rate=u=> u<0.78?1: 1-0.82*sstep(0.78,1.0,u);
+  for(let i=1;i<=N;i++){ s+=rate(i/N)/N; arr.push(s);} return arr.map(v=>v/s); })();
+function macroN(t){ const u=clamp((t-6.5)/34.5,0,1); const i=u*4000; const a=Math.floor(i), b=Math.min(a+1,4000); return 1.6+24.4*lerp(MAC[a],MAC[b],i-a); }
+function nAt(t){
+  if(t<5.5) return 1.0*(t/5.5)*(0.6+0.4*t/5.5)/1.0;
+  if(t<6.5) return 1.0+0.6*(t-5.5);
+  if(t<41) return macroN(t);
+  if(t<48){ const u=t-41; // electron push back
+    return 26 + 0.17*sstep(0.0,1.6,u) - 0.04*sstep(1.6,3.0,u) + 0.01*Math.sin(u*3.0)*sstep(3,4,u); }
+  if(t<49.2){ const u=easeIO((t-48)/1.0); return lerp(26.13, 1.2, u); }
+  return 26.13;
+}
+const distM=n=>D0*Math.pow(2,-n);
+function fmtDist(m){ let v,u; if(m>=1e-2){v=m*100;u='cm';} else if(m>=1e-3){v=m*1e3;u='mm';} else if(m>=1e-6){v=m*1e6;u='µm';} else {v=m*1e9;u='nm';}
+  let s = v>=100? v.toFixed(0) : v>=10? v.toFixed(1) : v>=1 ? v.toFixed(2) : v.toFixed(3); return s.replace('.',',')+' '+u; }
+const UPL=[[-99,'deine Fingerkuppe'],[2,'Fingerabdruck-Rillen'],[5.8,'abgestorbene Hautzellen'],[9.6,'Oberfläche einer Hautzelle'],[13.6,'Keratin-Fasern'],[17.9,'Keratin-Moleküle'],[22.2,'Atome des Keratins'],[25.6,'Elektronenwolken']];
+const LOL=[[-99,'die Taste J'],[4.2,'die Pixel unter dem Glas'],[6.9,'Hautfett vom Wischen'],[9.4,'Kratzer, die du nie siehst'],[11.8,'poliertes Glas'],[15.6,'Anti-Fett-Beschichtung'],[19.1,'Fluor-Polymerketten'],[22.2,'Fluor-Atome'],[25.6,null]];
+const pick=(L,n)=>{let r=L[0][1]; for(const e of L) if(n>=e[0]) r=e[1]; return r;};
+
+// typing outro
+const TYPE_TXT='berühren sich die Atome nie';
+const TYPE_T0=57.95, TYPE_DT=0.135;
+function typingState(t){
+  const i=Math.floor((t-TYPE_T0)/TYPE_DT);
+  const typed = t<TYPE_T0? '' : TYPE_TXT.slice(0, clamp(i+1,0,TYPE_TXT.length));
+  return typed;
+}
+function fingerTyping(t){
+  // returns [x,z], gap(cm), pressedKey
+  const n=TYPE_TXT.length;
+  const rest=keyWorld('j');
+  const keyAt=i=> i<0? [rest[0]+0.3,rest[2]+0.6] : i>=n? [rest[0]+0.5, rest[2]+0.2] : (k=>[k[0],k[2]])(keyWorld(TYPE_TXT[i]));
+  let u=(t-TYPE_T0)/TYPE_DT; // tap i at u=i
+  if(u< -1){ const p=keyAt(-1); return {xz:p, gap:0.9, key:null}; }
+  if(u > n-1+0.3){ const a=keyAt(n-1), b=keyAt(n); const v=ease((u-(n-1))/3); return {xz:[lerp(a[0],b[0],v),lerp(a[1],b[1],v)], gap:0.9*ease((u-(n-1))/1.5), key:null}; }
+  const i=Math.ceil(u); const fr=u-(i-1); // 0..1 from previous tap to this tap
+  const a=keyAt(i-1), b=keyAt(i);
+  const m=sstep(0.15,0.8,fr);
+  const gap = 0.55*Math.pow(Math.sin(Math.PI*clamp(fr,0,1)),0.8);
+  const ch=TYPE_TXT[i];
+  let key=null; if(fr>0.92 || fr<0.08){ const ci = fr<0.08? i-1 : i; if(ci>=0 && ci<n){ const c=TYPE_TXT[ci]; key = c===' '?' ':c.toLowerCase(); } }
+  return {xz:[lerp(a[0],b[0],m), lerp(a[1],b[1],m)], gap, key};
+}
+
+// ---------------------------------------------------------------- cameras
+const FD=norm([-0.62,0.72,-0.30]);
+const FD2=norm([0.45,0.70,0.55]);
+function camLook(target, dist, elDeg, azDeg, fov){
+  const el=elDeg*Math.PI/180, az=azDeg*Math.PI/180;
+  const dir=[Math.sin(az)*Math.cos(el), Math.sin(el), Math.cos(az)*Math.cos(el)];
+  const pos=add(target, mul(dir,dist));
+  const fw=norm(sub(target,pos)); const rt=norm(cross(fw,[0,1,0])); const up=cross(rt,fw);
+  return {pos,fw,rt,up,f:1/Math.tan(fov*Math.PI/360)};
+}
+function project(cam, X){ const v=sub(X,cam.pos); const z=dot(v,cam.fw); return [OW/2 + dot(v,cam.rt)/z*cam.f*OH/2, OH/2 - dot(v,cam.up)/z*cam.f*OH/2]; }
+function phoneState(t){
+  const J=keyWorld('j');
+  if(t<6.6){
+    const n=nAt(t), dcm=distM(n)*100;
+    const u=t/5.5;
+    let cam;
+    if(t<5.5){ cam=camLook(add(J,[-0.35,dcm*0.55+0.5,0]), lerp(7.6,6.0,ease(u)), lerp(20,16,u), lerp(12,8,u), 36); }
+    else { const v=easeIO((t-5.5)/1.05); cam=camLook(add(J,[lerp(-0.35,0,v),lerp(dcm*0.55+0.5,dcm/2,v),0]), lerp(6.0,1.5,v), lerp(16,2,v), lerp(8,0,v), lerp(36,26,v)); }
+    return {cam, tip:[J[0],dcm+0.78,J[2]], typed:'', pressed:null, dcm};
+  }
+  if(t<57.4){
+    const v=easeIO((t-48.7)/0.9);
+    const w=(t-49.6);
+    const cam=camLook(add(J,[0,lerp(0.05,0.5,v),0]), lerp(1.5,6.4,v)-0.25*clamp(w,0,3), lerp(2,19,v), lerp(0,11,v), lerp(26,36,v));
+    return {cam, tip:[J[0],0.78+0.004,J[2]], typed:'', pressed:'j', dcm:0};
+  }
+  const u=(t-57.4)/6.6;
+  const cam=camLook([0,0,0.9], lerp(21,19,ease(u)), lerp(52,49,u), lerp(4,2,u), 42);
+  const f=fingerTyping(t);
+  return {cam, tip:[f.xz[0], f.gap+0.78, f.xz[1]], typed:typingState(t), pressed:f.key, dcm:f.gap, typing:true, fd:FD2};
+}
+
+// ---------------------------------------------------------------- overlay helpers
+const ov=document.getElementById('ov'); const oc=ov.getContext('2d');
+function shadowText(c, txt, x, y, blur){ c.save(); c.shadowColor='rgba(0,0,0,0.75)'; c.shadowBlur=blur||14; c.shadowOffsetY=2; c.fillText(txt,x,y); c.restore(); }
+function caption(lines, y, a, size){
+  if(a<=0.001) return; const c=oc; c.save(); c.globalAlpha=a; c.fillStyle='#fff'; c.font='700 '+(size||60)+'px '+FONT; c.textAlign='center'; c.textBaseline='middle';
+  lines.forEach((l,i)=>shadowText(c,l,OW/2,y+i*(size||60)*1.22,18)); c.restore();
+}
+const fadeWin=(t,a,b,f)=> sstep(a,a+f,t)*(1-sstep(b-f,b,t));
+function measure(x, y1, y2, num, subTxt, up, down, a, compact){
+  if(a<=0.001) return; const c=oc; c.save(); c.globalAlpha=a;
+  c.strokeStyle='rgba(255,255,255,0.92)'; c.lineWidth=2.5; c.shadowColor='rgba(0,0,0,0.5)'; c.shadowBlur=6;
+  c.beginPath(); c.moveTo(x,y1); c.lineTo(x,y2); c.moveTo(x-10,y1); c.lineTo(x+10,y1); c.moveTo(x-10,y2); c.lineTo(x+10,y2); c.stroke();
+  const ym=(y1+y2)/2; const tx=x+30; const s=compact?0.82:1;
+  c.textAlign='left'; c.textBaseline='alphabetic';
+  let yy = ym - (down? 34 : 10)*s;
+  c.fillStyle='#fff'; c.font='700 '+Math.round(66*s)+'px '+FONT; shadowText(c,num,tx,yy,10);
+  yy += 44*s; c.font='500 '+Math.round(32*s)+'px '+FONT; shadowText(c,subTxt,tx,yy,8);
+  if(up){ yy += 44*s; c.fillStyle='#ffc39b'; c.font='600 '+Math.round(34*s)+'px '+FONT; shadowText(c,(down?'▲ ':'')+up,tx,yy,8); }
+  if(down){ yy += 42*s; c.fillStyle='#a9c4ff'; c.font='600 '+Math.round(34*s)+'px '+FONT; shadowText(c,'▼ '+down,tx,yy,8); }
+  c.restore();
+}
+function halvTxt(n){ const k=Math.max(0,Math.floor(n+1e-6)); return 'halbiert '+k+' Mal'; }
+function vignette(a){ const c=oc; const g=c.createRadialGradient(OW/2,OH/2,OH*0.28,OW/2,OH/2,OH*0.72); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,'+a+')'); c.fillStyle=g; c.fillRect(0,0,OW,OH); }
+
+// ---------------------------------------------------------------- cross-section scene
+function drawCross(t, a){
+  const c=oc; const tau=t-51.4; c.save(); c.globalAlpha=a;
+  const bg=c.createRadialGradient(540,1000,80,540,1000,1350); bg.addColorStop(0,'#0f1a2c'); bg.addColorStop(1,'#020306'); c.fillStyle=bg; c.fillRect(0,0,OW,OH);
+  const gT=1080, gB=1196, sY=1206, sH=14, pY=1238, pH=26;
+  const touch=sstep(0.2,1.4,tau); const gap=lerp(170,1,touch);
+  const field=sstep(1.7,2.6,tau); const detect=sstep(2.4,3.2,tau);
+  // pixel layer
+  const rip = sstep(4.0,4.1,tau)? (tau-4.0) : -1;
+  for(let x=4;x<OW;x+=13){ const k=Math.floor(x/13)%3; const col=k===0?[255,60,50]:k===1?[60,255,110]:[70,120,255];
+    let b=0.45; if(rip>=0){ const r=rip*700; b+= 0.9*Math.exp(-Math.pow((Math.abs(x-540)-r)/60,2))*Math.exp(-rip*0.8); }
+    c.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${clamp(b,0,1)})`; c.shadowColor=c.fillStyle; c.shadowBlur=10*b; c.fillRect(x,pY,9,pH); }
+  c.shadowBlur=0;
+  c.fillStyle='rgba(10,12,18,1)'; c.fillRect(0,pY+pH+6,OW,30);
+  // sensor electrodes
+  for(let x=-20;x<OW;x+=88){ const cx=x+34; const near=Math.exp(-Math.pow((cx-540)/150,2)); const it=0.32+0.68*detect*near*(0.85+0.15*Math.sin(t*12));
+    c.fillStyle=`rgba(70,230,215,${it})`; c.shadowColor='rgba(70,230,215,0.9)'; c.shadowBlur=26*it*detect*near; c.fillRect(x,sY,68,sH); }
+  c.shadowBlur=0;
+  // glass
+  const gg=c.createLinearGradient(0,gT,0,gB); gg.addColorStop(0,'rgba(170,210,255,0.24)'); gg.addColorStop(1,'rgba(120,170,240,0.10)');
+  c.fillStyle=gg; c.fillRect(0,gT,OW,gB-gT);
+  c.fillStyle='rgba(230,245,255,0.75)'; c.fillRect(0,gT,OW,2.5); c.fillStyle='rgba(200,225,255,0.25)'; c.fillRect(0,gB-1,OW,1.5);
+  // finger (side view)
+  const tipY=gT-gap; const R=175; const tc=[560, tipY-R];
+  const ang=Math.atan2(-1500, 900); // axis toward upper right
+  const ax=[Math.cos(ang),Math.sin(ang)]; const nx=[-ax[1],ax[0]];
+  const far=[tc[0]+ax[0]*2400, tc[1]+ax[1]*2400];
+  c.save();
+  c.beginPath(); c.arc(tc[0],tc[1],R,ang+Math.PI/2,ang-Math.PI/2+2*Math.PI,false);
+  c.lineTo(far[0]-nx[0]*R*1.1, far[1]-nx[1]*R*1.1); c.lineTo(far[0]+nx[0]*R*1.1, far[1]+nx[1]*R*1.1); c.closePath();
+  const fg=c.createLinearGradient(tc[0]+nx[0]*R, tc[1]+nx[1]*R, tc[0]-nx[0]*R, tc[1]-nx[1]*R);
+  fg.addColorStop(0,'#7a3a2c'); fg.addColorStop(0.25,'#c9806a'); fg.addColorStop(0.6,'#eaa98d'); fg.addColorStop(0.85,'#d48e74'); fg.addColorStop(1,'#8a4434');
+  c.fillStyle=fg; c.shadowColor='rgba(255,140,100,0.25)'; c.shadowBlur=40; c.fill();
+  c.clip();
+  // nail on top side
+  c.fillStyle='rgba(255,225,215,0.55)';
+  c.beginPath(); const nb=[tc[0]-nx[0]*R*0.86+ax[0]*30, tc[1]-nx[1]*R*0.86+ax[1]*30];
+  c.ellipse(nb[0]+ax[0]*120, nb[1]+ax[1]*120, 150, 26, ang, 0, Math.PI*2); c.fill();
+  // fingerprint ridges hint at bottom
+  c.strokeStyle='rgba(120,50,40,0.35)'; c.lineWidth=2;
+  for(let k=-6;k<=6;k++){ const a0=Math.PI/2+k*0.07; c.beginPath(); c.arc(tc[0],tc[1],R-6-Math.abs(k)*0.5, a0-0.03, a0+0.03); c.stroke(); }
+  c.restore();
+  // field lines
+  if(field>0.01){
+    c.save(); c.globalAlpha=a*field; c.lineWidth=3.2; c.setLineDash([16,14]); c.lineDashOffset=-t*90;
+    c.strokeStyle='rgba(255,226,130,0.95)'; c.shadowColor='rgba(255,210,90,0.9)'; c.shadowBlur=14;
+    for(let k=-4;k<=4;k++){ const th=Math.PI/2 + k*0.22; const sx=tc[0]+Math.cos(th)*R, sy=tc[1]+Math.sin(th)*R;
+      const ex=540+k*95, ey=sY+3; c.beginPath(); c.moveTo(sx,sy); c.quadraticCurveTo((sx+ex)/2+k*30, (sy+ey)/2+10, ex, ey); c.stroke(); }
+    c.restore();
+    c.save(); c.globalAlpha=a*field; c.fillStyle='#ffe082'; c.font='600 34px '+FONT; c.textAlign='left'; shadowText(c,'elektrisches Feld', 760, 990, 8); c.restore();
+  }
+  // labels
+  c.save(); c.globalAlpha=a*sstep(0.6,1.4,tau); c.strokeStyle='rgba(169,196,255,0.7)'; c.lineWidth=2; c.fillStyle='#a9c4ff'; c.font='600 32px '+FONT; c.textAlign='left';
+  const lab=(x,y0,y1,txt,tx)=>{ c.beginPath(); c.moveTo(x,y0); c.lineTo(x,y1); c.stroke(); c.beginPath(); c.arc(x,y0,4,0,7); c.fill(); shadowText(c,txt,tx,y1+34,6); };
+  lab(120, 1150, 1330, 'Schutzglas', 60); lab(470, 1213, 1420, 'Touch-Sensor', 380); lab(880, 1251, 1330, 'Pixel', 840);
+  c.restore();
+  c.restore();
+}
+
+// ---------------------------------------------------------------- main frame
+const macroCv=document.getElementById('macro'), phoneCv=document.getElementById('phone');
+window.initGL=(macroSrc, phoneSrc)=>{ G1=makeGL(macroCv, macroSrc); G2=makeGL(phoneCv, phoneSrc); return 'ok'; };
+window.renderFrame=(t)=>{
+  // visibility
+  let macroA=0, phoneA=0;
+  if(t<5.55) phoneA=1; else if(t<6.6){ phoneA=1; macroA=sstep(5.6,6.5,t); }
+  else if(t<48.75) macroA=1; else if(t<49.15){ phoneA=1; macroA=1-sstep(48.75,49.1,t); } else phoneA=1;
+  const crossA = t>=51.2 && t<57.6 ? sstep(51.2,51.6,t)*(1-sstep(57.25,57.6,t)) : 0;
+  if(crossA>=0.999) phoneA=0;
+  const n=nAt(t);
+  const ps=phoneState(t);
+  drawUI({t, typed:ps.typed, pressed:ps.pressed, typing:ps.typing});
+  if(phoneA>0){
+    uploadUI(G2);
+    const dim = 1 - 0.55*sstep(61.6,62.3,t);
+    drawGL(G2,(gl,U)=>{ gl.uniform2f(U.uRes,phoneCv.width,phoneCv.height); const c=ps.cam;
+      gl.uniform3fv(U.uCamPos,c.pos); gl.uniform3fv(U.uCamFw,c.fw); gl.uniform3fv(U.uCamRt,c.rt); gl.uniform3fv(U.uCamUp,c.up); gl.uniform1f(U.uFocal,c.f);
+      gl.uniform3fv(U.uTip,ps.tip); gl.uniform3fv(U.uFD,ps.fd||FD); gl.uniform1f(U.uT,t); gl.uniform1f(U.uDim,dim); });
+  }
+  phoneCv.style.opacity = phoneA>0?1:0;
+  if(macroA>0){
+    uploadUI(G1);
+    const J=KEYS['j'];
+    let rip=0, ripR=0; if(t>41.2 && t<48){ const u=(t-41.2)%1.6; ripR=0.05+u*0.5; rip=(1-u/1.6)*sstep(41.2,41.6,t)*0.8; }
+    drawGL(G1,(gl,U)=>{ gl.uniform2f(U.uRes,macroCv.width,macroCv.height); gl.uniform1f(U.uN,n); gl.uniform1f(U.uT,t);
+      gl.uniform2f(U.uDrift, 0.06*t, 0.0); gl.uniform2f(U.uKeyUV, J.cx/UIW, J.cy/UIH); gl.uniform1f(U.uRipple,rip); gl.uniform1f(U.uRippleR,ripR); });
+  }
+  macroCv.style.opacity = macroA;
+  // ---------------- overlay
+  oc.clearRect(0,0,OW,OH);
+  vignette(0.38);
+  // intro
+  if(t<6.0){
+    caption(['Wie nah kommt dein Finger','wirklich an dein Display?'], 300, fadeWin(t,0.2,5.4,0.4));
+    const c=ps.cam; const a=sstep(0.6,1.1,t)*(1-sstep(5.2,5.6,t));
+    const p1=project(c,[ps.tip[0],ps.tip[1]-0.78,ps.tip[2]]), p2=project(c,[ps.tip[0],0,ps.tip[2]]);
+    measure(p1[0], p1[1], p2[1], fmtDist(distM(n)), halvTxt(n), 'deine Fingerkuppe', 'die Taste J', a, true);
+  }
+  // macro measurement
+  if(macroA>0.5 && t<48.6){
+    const up=pick(UPL,n), down=pick(LOL,n);
+    const a = sstep(6.2,6.6,t)*(1-sstep(48.1,48.4,t));
+    measure(OW/2, OH/2-266, OH/2+266, fmtDist(distM(n)), halvTxt(n), up, down, a, false);
+  }
+  if(t>41 && t<48.4){
+    caption(['Sie berühren sich nie.'], 1480, fadeWin(t,41.7,48.3,0.4), 60);
+    caption(['Die Elektronen stoßen sich ab.'], 1560, fadeWin(t,43.0,48.3,0.4), 44);
+  }
+  // pressed phone
+  if(t>=49.1 && t<51.6){
+    const c=ps.cam; const P=project(c,[ps.tip[0],0.0,ps.tip[2]]);
+    const a=sstep(49.6,50.0,t);
+    oc.save(); oc.globalAlpha=a; oc.strokeStyle='rgba(255,255,255,0.9)'; oc.lineWidth=2.5;
+    oc.beginPath(); oc.moveTo(P[0]+6,P[1]+4); oc.lineTo(P[0]+70,P[1]+90); oc.lineTo(P[0]+90,P[1]+90); oc.stroke();
+    oc.fillStyle='#fff'; oc.font='700 40px '+FONT; oc.textAlign='left'; shadowText(oc,'immer noch 0,322 nm', P[0]-40, P[1]+140, 10);
+    oc.font='500 32px '+FONT; shadowText(oc,'entfernt', P[0]-40, P[1]+182, 10); oc.restore();
+    caption(['Du hast dein Handy','noch nie berührt.'], 300, fadeWin(t,49.4,51.5,0.35));
+  }
+  if(crossA>0){
+    drawCross(t, crossA);
+    const ca=crossA;
+    caption(['Aber woher weiß dein Handy,','wo du tippst?'], 300, ca*fadeWin(t,51.6,53.5,0.3), 56);
+    caption(['Unter dem Glas liegt','ein Sensor-Gitter.'], 300, ca*fadeWin(t,53.5,55.4,0.3), 56);
+    caption(['Es spürt nur das elektrische','Feld deines Fingers.'], 300, ca*fadeWin(t,55.4,57.6,0.3), 56);
+  }
+  if(t>61.5){
+    caption(['Du hast es nie berührt.'], 880, sstep(61.7,62.2,t), 66);
+    caption(['Es hat dich nur gespürt.'], 970, sstep(62.3,62.8,t), 66);
+  }
+  return n;
+};
+window.events=()=>{ // for audio
+  const ev={ticks:[], taps:[]}; let last=Math.floor(nAt(0));
+  for(let t=0;t<41;t+=1/240){ const k=Math.floor(nAt(t)); if(k>last){ ev.ticks.push([+t.toFixed(4),k]); last=k; } }
+  for(let i=0;i<TYPE_TXT.length;i++) ev.taps.push(+(TYPE_T0+i*TYPE_DT).toFixed(4));
+  return ev;
+};
+</script>
+</body></html>
