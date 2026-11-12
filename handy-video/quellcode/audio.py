@@ -97,10 +97,10 @@ for k in range(4):
     add(s, tb, 0.18)
 
 # ---------------- whoosh zoom-out 47.9..49.2 ----------------
-d = 1.7; t = tt(int(d * SR))
+d = 2.2; t = tt(int(d * SR))
 nz = fft_filter(rng.standard_normal(len(t)), lo=150, hi=4000); nz /= np.abs(nz).max()
 e = np.sin(np.pi * t / d) ** 2
-add(nz * e, 47.45, 0.38)
+add(nz * e, 47.2, 0.38)
 # dive whoosh at the start
 d = 1.6; t = tt(int(d * SR))
 nz = fft_filter(rng.standard_normal(len(t)), lo=200, hi=3000); nz /= np.abs(nz).max()
@@ -108,10 +108,10 @@ add(nz * np.sin(np.pi * t / d) ** 3, 5.0, 0.22)
 # soft hit on phone
 t = tt(int(2.5 * SR))
 hit = np.sin(2 * np.pi * 50 * t) * np.exp(-t * 4) + 0.3 * fft_filter(rng.standard_normal(len(t)), hi=1200) * np.exp(-t * 20) / 3
-add(hit, 49.05, 0.4)
+add(hit, 49.3, 0.4)
 for j, m in enumerate([45, 52, 57, 60, 64]):
     s = note(mtof(m), 2.6, harm=4) * env_adsr(int(2.6 * SR), 0.02, 1.5)
-    add(s, 49.05, 0.04, pan=(j - 2) * 0.2)
+    add(s, 49.3, 0.04, pan=(j - 2) * 0.2)
 
 # ---------------- cross-section 51.3..57.6 ----------------
 for j, m in enumerate([41, 48, 53, 57, 60]):

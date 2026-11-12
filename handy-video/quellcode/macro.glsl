@@ -8,6 +8,10 @@ uniform float uT, uYaw, uAz, uRipple, uRippleR;
 uniform vec2 uDrift;
 uniform sampler2D uUI;
 uniform vec2 uKeyUV;
+uniform float uRt, uHt, uZt, uLneg, uLpos, uCCl, uYsT, uYsL, uTsT, uTsL, uWc, uFocusT;
+uniform vec3 uDirT;
+uniform float uTopGain, uEmisGain, uRidgeK, uFlat;
+uniform vec3 uFU, uCen;
 
 const float CC = 0.016;
 const float FS = 0.546875;
@@ -39,7 +43,7 @@ vec4 ridges(vec2 q){
   vec2 rel; vec4 v = voro(q*1.7+3.1, 1.0, rel);
   float pore = (1.-smoothstep(0.05,0.15,v.x))*step(0.5,v.z)*crest;
   float h = crest*2.-1. - pore*1.8 + 0.08*vnoise(q*7.);
-  vec3 a = mix(vec3(0.58,0.25,0.19), vec3(0.93,0.56,0.40), crest);
+  vec3 a = mix(vec3(0.68,0.34,0.25), vec3(0.90,0.53,0.38), crest);
   a *= 1.-0.5*pore;
   return vec4(h, a);
 }
@@ -134,7 +138,7 @@ vec4 chains(vec2 q){ vec2 w = q + 0.9*vec2(fbm(q*0.3,3), fbm(q*0.3+5.,3)); float
 void evalTop(vec2 P, out float h, out vec3 alb, out float hr){
   h = 0.; hr = 0.; alb = vec3(0.); float ws = 0.;
   vec4 r; float k;
-  if(wR>0.001){ k=AA(sR); r = k>0.01? ridges(P*sR) : vec4(0.); h += wR*k*r.x*0.30/sR; hr += wR*k*r.x; alb += wR*mix(vec3(0.80,0.43,0.31), r.yzw, k); ws += wR; }
+  if(wR>0.001){ k=AA(sR)*uRidgeK; r = k>0.01? ridges(P*sR) : vec4(0.); h += wR*k*r.x*0.30/sR; hr += wR*k*r.x; alb += wR*mix(vec3(0.80,0.43,0.31), r.yzw, k); ws += wR; }
   if(wC>0.001){ k=AA(sC); r = k>0.01? cells(P*sC+1.7) : vec4(0.); h += wC*k*r.x*0.30/sC; hr += wC*k*r.x; alb += wC*mix(vec3(0.86,0.56,0.40), r.yzw, k); ws += wC; }
   if(wW>0.001){ k=AA(sW); r = k>0.01? wrinkles(P*sW+5.3) : vec4(0.); h += wW*k*r.x*0.22/sW; hr += wW*k*r.x; alb += wW*mix(vec3(0.82,0.54,0.41), r.yzw, k); ws += wW; }
   if(wF>0.001){ k=AA(sF); r = k>0.01? fibers(P*sF+2.2) : vec4(0.); h += wF*k*r.x*0.25/sF; hr += wF*k*r.x; alb += wF*mix(vec3(0.82,0.58,0.46), r.yzw, k); ws += wF; }
@@ -182,38 +186,83 @@ vec3 uiCm(vec2 cm){ return pow(texture(uUI, uKeyUV + vec2(cm.x/6.66, cm.y/14.16)
 
 vec3 aces(vec3 x){ return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.,1.); }
 
+float capIntersect(vec3 ro, vec3 rd, vec3 pa, vec3 pb, float r){
+  vec3 ba = pb - pa; vec3 oa = ro - pa;
+  float baba = dot(ba,ba), bard = dot(ba,rd), baoa = dot(ba,oa), rdoa = dot(rd,oa), oaoa = dot(oa,oa);
+  float a = baba - bard*bard; float b = baba*rdoa - baoa*bard; float c = baba*oaoa - baoa*baoa - r*r*baba;
+  float h = b*b - a*c;
+  if(h >= 0.){
+    float t = (-b - sqrt(h))/a; float y = baoa + t*bard;
+    if(y > 0. && y < baba) return t;
+    vec3 oc = (y <= 0.) ? oa : ro - pb; b = dot(rd,oc); c = dot(oc,oc) - r*r; h = b*b - c;
+    if(h > 0.) return -b - sqrt(h);
+  }
+  return -1.;
+}
+vec3 capNormal(vec3 pos, vec3 a, vec3 b, float r){ vec3 ba=b-a, pa=pos-a; float h=clamp(dot(pa,ba)/dot(ba,ba),0.,1.); return (pa-h*ba)/r; }
+vec3 Mf(vec3 p){ return p + uFU*(dot(p,uFU)*uFlat); }
+// flattened fingertip capsule: intersect in the space where it is round
+float fingerHit(vec3 ro, vec3 rd, vec3 pa, vec3 pb, float r, out vec3 nrm){
+  vec3 ro2 = Mf(ro), rd2 = Mf(rd); float l = length(rd2); rd2 /= l;
+  vec3 pa2 = Mf(pa), pb2 = Mf(pb);
+  float t2 = capIntersect(ro2, rd2, pa2, pb2, r);
+  nrm = vec3(0.,-1.,0.);
+  if(t2 < 0.) return -1.;
+  vec3 n2 = capNormal(ro2 + rd2*t2, pa2, pb2, r);
+  nrm = normalize(Mf(n2));
+  return t2/l;
+}
+
 void main(){
   vec2 fc = gl_FragCoord.xy;
   vec2 q = (fc - 0.5*uRes)/(FS*uRes.y);
-  bool top = q.y > 0.;
   float ay = abs(q.y);
   float px = 1.0/(FS*uRes.y);
-  float Hs = 1.;
 
   sR = Sc(log2(4.7e-4)); sC = Sc(log2(3.5e-5)); sW = Sc(log2(2.5e-6)); sF = Sc(log2(1.6e-7)); sM = Sc(log2(8.0e-9)); sA = Sc(log2(4.0e-10));
   tS = Sc(log2(1.6e-5)); tK = Sc(log2(3.0e-6)); tP = Sc(log2(6.0e-7)); tC = Sc(log2(4.0e-8)); tL = Sc(log2(3.5e-9)); tA = Sc(log2(4.0e-10));
   wR = Ws(sR,true,false); wC = Ws(sC,false,false); wW = Ws(sW,false,false); wF = Ws(sF,false,false); wM = Ws(sM,false,false); wA = smoothstep(21.6,23.0,uN);
   lS = Ws(tS,false,false)*smoothstep(5.0,6.0,uN); lK = Ws(tK,false,false); lP = Ws(tP,false,false); lC = Ws(tC,false,false); lL = Ws(tL,false,false); lA = smoothstep(21.6,23.0,uN);
 
-  float YSs = 2.*sqrt(CC*Hs);
-  float ts = sqrt(Hs/CC);
-  float dome = top ? 0.20*(1.-smoothstep(1.0,4.0,uN))*sqrt(Hs) : 0.;
-  float ysE = YSs*clamp(uGap,0.,1.) + dome*q.x*q.x;
-  float ayc = max(ay, YSs + 1e-5);
-  float sd = sqrt(max(ayc*ayc - 4.*CC*Hs, 0.));
-  float t = (ayc - sd)/(2.*CC);
-  float inGap = max(YSs - ay, 0.);
-  mat2 Ry = mat2(cos(uYaw), sin(uYaw), -sin(uYaw), cos(uYaw));
-  vec2 Pl = vec2(q.x*t, t + inGap*25.);
-  vec2 P = Ry*Pl + uDrift;
-  float dtday = (ayc/max(sd,1e-4) - 1.)/(2.*CC);
-  gEps = max(t*px, min(px*dtday, t*px*5.));
-  float eps = t*px;
-
   vec3 I = normalize(vec3(q.x, q.y, 1.));
   vec3 V = -I;
-  vec3 N0 = top ? normalize(vec3(0., -1., 2.*CC*t)) : normalize(vec3(0., 1., 2.*CC*t));
-  vec3 Tz = normalize(vec3(0., top? 2.*CC*t : -2.*CC*t, 1.));
+  // ---- geometry: fingertip capsule (top) and glass (bottom), exact ray intersections
+  vec3 cen = uCen;
+  vec3 pa = cen - uDirT*uLneg, pb = cen + uDirT*uLpos;
+  vec3 nT; float sT = fingerHit(vec3(0.), I, pa, pb, uRt, nT);
+  float A2 = uCCl*I.z*I.z, B2 = I.y, C2 = 1.;
+  float sL = -1.;
+  if(A2 < 1e-7){ if(B2 < 0.) sL = -C2/B2; }
+  else { float dd = B2*B2 - 4.*A2*C2; if(dd >= 0.) sL = (-B2 - sqrt(dd))/(2.*A2); }
+  bool hitT = sT > 0., hitL = sL > 0.;
+  bool top; bool miss = false; float s;
+  if(hitT && (!hitL || sT < sL)){ top = true; s = sT; }
+  else if(hitL){ top = false; s = sL; }
+  else { miss = true; top = q.y > 0.; s = 0.; }
+
+  float ys = top ? uYsT : uYsL;
+  float ts = top ? uTsT : uTsL;
+  float inGap = miss ? max(ys - ay, 0.) : 0.;
+  vec3 X; vec3 N0;
+  if(!miss){
+    X = I*s;
+    N0 = top ? nT : normalize(vec3(0., 1., 2.*uCCl*X.z));
+  } else {
+    X = vec3(q.x*ts, top ? ys*ts : -ys*ts, ts);
+    N0 = top ? normalize(vec3(0., -1., ts/max(uRt,1.))) : normalize(vec3(0., 1., 2.*uCCl*ts));
+  }
+  if(miss && uWc < 0.001 && uN < 24.5){ outColor = vec4(vec3(0.), 0.); return; }
+  float t = X.z;
+  mat2 Ry = mat2(cos(uYaw), sin(uYaw), -sin(uYaw), cos(uYaw));
+  vec2 Pl = vec2(X.x, X.z + inGap*25.);
+  vec2 P = Ry*Pl + uDirT.xz*0. + uDrift;
+  float dist = length(X);
+  float cosi = max(abs(dot(N0, I)), 0.2);
+  gEps = dist*px/cosi;
+  float eps = dist*px;
+  vec3 Tx = normalize(vec3(1.,0.,0.) - N0*N0.x);
+  vec3 Tz = normalize(vec3(0.,0.,1.) - N0*N0.z);
+
   vec3 L = normalize(vec3(-0.45, top? -0.75 : 0.75, -0.5));
   vec3 L2 = normalize(vec3(0.7, top? -0.3 : 0.3, -0.2));
 
@@ -225,7 +274,7 @@ void main(){
     vec3 alb; float hr; evalTop(P, h0, alb, hr);
     float hx, hy, d2; vec3 d1; evalTop(P+Ry*vec2(eps,0.), hx, d1, d2); evalTop(P+Ry*vec2(0.,eps), hy, d1, d2);
     vec2 g = vec2(hx-h0, hy-h0)/eps;
-    vec3 N = normalize(N0 - g.x*vec3(1.,0.,0.) - g.y*Tz);
+    vec3 N = normalize(N0 - g.x*Tx - g.y*Tz);
     float ndl = dot(N,L);
     vec3 wrapc = mix(vec3(0.35,0.22,0.18), vec3(0.15), wA);
     vec3 dif = clamp((vec3(ndl)+wrapc)/(1.+wrapc), 0., 1.);
@@ -236,11 +285,12 @@ void main(){
     col = alb*(0.05 + 1.05*dif)*ao + sp;
     col += alb*vec3(0.30,0.34,0.46)*0.12*clamp(dot(N,L2)+0.3,0.,1.);
     col += alb*alb*vec3(0.45,0.10,0.05)*0.25*(1.-wA)*(1.-dif.g);
+    col *= uTopGain;
   } else {
     float oil; vec3 alb; float hr; evalBot(P, h0, oil, alb, hr);
     float hx, hy, o2, d2; vec3 d1; evalBot(P+Ry*vec2(eps,0.), hx, o2, d1, d2); evalBot(P+Ry*vec2(0.,eps), hy, o2, d1, d2);
     vec2 g = vec2(hx-h0, hy-h0)/eps;
-    vec3 N = normalize(N0 - g.x*vec3(1.,0.,0.) - g.y*Tz);
+    vec3 N = normalize(N0 - g.x*Tx - g.y*Tz);
     float ndl = dot(N,L);
     float wrap = clamp((ndl+0.2)/1.2, 0., 1.);
     vec3 H = normalize(L+V);
@@ -249,18 +299,17 @@ void main(){
     float ao = 0.6 + 0.4*smoothstep(-1.0, 0.7, hr);
     vec3 glassCol = vec3(0.);
     if(glass > 0.001){
-      // --- pixels 0.7 mm below the glass surface, seen through it (refraction)
-      vec3 X = vec3(Pl.x, -(Hs + CC*t*t), Pl.y);
+      vec3 Xg = vec3(Pl.x, X.y, Pl.y);
       vec3 Rf = refract(I, N, 1./1.5);
       float delta = 0.07/Uv;
-      vec2 off = Rf.xz*(delta/max(-Rf.y, 0.08));
-      vec2 Pp = Ry*(X.xz + off) + uDrift;
+      vec2 off = Rf.xz*(delta/max(-dot(Rf,N0), 0.08));
+      vec2 Pp = Ry*(Xg.xz + off) + uDrift;
       vec2 cm = phoneCm(Pp, Uv);
-      vec3 uiS = uiCm(cm)*2.4;
+      vec3 uiS = uiCm(cm)*uEmisGain;
       const float CELL = 0.0078;     // diamond PenTile repeat: 2 pixels at 460 ppi
       vec2 pc = cm/CELL;
       vec2 cell = floor(pc), f = fract(pc);
-      vec3 pcol = uiCm((cell+0.5)*CELL)*2.4;
+      vec3 pcol = uiCm((cell+0.5)*CELL)*uEmisGain;
       float fpc = gEps*Uv/CELL;
       float sg = clamp(0.065*exp2(0.55*(uN-4.6)), 0.065, 0.6);
       sg = max(sg, fpc*0.6);
@@ -275,19 +324,15 @@ void main(){
       float pm = smoothstep(1.2, 0.5, fpc);
       vec3 emis = mix(uiS, mix(uiS, sub, pm), smoothstep(2.8, 4.4, uN));
       float trans = 1. - smoothstep(10.5, 13.5, uN);
-      // --- mirror image of the fingertip in the glass
+      // mirror image of the fingertip in the glass
       vec3 Rr = reflect(I, N);
-      float A = CC*Rr.z*Rr.z, B = 2.*CC*X.z*Rr.z - Rr.y, C = CC*X.z*X.z + Hs - X.y;
-      float disc = B*B - 4.*A*C;
       vec3 refl = vec3(0.004);
-      if(disc > 0. && A > 1e-6){
-        float s = (-B - sqrt(disc))/(2.*A);
-        if(s > 0.){
-          vec3 Y = X + s*Rr;
-          float hh, hr2; vec3 at; evalTop(Ry*Y.xz + uDrift, hh, at, hr2);
-          refl = at*(0.10 + 0.5*clamp(-Rr.y,0.,1.))*(0.65+0.35*smoothstep(-1.,0.7,hr2));
-          refl *= exp(-s*0.08);
-        }
+      vec3 nR; float sr = fingerHit(X + N0*0.002, Rr, pa, pb, uRt, nR);
+      if(sr > 0.){
+        vec3 Y = X + N0*0.002 + sr*Rr;
+        float hh, hr2; vec3 at; evalTop(Ry*Y.xz + uDrift, hh, at, hr2);
+        refl = at*(0.10 + 0.5*clamp(-Rr.y,0.,1.))*(0.65+0.35*smoothstep(-1.,0.7,hr2));
+        refl *= exp(-sr*0.08)*uTopGain;
       }
       float fr = 0.04 + 0.96*pow(1.-max(dot(N,V),0.), 5.);
       if(inGap > 0.) fr = min(fr, 0.45);
@@ -311,11 +356,14 @@ void main(){
     col = mix(col, cl, e);
   }
 
-  float jag = clamp(h0/max(ts,1.), -0.03, 0.03)*smoothstep(0.,0.3,uGap);
-  float edge = ay - (ysE - jag);
-  float cov = smoothstep(-px*1.0, px*1.0, edge);
-  cov = mix(cov, ay >= YSs ? 1. : cloudGap, e);
-  float depthDark = mix(1.0, 0.70, smoothstep(2.5, ts, t));
+  float cov = 1.;
+  if(miss){
+    float jag = clamp(h0/max(ts,1.), -0.03, 0.03)*smoothstep(0.,0.3,uGap);
+    float edge = ay - (ys*clamp(uGap,0.,1.) - jag);
+    cov = uWc*smoothstep(-px*1.0, px*1.0, edge);
+    cov = mix(cov, cloudGap, e);
+  }
+  float depthDark = mix(1.0, 0.70, smoothstep(2.5, max(ts,3.), t));
   col *= depthDark*cov;
 
   if(e > 0.001){
@@ -334,9 +382,7 @@ void main(){
 
   col = aces(col*1.0);
   col = pow(col, vec3(1./2.2));
-  // depth of field: focus close to the gap edge
-  float tf = ts*0.82;
-  float coc = 3.6*abs(t - tf)/t + 3.*e;
-  if(ay < YSs) coc = 3.*e;
+  float coc = 3.6*abs(dist - uFocusT)/max(dist,1e-3) + 3.*e;
+  if(miss) coc = 3.*e;
   outColor = vec4(col, clamp(coc/24., 0., 1.));
 }

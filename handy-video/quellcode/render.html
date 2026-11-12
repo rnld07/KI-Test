@@ -172,8 +172,9 @@ function pass(P, target, set){ gl.bindFramebuffer(gl.FRAMEBUFFER, target); gl.vi
 
 // ------------------------------------------------------------ timeline
 const D0=0.024;
-const T_ZIN0=5.2, T_ZIN1=6.4, T_MAC1=41.0, T_ZOUT0=47.6, T_ZOUT1=49.1, T_CROSS0=51.4, T_CROSS1=57.4, TYPE_T0=58.2, TYPE_DT=0.13;
+const T_ZIN0=5.2, T_ZIN1=6.4, T_MAC1=41.0, T_ZOUT0=47.3, T_ZOUT1=49.3, T_CROSS0=51.4, T_CROSS1=57.4, TYPE_T0=58.2, TYPE_DT=0.13;
 const N_END=26.13;
+const DIVE0=5.0, DIVE1=6.0, XF_IN0=6.0, XF_IN1=6.5, XF_OUT0=49.05, XF_OUT1=49.5;
 const MAC=(function(){ const N=4000, arr=[0]; let s=0; const rate=u=> u<0.8?1: 1-0.85*sstep(0.8,1.0,u);
   for(let i=1;i<=N;i++){ s+=rate(i/N)/N; arr.push(s);} return arr.map(v=>v/s); })();
 function macroN(t){ const u=clamp((t-T_ZIN1)/(T_MAC1-T_ZIN1),0,1)*4000; const a=Math.floor(u), b=Math.min(a+1,4000); return 1.5+24.5*lerp(MAC[a],MAC[b],u-a); }
@@ -236,21 +237,21 @@ function phoneState(t){
   const J=keyWorld('j');
   if(t < 30){
     const n=nReal(t), dcm=distM(n)*100;
-    const u=clamp(t/T_ZIN0,0,1);
+    const u=clamp(t/DIVE0,0,1);
     const intro={t:add(J,[0,dcm*0.5+0.9,0]), d:lerp(8.4,6.6,ease(u)), el:lerp(16,12,u), az:lerp(-64,-48,ease(u)), fov:36};
     let c=intro;
-    if(t>T_ZIN0){ const v=easeIO((t-T_ZIN0)/(T_ZIN1-T_ZIN0)); const i2={t:add(J,[0,dcm*0.5+0.9,0]), d:6.6, el:12, az:-48, fov:36}; c=lerpCam(i2, matched(dcm), v); }
+    if(t>DIVE0){ const v=easeIO((t-DIVE0)/(DIVE1-DIVE0)); const i2={t:add(J,[0,dcm*0.5+0.9,0]), d:6.6, el:12, az:-48, fov:36}; c=lerpCam(i2, matched(dcm), v); }
     const cam=mkCam(c);
-    return {cam, tip:tipFor(J,dcm), typed:'', pressed:null, dcm, focus:len(sub(add(J,[0,dcm*0.5,0]),cam.pos)), aper: t>T_ZIN0? lerp(11,3,easeIO((t-T_ZIN0)/(T_ZIN1-T_ZIN0))) : 11};
+    return {cam, tip:tipFor(J,dcm), typed:'', pressed:null, dcm, focus:len(sub(add(J,[0,dcm*0.5,0]),cam.pos)), aper: t>DIVE0? lerp(11,3.6,easeIO((t-DIVE0)/(DIVE1-DIVE0))) : 11};
   }
   if(t < T_CROSS1-0.2){
-    const dv=distM(1.3)*100;
-    const v=easeIO((t-T_ZOUT1+0.25)/1.7);
+    const dv=distM(nView(Math.min(t,XF_OUT1)))*100;
+    const v=easeIO((t-XF_OUT1)/1.8);
     const end={t:add(J,[0,0.55,0]), d:5.6, el:12, az:-50, fov:34};
     const c=lerpCam(matched(dv), end, v);
     c.d -= 0.12*clamp(t-50.6,0,3);
     const cam=mkCam(c);
-    return {cam, tip:tipFor(J,0.0), typed:'', pressed:'j', dcm:0, focus:len(sub(J,cam.pos)), aper:lerp(3,11,v)};
+    return {cam, tip:tipFor(J,0.0), typed:'', pressed:'j', dcm:0, focus:len(sub(add(J,[0,dv/2*(1-v),0]),cam.pos)), aper:lerp(3.6,11,v)};
   }
   const v=easeIO((t-(T_CROSS1-0.2))/1.9);
   const A={t:add(J,[0,0.5,0]), d:5.6, el:14, az:-48, fov:34};
@@ -262,25 +263,47 @@ function phoneState(t){
 }
 window.DBG=null;
 function macroState(t){
-  if(window.DBG) return window.DBG;
+  if(window.DBG) return Object.assign({yaw:0,rip:0,ripR:0,gap:1}, window.DBG, macroGeom(window.DBG.n, window.DBG.gap===undefined?1:window.DBG.gap, !!window.DBG.out));
   const nv=nView(t);
   const gap = t<T_ZOUT0 ? 1 : Math.pow(2, nv - N_END);
   const yaw = t<T_ZIN1? 0 : 0.07*Math.sin(Math.PI*clamp((t-T_ZIN1)/(T_ZOUT0-T_ZIN1),0,1));
   let rip=0, ripR=0; if(t>41.2 && t<T_ZOUT0){ const u=(t-41.2)%1.6; ripR=0.05+u*0.5; rip=(1-u/1.6)*sstep(41.2,41.6,t)*sstep(T_ZOUT0,T_ZOUT0-0.4,t); }
-  return {n:nv, gap, yaw, rip, ripR};
+  return Object.assign({n:nv, gap, yaw, rip, ripR}, macroGeom(nv, gap, t>=T_ZOUT0));
+}
+// fingertip axis in the macro camera frame (camera at the matched pose)
+const ML=(function(){ const c=mkCam(matched(1)); return norm([dot(FD1,c.rt), FD1[1], dot(FD1,c.fw)]); })();
+function macroGeom(n, gap, out){
+  const dcm=2.4*Math.pow(2,-n);
+  const Rt=Math.min(1.34/dcm, 31.25);
+  const m=sstep(1.5,5.74,n);
+  let zt, Ht, w2, Lneg, wc;
+  if(!out){ zt=3*(1-m); Ht=1; w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n); wc=sstep(5.8,6.3,n); }
+  else { zt=3*(1-gap); Ht=1-2*(1-gap)*(1-sstep(2.0,3.0,n)); w2=sstep(1.6,3.0,n); Lneg=60*sstep(2.0,3.0,n); wc=sstep(2.0,3.0,n); }
+  const dir=norm(lerp3(ML,[1,0,0],w2));
+  // flattened cross-section like the 3D finger (dorsal axis squeezed by 1.13)
+  const FU=norm(sub([0,1,0], mul(dir, dir[1]))); const fl=0.13*(1-w2);
+  const Minv=v=>sub(v, mul(FU, dot(FU,v)*fl/(1+fl)));
+  const a0=Minv([0,1,0]); const o=mul(Minv(a0), -Rt/len(a0));
+  const cen=sub([0,Ht,zt], o);
+  const CCl=0.016*m;
+  const cy=cen[1], C=Math.hypot(cen[2],cy); const al=Math.atan2(cy,cen[2])-Math.asin(clamp((Ht>-2? cy-Ht : Rt)/C,-1,1));
+  const rv=cy-Ht; const ysT=Math.max(Math.tan(al),0.001); const tsT=Math.sqrt(Math.max(C*C-rv*rv,0))*Math.cos(al);
+  const ysL=2*Math.sqrt(CCl), tsL=CCl>1e-6? Math.min(1/Math.sqrt(CCl),60):60;
+  const g2=sstep(1.6,4.6,n);
+  return {Rt, Ht, zt, dir, FU, fl, cen, Lneg, Lpos:60, CCl, ysT, ysL, tsT:Math.max(tsT,0.5), tsL, wc, focusT:lerp(3.0,6.5,m), m, topGain:lerp(0.2,1,g2), emisGain:lerp(1.35,2.4,g2), ridgeK:sstep(1.4,3.4,n)};
 }
 function visibility(t){
   if(window.DBG) return {m:1,p:0,cr:0};
   let m=0, p=0;
-  if(t<5.85) p=1; else if(t<6.35){ m=sstep(5.85,6.35,t); p=1; } else if(t<48.85) m=1; else if(t<49.05){ m=1-sstep(48.85,49.05,t); p=1; } else p=1;
+  if(t<XF_IN0) p=1; else if(t<XF_IN1){ m=sstep(XF_IN0,XF_IN1,t); p=1; } else if(t<XF_OUT0) m=1; else if(t<XF_OUT1){ m=1-sstep(XF_OUT0,XF_OUT1,t); p=1; } else p=1;
   const cr = (t>=T_CROSS0-0.2 && t<T_CROSS1+0.2) ? sstep(T_CROSS0-0.2,T_CROSS0+0.25,t)*(1-sstep(T_CROSS1-0.25,T_CROSS1+0.2,t)) : 0;
   return {m,p,cr};
 }
 function subframes(t){
   if(window.DBG) return 1;
-  if(t>T_ZIN0-0.1 && t<T_ZIN1+0.2) return 6;
-  if(t>T_ZOUT0 && t<T_ZOUT1+0.2) return 6;
-  if(t>49.2 && t<50.9) return 3;
+  if(t>DIVE0-0.1 && t<XF_IN1+0.15) return 6;
+  if(t>T_ZOUT0-0.1 && t<XF_OUT1+0.05) return 1;
+  if(t>=XF_OUT1+0.1 && t<51.3) return 3;
   if(t>T_CROSS1-0.3 && t<TYPE_T0-0.1) return 3;
   if(t>=TYPE_T0-0.1 && t<62.0) return 5;
   return 1;
@@ -298,6 +321,10 @@ function renderGL(t){
     pass(PM, fbA.fb, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uN,ms.n); gl.uniform1f(U.uGap,ms.gap); gl.uniform1f(U.uT,t);
       gl.uniform1f(U.uYaw,ms.yaw); gl.uniform1f(U.uAz,A_END*D2R); gl.uniform2f(U.uDrift,0,0); gl.uniform2f(U.uKeyUV,J.cx/UIW,J.cy/UIH);
       gl.uniform1f(U.uRipple,ms.rip); gl.uniform1f(U.uRippleR,ms.ripR);
+      gl.uniform1f(U.uRt,ms.Rt); gl.uniform1f(U.uHt,ms.Ht); gl.uniform1f(U.uZt,ms.zt); gl.uniform3fv(U.uDirT,ms.dir);
+      gl.uniform1f(U.uLneg,ms.Lneg); gl.uniform1f(U.uLpos,ms.Lpos); gl.uniform1f(U.uCCl,ms.CCl);
+      gl.uniform1f(U.uYsT,ms.ysT); gl.uniform1f(U.uYsL,ms.ysL); gl.uniform1f(U.uTsT,ms.tsT); gl.uniform1f(U.uTsL,ms.tsL);
+      gl.uniform1f(U.uWc,ms.wc); gl.uniform1f(U.uFocusT,ms.focusT); gl.uniform1f(U.uTopGain,ms.topGain); gl.uniform1f(U.uEmisGain,ms.emisGain); gl.uniform1f(U.uRidgeK,ms.ridgeK); gl.uniform3fv(U.uFU,ms.FU); gl.uniform1f(U.uFlat,ms.fl); gl.uniform3fv(U.uCen,ms.cen);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); });
   }
   if(needP){
@@ -308,7 +335,8 @@ function renderGL(t){
       gl.uniform1f(U.uT,t); gl.uniform1f(U.uDim, ps.dim===undefined?1:ps.dim);
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); });
   }
-  pass(PD, null, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t);
+  const zb = (t>T_ZOUT0-0.05 && t<XF_OUT1+0.05) ? Math.pow(2, Math.abs(nView(t+0.25/30)-nView(t-0.25/30)))-1 : 0;
+  pass(PD, null, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t); gl.uniform1f(U.uZoom, zb);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbA.tex); gl.uniform1i(U.uA,0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,fbB.tex); gl.uniform1i(U.uB,1);
     gl.uniform1f(U.uUseA, needM?1:0); gl.uniform1f(U.uUseB, needP?1:0);
@@ -399,7 +427,7 @@ function drawCross(t, a){
 
 // ------------------------------------------------------------ frame
 window.renderFrame=(t)=>{
-  const K=subframes(t); const shutter=(t>=TYPE_T0-0.1 && t<62)?0.35/30:0.5/30;
+  const K=subframes(t); const shutter=(t>=TYPE_T0-0.1 && t<62)?0.35/30:((t>T_ZOUT0-0.1 && t<XF_OUT1+0.1)?0.65/30:0.5/30);
   let info=null;
   oc.globalAlpha=1; oc.fillStyle='#000'; oc.fillRect(0,0,OW,OH);
   for(let i=0;i<K;i++){
@@ -414,14 +442,16 @@ window.renderFrame=(t)=>{
   // intro
   if(t<T_ZIN1){
     caption(['Wie nah kommt dein Finger','wirklich an dein Display?'], 300, fadeWin(t,0.25,5.1,0.45));
-    const a=sstep(0.6,1.1,t)*(1-sstep(T_ZIN0-0.3,T_ZIN0+0.1,t));
+    const a=sstep(0.6,1.1,t)*(1-sstep(DIVE0-0.3,DIVE0+0.1,t));
     if(a>0){ const J=keyWorld('j'); const p1=project(ps.cam,[J[0],ps.dcm,J[2]]), p2=project(ps.cam,J);
       measure(p1[0], p1[1], p2[1], fmtDist(distM(n)), halvTxt(n), 'deine Fingerkuppe', 'die Taste J', a, 0.85); }
   }
   // macro measurement
-  if(t>6.0 && t<T_ZOUT0+0.1){
-    const a = sstep(6.15,6.55,t)*(1-sstep(T_ZOUT0-0.35,T_ZOUT0,t));
-    measure(OW/2, OH/2-266, OH/2+266, fmtDist(distM(n)), halvTxt(n), pick(UPL,n), pick(LOL,n), a, 1);
+  if(t>6.2 && t<T_ZOUT0+0.1){
+    const a = sstep(6.35,6.75,t)*(1-sstep(T_ZOUT0-0.35,T_ZOUT0,t));
+    const gm=macroGeom(n,1,false); const SC=0.546875*OH;
+    const yT=gm.ysT, yL=lerp(1/3, gm.ysL, gm.m);
+    measure(OW/2, OH/2-yT*SC, OH/2+yL*SC, fmtDist(distM(n)), halvTxt(n), pick(UPL,n), pick(LOL,n), a, 1);
   }
   if(t>41 && t<T_ZOUT0+0.2){
     caption(['Sie berühren sich nie.'], 1480, fadeWin(t,41.7,T_ZOUT0,0.4), 60);
@@ -430,13 +460,13 @@ window.renderFrame=(t)=>{
   // back on the phone
   if(t>=T_ZOUT1 && t<T_CROSS0+0.2){
     const J=keyWorld('j'); const P=project(ps.cam,[J[0],0,J[2]]);
-    const a=sstep(49.7,50.1,t)*(1-sstep(T_CROSS0-0.3,T_CROSS0,t));
+    const a=sstep(50.0,50.4,t)*(1-sstep(T_CROSS0-0.3,T_CROSS0,t));
     oc.save(); oc.globalAlpha=a; oc.strokeStyle='rgba(255,255,255,0.92)'; oc.lineWidth=2.5;
     oc.beginPath(); oc.arc(P[0],P[1],5,0,7); oc.stroke();
     oc.beginPath(); oc.moveTo(P[0]+5,P[1]+5); oc.lineTo(P[0]+60,P[1]+95); oc.lineTo(P[0]+86,P[1]+95); oc.stroke();
     oc.fillStyle='#fff'; oc.font='700 42px '+FONT; oc.textAlign='left'; shadowText(oc,'immer noch 0,322 nm', P[0]-30, P[1]+148, 10);
     oc.font='500 32px '+FONT; shadowText(oc,'Abstand', P[0]-30, P[1]+190, 10); oc.restore();
-    caption(['Du hast dein Handy','noch nie berührt.'], 300, fadeWin(t,49.4,T_CROSS0,0.35));
+    caption(['Du hast dein Handy','noch nie berührt.'], 300, fadeWin(t,49.6,T_CROSS0,0.35));
   }
   if(vis.cr>0){
     caption(['Aber woher weiß dein Handy,','wo du tippst?'], 300, vis.cr*fadeWin(t,51.6,53.4,0.3), 56);
