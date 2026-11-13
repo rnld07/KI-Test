@@ -29,17 +29,10 @@ vec3 dof(sampler2D tx, vec2 fc){
   }
   return acc/ws;
 }
-vec3 zoomBlur(sampler2D tx, vec2 fc){
-  vec2 c = 0.5*uRes; vec2 d = fc - c;
-  vec3 acc = vec3(0.); float j = hash12(fc);
-  for(int i=0;i<40;i++){ float u = (float(i)+j)/40. - 0.5; acc += texture(tx, (c + d*(1. + u*uZoom))/uRes).rgb; }
-  return acc/40.;
-}
 void main(){
   vec2 fc = gl_FragCoord.xy;
-  vec3 a = uUseA > 0.5 ? (uZoom > 0.004 ? zoomBlur(uA, fc) : dof(uA, fc)) : vec3(0.);
-  vec3 b = uUseB > 0.5 ? (uZoom > 0.004 ? zoomBlur(uB, fc) : dof(uB, fc)) : vec3(0.);
+  vec3 a = uUseA > 0.5 ? dof(uA, fc) : vec3(0.);
+  vec3 b = uUseB > 0.5 ? dof(uB, fc) : vec3(0.);
   vec3 c = mix(a, b, uMix);
-  c += (hash12(fc + fract(uT*7.13)*311.) - 0.5)*0.022;
   outColor = vec4(c, 1.);
 }

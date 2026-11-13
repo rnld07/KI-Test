@@ -10,7 +10,7 @@ html,body{margin:0;padding:0;background:#000;width:1080px;height:1920px;overflow
 <canvas id="gl" width="1080" height="1920"></canvas>
 <script>
 'use strict';
-const OW=1080, OH=1920;
+const OW=1080, OH=1920, MW=540, MH=960;
 const FONT='Inter, "Inter Display", sans-serif';
 // ------------------------------------------------------------ math
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
@@ -138,7 +138,7 @@ function tipFor(point, gap){ return [point[0]-LOW[0], point[1]+gap-LOW[1], point
 // ------------------------------------------------------------ GL
 const glc=document.getElementById('gl');
 const gl=glc.getContext('webgl2',{preserveDrawingBuffer:true, antialias:false});
-let PM,PP,PD, texUI, fbA, fbB;
+let PM,PP,PD,PQ, texUI, fbA, fbB, fbC;
 function prog(fsSrc){
   const vs='#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
   function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);
@@ -150,25 +150,25 @@ function prog(fsSrc){
   for(let i=0;i<n;i++){ const a=gl.getActiveUniform(pr,i); U[a.name]=gl.getUniformLocation(pr,a.name); }
   return {pr,U};
 }
-function makeFB(){ const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
-  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,OW,OH,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+function makeFB(W,H){ W=W||OW; H=H||OH; const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   const fb=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fb); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
   gl.bindFramebuffer(gl.FRAMEBUFFER,null); return {fb,tex}; }
-window.initGL=(macroSrc, phoneSrc, dofSrc)=>{
-  PM=prog(macroSrc); PP=prog(phoneSrc); PD=prog(dofSrc);
+window.initGL=(macroSrc, phoneSrc, dofSrc, postSrc)=>{
+  PM=prog(macroSrc); PP=prog(phoneSrc); PD=prog(dofSrc); PQ=prog(postSrc);
   const bf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
   gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
   texUI=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,texUI);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
   const ext=gl.getExtension('EXT_texture_filter_anisotropic'); if(ext) gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 8);
-  fbA=makeFB(); fbB=makeFB();
+  fbA=makeFB(MW,MH); fbB=makeFB(); fbC=makeFB();
   return 'ok low='+LOW.map(v=>v.toFixed(3)).join(',');
 };
 function uploadUI(){ gl.bindTexture(gl.TEXTURE_2D,texUI); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,ui); gl.generateMipmap(gl.TEXTURE_2D); }
-function pass(P, target, set){ gl.bindFramebuffer(gl.FRAMEBUFFER, target); gl.viewport(0,0,OW,OH); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES,0,3); }
+function pass(P, target, set, W, H){ gl.bindFramebuffer(gl.FRAMEBUFFER, target); gl.viewport(0,0,W||OW,H||OH); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES,0,3); }
 
 // ------------------------------------------------------------ timeline
 const D0=0.024;
@@ -272,25 +272,57 @@ function macroState(t){
 }
 // fingertip axis in the macro camera frame (camera at the matched pose)
 const ML=(function(){ const c=mkCam(matched(1)); return norm([dot(FD1,c.rt), FD1[1], dot(FD1,c.fw)]); })();
-function macroGeom(n, gap, out){
-  const dcm=2.4*Math.pow(2,-n);
-  const Rt=Math.min(1.34/dcm, 31.25);
-  const m=sstep(1.5,5.74,n);
-  let zt, Ht, w2, Lneg, wc;
-  if(!out){ zt=3*(1-m); Ht=1; w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n); wc=sstep(5.8,6.3,n); }
-  else { zt=3*(1-gap); Ht=1-2*(1-gap)*(1-sstep(2.0,3.0,n)); w2=sstep(1.6,3.0,n); Lneg=60*sstep(2.0,3.0,n); wc=sstep(2.0,3.0,n); }
+function topFrame(Rt, Ht, zt, w2, Lneg){
   const dir=norm(lerp3(ML,[1,0,0],w2));
-  // flattened cross-section like the 3D finger (dorsal axis squeezed by 1.13)
   const FU=norm(sub([0,1,0], mul(dir, dir[1]))); const fl=0.13*(1-w2);
   const Minv=v=>sub(v, mul(FU, dot(FU,v)*fl/(1+fl)));
   const a0=Minv([0,1,0]); const o=mul(Minv(a0), -Rt/len(a0));
   const cen=sub([0,Ht,zt], o);
-  const CCl=0.016*m;
-  const cy=cen[1], C=Math.hypot(cen[2],cy); const al=Math.atan2(cy,cen[2])-Math.asin(clamp((Ht>-2? cy-Ht : Rt)/C,-1,1));
-  const rv=cy-Ht; const ysT=Math.max(Math.tan(al),0.001); const tsT=Math.sqrt(Math.max(C*C-rv*rv,0))*Math.cos(al);
-  const ysL=2*Math.sqrt(CCl), tsL=CCl>1e-6? Math.min(1/Math.sqrt(CCl),60):60;
+  // clearance of the camera (origin) to the flattened capsule
+  const Mf=p=>add(p, mul(FU, dot(p,FU)*fl));
+  const A=Mf(sub(cen, mul(dir,Lneg))), B=Mf(add(cen, mul(dir,60)));
+  const ba=sub(B,A), pa=mul(A,-1); const h=clamp(dot(pa,ba)/dot(ba,ba),0,1);
+  const sd0=len(sub(pa, mul(ba,h)))-Rt;
+  return {dir, FU, fl, cen, sd0};
+}
+function macroGeom(n, gap, out){
+  const dcm=2.4*Math.pow(2,-n);
+  const Rt=Math.min(1.34/dcm, 31.25);
+  const m=sstep(1.5,5.74,n);
+  let zt, Ht, Hb, zc, CCl, w2, Lneg, gg=1, sw=1;
+  if(!out){ zt=3*(1-m); Ht=1; Hb=1; zc=0; CCl=0.016*m; w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n); }
+  else {
+    // zoom-out: the real gap closes (wedge where finger and glass meet), then the camera rises to the phone shot
+    gg=Math.pow(2, Math.min(n-N_END,0)); sw=sstep(2.2,7.5,n);
+    zt=3*(1-gg*sw); zc=zt*sw; CCl=0.016*sw;
+    w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n);
+    const target=lerp(-1, gg, sw);
+    // keep the camera outside the finger: lowest Ht with clearance >= 0.12
+    const sdAt=H=>{ const g=topFrame(Rt,H,zt,w2,Lneg); return g.sd0; };
+    let lo=-3, hi=Math.max(gg,0)+0.5;
+    for(let k=0;k<40;k++){ const mid=(lo+hi)/2; if(sdAt(mid)<0.06) lo=mid; else hi=mid; }
+    const hmin=hi;
+    // smooth max(target, hmin) so the camera path has no kink
+    const k=0.04, d=hmin-target; Ht = Math.max(target,hmin) + k*Math.log(1+Math.exp(-Math.abs(d)/k));
+    // glass follows so the real gap (2*gg view units) is kept at the contact point
+    Hb = 2*gg - Ht - CCl*(zt-zc)*(zt-zc);
+  }
+  const tf=topFrame(Rt,Ht,zt,w2,Lneg);
+  const dir=tf.dir, FU=tf.FU, fl=tf.fl, cen=tf.cen;
+  const cy=cen[1], C=Math.hypot(cen[2],cy); const al=Math.atan2(cy,cen[2])-Math.asin(clamp((cy-Ht)/C,-1,1));
+  const rv=cy-Ht; const ysT=Math.max(Math.tan(al),0.001); const tsT=Math.max(Math.sqrt(Math.max(C*C-rv*rv,0))*Math.cos(al),0.5);
+  // bottom: tangent ray of y=-Hb-CCl(z-zc)^2
+  let ysL, tsL;
+  if(CCl>1e-6){ const k=Math.sqrt(4*CCl*Math.max(Hb+CCl*zc*zc,0))-2*CCl*zc; ysL=Math.max(k,0.001); tsL=Math.min(Math.sqrt(Math.max(Hb+CCl*zc*zc,0)/CCl),60); } else { ysL=0.001; tsL=60; }
+  const yL=lerp(1/3, ysL, m);
+  // zoom centre on each surface = point under the measuring line (band view) / contact point (wedge)
+  let ancL = CCl>1e-6 ? (yL - Math.sqrt(Math.max(yL*yL-4*CCl*Hb,0)))/(2*CCl) : Hb/yL;
+  if(!isFinite(ancL)||ancL<=0) ancL=3;
+  let ancT=tsT;
+  if(out){ ancT=lerp(zt, tsT, gg); ancL=lerp(zt, Math.min(ancL,60), gg); }
   const g2=sstep(1.6,4.6,n);
-  return {Rt, Ht, zt, dir, FU, fl, cen, Lneg, Lpos:60, CCl, ysT, ysL, tsT:Math.max(tsT,0.5), tsL, wc, focusT:lerp(3.0,6.5,m), m, topGain:lerp(0.2,1,g2), emisGain:lerp(1.35,2.4,g2), ridgeK:sstep(1.4,3.4,n)};
+  return {Rt, Ht, Hb, zc, zt, dir, FU, fl, cen, Lneg, Lpos:60, CCl, ysT, ysL, tsT, tsL, yL, ancT, ancL, edge:(!out && m>0.5)?1:0,
+    focusT: out? lerp(3.0, lerp(3.0,6.5,m), gg) : lerp(3.0,6.5,m), m, topGain:lerp(0.2,1,g2), emisGain:lerp(1.35,2.4,g2), ridgeK: out? sstep(2.4,4.2,n) : sstep(1.4,3.4,n), pix: out?0:1};
 }
 function visibility(t){
   if(window.DBG) return {m:1,p:0,cr:0};
@@ -318,14 +350,14 @@ function renderGL(t){
   uploadUI();
   if(needM){
     const ms=macroState(t); const J=KEYS['j'];
-    pass(PM, fbA.fb, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uN,ms.n); gl.uniform1f(U.uGap,ms.gap); gl.uniform1f(U.uT,t);
+    pass(PM, fbA.fb, U=>{ gl.uniform2f(U.uRes,MW,MH); gl.uniform1f(U.uN,ms.n); gl.uniform1f(U.uGap,ms.gap); gl.uniform1f(U.uT,t);
       gl.uniform1f(U.uYaw,ms.yaw); gl.uniform1f(U.uAz,A_END*D2R); gl.uniform2f(U.uDrift,0,0); gl.uniform2f(U.uKeyUV,J.cx/UIW,J.cy/UIH);
       gl.uniform1f(U.uRipple,ms.rip); gl.uniform1f(U.uRippleR,ms.ripR);
       gl.uniform1f(U.uRt,ms.Rt); gl.uniform1f(U.uHt,ms.Ht); gl.uniform1f(U.uZt,ms.zt); gl.uniform3fv(U.uDirT,ms.dir);
       gl.uniform1f(U.uLneg,ms.Lneg); gl.uniform1f(U.uLpos,ms.Lpos); gl.uniform1f(U.uCCl,ms.CCl);
       gl.uniform1f(U.uYsT,ms.ysT); gl.uniform1f(U.uYsL,ms.ysL); gl.uniform1f(U.uTsT,ms.tsT); gl.uniform1f(U.uTsL,ms.tsL);
-      gl.uniform1f(U.uWc,ms.wc); gl.uniform1f(U.uFocusT,ms.focusT); gl.uniform1f(U.uTopGain,ms.topGain); gl.uniform1f(U.uEmisGain,ms.emisGain); gl.uniform1f(U.uRidgeK,ms.ridgeK); gl.uniform3fv(U.uFU,ms.FU); gl.uniform1f(U.uFlat,ms.fl); gl.uniform3fv(U.uCen,ms.cen);
-      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); });
+      gl.uniform1f(U.uHb,ms.Hb); gl.uniform1f(U.uZc,ms.zc); gl.uniform2f(U.uAnc,ms.ancT,ms.ancL); gl.uniform1f(U.uEdge,ms.edge); gl.uniform1f(U.uPix,ms.pix===undefined?1:ms.pix); gl.uniform1f(U.uFocusT,ms.focusT); gl.uniform1f(U.uTopGain,ms.topGain); gl.uniform1f(U.uEmisGain,ms.emisGain); gl.uniform1f(U.uRidgeK,ms.ridgeK); gl.uniform3fv(U.uFU,ms.FU); gl.uniform1f(U.uFlat,ms.fl); gl.uniform3fv(U.uCen,ms.cen);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); }, MW, MH);
   }
   if(needP){
     pass(PP, fbB.fb, U=>{ const c=ps.cam; gl.uniform2f(U.uRes,OW,OH);
@@ -336,11 +368,13 @@ function renderGL(t){
       gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); });
   }
   const zb = (t>T_ZOUT0-0.05 && t<XF_OUT1+0.05) ? Math.pow(2, Math.abs(nView(t+0.25/30)-nView(t-0.25/30)))-1 : 0;
-  pass(PD, null, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t); gl.uniform1f(U.uZoom, zb);
+  pass(PD, fbC.fb, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbA.tex); gl.uniform1i(U.uA,0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,fbB.tex); gl.uniform1i(U.uB,1);
     gl.uniform1f(U.uUseA, needM?1:0); gl.uniform1f(U.uUseB, needP?1:0);
     gl.uniform1f(U.uMix, needM&&needP ? vis.p*(1-vis.m)/(vis.p*(1-vis.m)+vis.m) : (needP?1:0)); });
+  pass(PQ, null, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t); gl.uniform1f(U.uZoom, zb);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbC.tex); gl.uniform1i(U.uC,0); });
   gl.activeTexture(gl.TEXTURE0);
   gl.finish();
   return {vis, ps, needGL: needM||needP};
@@ -450,7 +484,7 @@ window.renderFrame=(t)=>{
   if(t>6.2 && t<T_ZOUT0+0.1){
     const a = sstep(6.35,6.75,t)*(1-sstep(T_ZOUT0-0.35,T_ZOUT0,t));
     const gm=macroGeom(n,1,false); const SC=0.546875*OH;
-    const yT=gm.ysT, yL=lerp(1/3, gm.ysL, gm.m);
+    const yT=gm.ysT, yL=gm.yL;
     measure(OW/2, OH/2-yT*SC, OH/2+yL*SC, fmtDist(distM(n)), halvTxt(n), pick(UPL,n), pick(LOL,n), a, 1);
   }
   if(t>41 && t<T_ZOUT0+0.2){

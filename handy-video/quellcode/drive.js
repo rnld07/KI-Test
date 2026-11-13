@@ -12,7 +12,7 @@ const D = __dirname;
   p.on('pageerror', e => console.log('[pageerror]', e.message));
   await p.goto('file://' + path.join(D, 'render.html'));
   await p.evaluate(async () => { await document.fonts.load('700 40px Inter'); await document.fonts.load('400 40px Inter'); await document.fonts.load('600 40px Inter'); await document.fonts.load('500 40px Inter'); });
-  const r = await p.evaluate(([a, bb, cc]) => window.initGL(a, bb, cc), [fs.readFileSync(path.join(D, 'macro.glsl'), 'utf8'), fs.readFileSync(path.join(D, 'phone.glsl'), 'utf8'), fs.readFileSync(path.join(D, 'dof.glsl'), 'utf8')]);
+  const r = await p.evaluate(([a, bb, cc, dd]) => window.initGL(a, bb, cc, dd), [fs.readFileSync(path.join(D, 'macro.glsl'), 'utf8'), fs.readFileSync(path.join(D, 'phone.glsl'), 'utf8'), fs.readFileSync(path.join(D, 'dof.glsl'), 'utf8'), fs.readFileSync(path.join(D, 'post.glsl'), 'utf8')]);
   console.log('init', r);
   if (mode === 'test') {
     const times = process.argv.slice(3).map(Number);
@@ -32,6 +32,19 @@ const D = __dirname;
     }
   } else if (mode === 'events') {
     fs.writeFileSync(path.join(D, 'events.json'), JSON.stringify(await p.evaluate(() => window.events())));
+  } else if (mode === 'frames') {
+    // resumable: args start end step offset dir
+    const fps = 30, start = +process.argv[3], end = +process.argv[4], step = +process.argv[5], off = +process.argv[6], dir = path.join(D, process.argv[7]);
+    fs.mkdirSync(dir, { recursive: true });
+    const t0 = Date.now(); let n = 0;
+    for (let f = start + off; f < end; f += step) {
+      const fn = path.join(dir, String(f).padStart(5, '0') + '.jpg');
+      if (fs.existsSync(fn)) continue;
+      await p.evaluate(t => window.renderFrame(t), f / fps);
+      const buf = await p.screenshot({ type: 'jpeg', quality: 95 });
+      fs.writeFileSync(fn + '.tmp', buf); fs.renameSync(fn + '.tmp', fn);
+      n++; if (n % 10 === 0) console.log('job', off, 'frame', f, 'done', n, ((Date.now() - t0) / 1000).toFixed(0) + 's');
+    }
   } else {
     // full render: args start end out
     const fps = 30, start = +process.argv[3], end = +process.argv[4], out = process.argv[5];
