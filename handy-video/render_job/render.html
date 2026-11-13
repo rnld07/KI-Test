@@ -1,0 +1,524 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+html,body{margin:0;padding:0;background:#000;width:1080px;height:1920px;overflow:hidden}
+#out{position:absolute;left:0;top:0;width:1080px;height:1920px}
+#gl{display:none}
+</style></head>
+<body>
+<canvas id="out" width="1080" height="1920"></canvas>
+<canvas id="gl" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+const OW=1080, OH=1920, MW=540, MH=960;
+const FONT='Inter, "Inter Display", sans-serif';
+// ------------------------------------------------------------ math
+const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const sub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const mul=(a,s)=>[a[0]*s,a[1]*s,a[2]*s];
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const len=a=>Math.hypot(a[0],a[1],a[2]);
+const norm=a=>mul(a,1/len(a));
+const lerp=(a,b,u)=>a+(b-a)*u;
+const lerp3=(a,b,u)=>[lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u)];
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const sstep=(a,b,x)=>{const u=clamp((x-a)/(b-a),0,1);return u*u*(3-2*u);};
+const ease=u=>{u=clamp(u,0,1);return u*u*(3-2*u);};
+const easeIO=u=>{u=clamp(u,0,1);return u<0.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;};
+const easeQ=u=>{u=clamp(u,0,1);return u<0.5?16*u*u*u*u*u:1-Math.pow(-2*u+2,5)/2;};
+const loglerp=(a,b,u)=>Math.exp(lerp(Math.log(a),Math.log(b),u));
+const D2R=Math.PI/180;
+
+// ------------------------------------------------------------ phone UI texture
+const UIW=600, UIH=1276;
+const ui=document.createElement('canvas'); ui.width=UIW; ui.height=UIH;
+const uc=ui.getContext('2d');
+const KEYS={};
+(function layout(){
+  const r1='qwertzuiopü', r2='asdfghjklöä', r3='yxcvbnm';
+  const kw=48, kh=84; const ys=[852, 952, 1052, 1152];
+  for(let i=0;i<11;i++) KEYS[r1[i]]={x:6+i*54,y:ys[0]-kh/2,w:kw,h:kh,label:r1[i].toUpperCase(),type:'l'};
+  for(let i=0;i<11;i++) KEYS[r2[i]]={x:6+i*54,y:ys[1]-kh/2,w:kw,h:kh,label:r2[i].toUpperCase(),type:'l'};
+  KEYS['shift']={x:6,y:ys[2]-kh/2,w:72,h:kh,label:'',type:'s'};
+  for(let i=0;i<7;i++) KEYS[r3[i]]={x:114+i*54,y:ys[2]-kh/2,w:kw,h:kh,label:r3[i].toUpperCase(),type:'l'};
+  KEYS['back']={x:522,y:ys[2]-kh/2,w:72,h:kh,label:'',type:'s'};
+  KEYS['123']={x:6,y:ys[3]-kh/2,w:104,h:kh,label:'123',type:'s'};
+  KEYS['emo']={x:116,y:ys[3]-kh/2,w:64,h:kh,label:'',type:'s'};
+  KEYS[' ']={x:186,y:ys[3]-kh/2,w:268,h:kh,label:'Leerzeichen',type:'sp'};
+  KEYS['ret']={x:460,y:ys[3]-kh/2,w:134,h:kh,label:'',type:'s'};
+  for(const k in KEYS){ const K=KEYS[k]; K.cx=K.x+K.w/2; K.cy=K.y+K.h/2; }
+})();
+function keyWorld(ch){ const K=KEYS[ch]||KEYS[ch.toLowerCase()]||KEYS[' ']; return [K.cx/UIW*6.66-3.33, 0, K.cy/UIH*14.16-7.08]; }
+function rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function wrapLines(c, text, maxW){ const words=text.split(' '); const lines=[]; let cur='';
+  for(const w of words){ const test=cur? cur+' '+w : w; if(c.measureText(test).width>maxW && cur){ lines.push(cur); cur=w; } else cur=test; }
+  lines.push(cur); return lines; }
+const PRE='Wenn ich mein Display berühre, ';
+function icon(c,k,K){
+  c.save(); c.strokeStyle='#fff'; c.fillStyle='#fff'; c.lineWidth=3; c.lineJoin='round'; c.lineCap='round';
+  const x=K.cx, y=K.cy;
+  if(k==='shift'){ c.beginPath(); c.moveTo(x,y-16); c.lineTo(x+15,y); c.lineTo(x+7,y); c.lineTo(x+7,y+13); c.lineTo(x-7,y+13); c.lineTo(x-7,y); c.lineTo(x-15,y); c.closePath(); c.stroke(); }
+  if(k==='back'){ c.beginPath(); c.moveTo(x-20,y); c.lineTo(x-9,y-12); c.lineTo(x+18,y-12); c.lineTo(x+18,y+12); c.lineTo(x-9,y+12); c.closePath(); c.stroke();
+    c.beginPath(); c.moveTo(x-1,y-6); c.lineTo(x+10,y+6); c.moveTo(x+10,y-6); c.lineTo(x-1,y+6); c.stroke(); }
+  if(k==='emo'){ c.beginPath(); c.arc(x,y,15,0,7); c.stroke(); c.beginPath(); c.arc(x,y+2,8,0.2,Math.PI-0.2); c.stroke(); c.beginPath(); c.arc(x-5,y-5,1.8,0,7); c.arc(x+5,y-5,1.8,0,7); c.fill(); }
+  if(k==='ret'){ c.beginPath(); c.moveTo(x+18,y-12); c.lineTo(x+18,y+6); c.lineTo(x-16,y+6); c.stroke(); c.beginPath(); c.moveTo(x-8,y-2); c.lineTo(x-17,y+6); c.lineTo(x-8,y+14); c.stroke(); }
+  c.restore();
+}
+function drawUI(st){
+  const c=uc;
+  c.fillStyle='#0b0b0c'; c.fillRect(0,0,UIW,UIH);
+  c.textBaseline='middle'; c.textAlign='left';
+  c.fillStyle='#fff'; c.font='600 27px '+FONT; c.fillText('9:41', 58, 50);
+  c.fillStyle='#000'; rr(c,205,24,190,54,27); c.fill();
+  c.fillStyle='#fff'; for(let i=0;i<4;i++){ rr(c,438+i*9,58-8-i*5,6,8+i*5,1.5); c.fill(); }
+  c.strokeStyle='rgba(255,255,255,0.5)'; c.lineWidth=2; rr(c,486,40,46,22,6); c.stroke();
+  c.fillStyle='#fff'; rr(c,490,44,32,14,3); c.fill(); rr(c,534,47,3,8,1); c.fill();
+  c.fillStyle='#e8ad2e'; c.font='500 30px '+FONT; c.fillText('‹ Notizen', 18, 122);
+  c.font='600 30px '+FONT; c.textAlign='right'; c.fillText('Fertig', 580, 122);
+  c.textAlign='center'; c.fillStyle='#8e8e93'; c.font='400 20px '+FONT; c.fillText('12. November 2026 um 09:41', 300, 182);
+  c.textAlign='left'; c.fillStyle='#fff'; c.font='700 42px '+FONT;
+  c.fillText('Berühren wir überhaupt', 30, 240); c.fillText('etwas?', 30, 292);
+  c.font='400 32px '+FONT; c.fillStyle='#e5e5ea';
+  const body=PRE+st.typed; const lines=wrapLines(c, body, 540);
+  for(let i=0;i<lines.length;i++) c.fillText(lines[i], 30, 372+i*46);
+  const ll=lines[lines.length-1]; const lastX=30+c.measureText(ll).width+(body.endsWith(' ')?c.measureText(' ').width:0);
+  const ly=372+(lines.length-1)*46;
+  if(Math.floor(st.t*1.6)%2===0 || st.typing){ c.fillStyle='#e8ad2e'; c.fillRect(lastX+2, ly-20, 3, 40); }
+  c.fillStyle='#232325'; c.fillRect(0,790,UIW,UIH-790);
+  for(const k in KEYS){ const K=KEYS[k]; const pressed=st.pressed===k;
+    c.fillStyle='rgba(0,0,0,0.55)'; rr(c,K.x,K.y+2,K.w,K.h,9); c.fill();
+    c.fillStyle = (K.type==='l'||K.type==='sp') ? (pressed?'#a0a0a6':'#5f5f64') : (pressed?'#8a8a90':'#3c3c3f');
+    rr(c,K.x,K.y,K.w,K.h,9); c.fill();
+    c.fillStyle='#fff'; c.textAlign='center';
+    c.font = K.type==='l' ? '400 34px '+FONT : (K.type==='sp'?'400 24px ':'500 24px ')+FONT;
+    if(K.label) c.fillText(K.label, K.cx, K.cy+2); else icon(c,k,K);
+  }
+  // globe + mic
+  c.save(); c.strokeStyle='#9a9aa0'; c.lineWidth=2.5;
+  c.beginPath(); c.arc(46,1232,15,0,7); c.stroke(); c.beginPath(); c.ellipse(46,1232,6,15,0,0,7); c.stroke(); c.beginPath(); c.moveTo(31,1232); c.lineTo(61,1232); c.stroke();
+  rr(c,549,1216,14,22,7); c.stroke(); c.beginPath(); c.arc(556,1232,11,0.1,Math.PI-0.1); c.stroke(); c.beginPath(); c.moveTo(556,1243); c.lineTo(556,1250); c.stroke();
+  c.restore();
+  c.fillStyle='rgba(255,255,255,0.85)'; rr(c,200,1258,200,8,4); c.fill();
+  if(st.pressed && KEYS[st.pressed] && KEYS[st.pressed].type==='l'){
+    const K=KEYS[st.pressed]; const bw=76, bh=96, bx=K.cx-bw/2, by=K.y-bh+18;
+    c.fillStyle='rgba(0,0,0,0.45)'; rr(c,bx-1,by+3,bw+2,bh+K.h-14,12); c.fill();
+    c.fillStyle='#7c7c82'; rr(c,bx,by,bw,bh,12); c.fill(); rr(c,K.x,K.y+4,K.w,K.h-4,9); c.fill();
+    c.fillRect(K.x, by+bh-14, K.w, 30);
+    c.fillStyle='#fff'; c.font='400 50px '+FONT; c.textAlign='center'; c.fillText(K.label, K.cx, by+bh/2+4);
+  }
+}
+
+// ------------------------------------------------------------ finger geometry (mirrors phone.glsl)
+const L1=2.3, L2=2.5, L3=9.0;
+const HDG=norm([0.42,0,0.91]);
+const fdir=deg=>norm(add(mul(HDG,Math.cos(deg*D2R)),[0,Math.sin(deg*D2R),0]));
+const FD1=fdir(55), FD2=fdir(33), FD3=fdir(15);
+function sdSegJS(p,a,d,L,r0,r1){ const UP=[0,1,0]; const U=norm(sub(UP,mul(d,dot(UP,d))));
+  const v=sub(p,a); const h=clamp(dot(v,d),0,L); const c=sub(v,mul(d,h)); const cu=dot(c,U); const e=add(c,mul(U,cu*0.13));
+  return (len(e)-lerp(r0,r1,h/L))*0.88; }
+function sdFingerJS(p){ const A=[0,0,0]; const J1=mul(FD1,L1); const J2=add(J1,mul(FD2,L2));
+  const sm=(a,b,k)=>{const h=clamp(0.5+0.5*(b-a)/k,0,1); return lerp(b,a,h)-k*h*(1-h);};
+  return sm(sm(sdSegJS(p,A,FD1,L1,0.66,0.78), sdSegJS(p,J1,FD2,L2,0.78,0.84),0.22), sdSegJS(p,J2,FD3,L3,0.84,0.96),0.28); }
+const LOW=(function(){ let best=[0,0,0];
+  for(let it=0; it<2; it++){
+    const c0=best; const span=it===0?1.2:0.08, step=it===0?0.03:0.002;
+    for(let x=-span;x<=span;x+=step) for(let z=-span;z<=span;z+=step){
+      let lo=-2, hi=0.5; if(sdFingerJS([c0[0]+x, hi, c0[2]+z])>0 && sdFingerJS([c0[0]+x,-0.0,c0[2]+z])>0) {}
+      // find lowest y inside the finger along this vertical line
+      let inside=null; for(let y=-1.2;y<=0.6;y+=0.01){ if(sdFingerJS([c0[0]+x,y,c0[2]+z])<0){ inside=y; break; } }
+      if(inside===null) continue;
+      let a=inside-0.01, b=inside; for(let k=0;k<20;k++){ const m=(a+b)/2; if(sdFingerJS([c0[0]+x,m,c0[2]+z])<0) b=m; else a=m; }
+      if(b<best[1]) best=[c0[0]+x,b,c0[2]+z];
+    }
+  }
+  return best; })();
+function tipFor(point, gap){ return [point[0]-LOW[0], point[1]+gap-LOW[1], point[2]-LOW[2]]; }
+
+// ------------------------------------------------------------ GL
+const glc=document.getElementById('gl');
+const gl=glc.getContext('webgl2',{preserveDrawingBuffer:true, antialias:false});
+let PM,PP,PD,PQ, texUI, fbA, fbB, fbC;
+function prog(fsSrc){
+  const vs='#version 300 es\nin vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  function sh(t,s){const x=gl.createShader(t);gl.shaderSource(x,s);gl.compileShader(x);
+    if(!gl.getShaderParameter(x,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x;}
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fsSrc));
+  gl.bindAttribLocation(pr,0,'p'); gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+  const U={}; const n=gl.getProgramParameter(pr,gl.ACTIVE_UNIFORMS);
+  for(let i=0;i<n;i++){ const a=gl.getActiveUniform(pr,i); U[a.name]=gl.getUniformLocation(pr,a.name); }
+  return {pr,U};
+}
+function makeFB(W,H){ W=W||OW; H=H||OH; const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,W,H,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const fb=gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER,fb); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); return {fb,tex}; }
+window.initGL=(macroSrc, phoneSrc, dofSrc, postSrc)=>{
+  PM=prog(macroSrc); PP=prog(phoneSrc); PD=prog(dofSrc); PQ=prog(postSrc);
+  const bf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  texUI=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,texUI);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const ext=gl.getExtension('EXT_texture_filter_anisotropic'); if(ext) gl.texParameterf(gl.TEXTURE_2D, ext.TEXTURE_MAX_ANISOTROPY_EXT, 8);
+  fbA=makeFB(MW,MH); fbB=makeFB(); fbC=makeFB();
+  return 'ok low='+LOW.map(v=>v.toFixed(3)).join(',');
+};
+function uploadUI(){ gl.bindTexture(gl.TEXTURE_2D,texUI); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,ui); gl.generateMipmap(gl.TEXTURE_2D); }
+function pass(P, target, set, W, H){ gl.bindFramebuffer(gl.FRAMEBUFFER, target); gl.viewport(0,0,W||OW,H||OH); gl.useProgram(P.pr); set(P.U); gl.drawArrays(gl.TRIANGLES,0,3); }
+
+// ------------------------------------------------------------ timeline
+const D0=0.024;
+const T_ZIN0=5.2, T_ZIN1=6.4, T_MAC1=41.0, T_ZOUT0=47.3, T_ZOUT1=49.3, T_CROSS0=51.4, T_CROSS1=57.4, TYPE_T0=58.2, TYPE_DT=0.13;
+const N_END=26.13;
+const DIVE0=5.0, DIVE1=6.0, XF_IN0=6.0, XF_IN1=6.5, XF_OUT0=49.05, XF_OUT1=49.5;
+const MAC=(function(){ const N=4000, arr=[0]; let s=0; const rate=u=> u<0.8?1: 1-0.85*sstep(0.8,1.0,u);
+  for(let i=1;i<=N;i++){ s+=rate(i/N)/N; arr.push(s);} return arr.map(v=>v/s); })();
+function macroN(t){ const u=clamp((t-T_ZIN1)/(T_MAC1-T_ZIN1),0,1)*4000; const a=Math.floor(u), b=Math.min(a+1,4000); return 1.5+24.5*lerp(MAC[a],MAC[b],u-a); }
+// real distance (halvings)
+function nReal(t){
+  if(t<T_ZIN0) return 1.0*Math.pow(t/T_ZIN0,1.3);
+  if(t<T_ZIN1) return 1.0+0.5*(t-T_ZIN0)/(T_ZIN1-T_ZIN0);
+  if(t<T_MAC1) return macroN(t);
+  const u=t-T_MAC1; return 26 + 0.17*sstep(0.0,1.6,u) - 0.04*sstep(1.6,3.0,u);
+}
+// view scale (halvings) for the macro shader
+function nView(t){
+  if(t<T_ZOUT0) return nReal(t);
+  return lerp(N_END, 1.3, easeIO((t-T_ZOUT0)/(T_ZOUT1-T_ZOUT0)));
+}
+const distM=n=>D0*Math.pow(2,-n);
+function fmtDist(m){ let v,u; if(m>=1e-2){v=m*100;u='cm';} else if(m>=1e-3){v=m*1e3;u='mm';} else if(m>=1e-6){v=m*1e6;u='µm';} else {v=m*1e9;u='nm';}
+  const s = v>=100? v.toFixed(0) : v>=10? v.toFixed(1) : v>=1 ? v.toFixed(2) : v.toFixed(3); return s.replace('.',',')+' '+u; }
+const UPL=[[-99,'deine Fingerkuppe'],[2,'Fingerabdruck-Rillen'],[6.2,'abgestorbene Hautzellen'],[10.0,'Oberfläche einer Hautzelle'],[14.0,'Keratin-Fasern'],[18.3,'Keratin-Moleküle'],[22.6,'Atome des Keratins'],[25.6,'Elektronenwolken']];
+const LOL=[[-99,'die Taste J'],[4.3,'Pixel unter dem Glas'],[7.3,'Hautfett vom Wischen'],[9.8,'Kratzer, die du nie siehst'],[12.1,'poliertes Glas'],[16.0,'Anti-Fett-Beschichtung'],[19.5,'Fluor-Polymerketten'],[22.6,'Fluor-Atome'],[25.6,null]];
+const pick=(L,n)=>{let r=L[0][1]; for(const e of L) if(n>=e[0]) r=e[1]; return r;};
+
+// typing
+const TYPE_TXT='berühren sich die Atome nie';
+function typingText(t){ if(t<TYPE_T0) return ''; const i=Math.floor((t-TYPE_T0)/TYPE_DT); return TYPE_TXT.slice(0, clamp(i+1,0,TYPE_TXT.length)); }
+function fingerTyping(t){
+  const n=TYPE_TXT.length; const J=keyWorld('j');
+  const keyAt=i=>{ if(i<0) return J; if(i>=n) return add(keyWorld('l'),[0.3,0,0.5]); return keyWorld(TYPE_TXT[i]); };
+  const u=(t-TYPE_T0)/TYPE_DT;
+  if(u < -1){ // lifting from J before typing starts
+    const g = 0.55*ease((t-(T_CROSS1-0.2))/0.6);
+    return {pt:J, gap:g, key: g<0.02?'j':null};
+  }
+  if(u > n-1){ const a=keyAt(n-1), b=keyAt(n); const v=ease((u-(n-1))/4); return {pt:lerp3(a,b,v), gap:0.9*ease((u-(n-1))/2.5), key:(u-(n-1))<0.08?TYPE_TXT[n-1].toLowerCase():null}; }
+  const i=Math.ceil(u+1e-9); const fr=u-(i-1);
+  const a=keyAt(i-1), b=keyAt(i);
+  const m=sstep(0.12,0.82,fr);
+  const gap = i===0 ? 0.55*Math.pow(Math.cos(clamp(fr,0,1)*Math.PI/2),0.7) : 0.5*Math.pow(Math.sin(Math.PI*clamp(fr,0,1)),0.85);
+  let key=null; const ci = fr<0.1? i-1 : (fr>0.9? i : -1);
+  if(ci>=0 && ci<n){ const c=TYPE_TXT[ci]; key = c===' '?' ':c.toLowerCase(); }
+  return {pt:lerp3(a,b,m), gap, key};
+}
+
+// cameras
+function camLook(target, dist, elDeg, azDeg, fov){
+  const el=elDeg*D2R, az=azDeg*D2R;
+  const dir=[Math.sin(az)*Math.cos(el), Math.sin(el), Math.cos(az)*Math.cos(el)];
+  const pos=add(target, mul(dir,dist));
+  const fw=norm(sub(target,pos)); const rt=norm(cross(fw,[0,1,0])); const up=cross(rt,fw);
+  return {pos,fw,rt,up,f:1/Math.tan(fov*D2R/2), target, dist};
+}
+function lerpCam(A,B,u){ return { t:lerp3(A.t,B.t,u), d:loglerp(A.d,B.d,u), el:lerp(A.el,B.el,u), az:lerp(A.az,B.az,u),
+  fov: 2*Math.atan(loglerp(Math.tan(A.fov*D2R/2),Math.tan(B.fov*D2R/2),u))/D2R }; }
+const mkCam=c=>camLook(c.t,c.d,c.el,c.az,c.fov);
+function project(cam, X){ const v=sub(X,cam.pos); const z=dot(v,cam.fw); return [OW/2 + dot(v,cam.rt)/z*cam.f*OH/2, OH/2 - dot(v,cam.up)/z*cam.f*OH/2]; }
+const A_END=-42;
+const matched=(dcm)=>({t:add(keyWorld('j'),[0,dcm/2,0]), d:1.5*dcm, el:0, az:A_END, fov:84.9});
+
+function phoneState(t){
+  const J=keyWorld('j');
+  if(t < 30){
+    const n=nReal(t), dcm=distM(n)*100;
+    const u=clamp(t/DIVE0,0,1);
+    const intro={t:add(J,[0,dcm*0.5+0.9,0]), d:lerp(8.4,6.6,ease(u)), el:lerp(16,12,u), az:lerp(-64,-48,ease(u)), fov:36};
+    let c=intro;
+    if(t>DIVE0){ const v=easeIO((t-DIVE0)/(DIVE1-DIVE0)); const i2={t:add(J,[0,dcm*0.5+0.9,0]), d:6.6, el:12, az:-48, fov:36}; c=lerpCam(i2, matched(dcm), v); }
+    const cam=mkCam(c);
+    return {cam, tip:tipFor(J,dcm), typed:'', pressed:null, dcm, focus:len(sub(add(J,[0,dcm*0.5,0]),cam.pos)), aper: t>DIVE0? lerp(11,3.6,easeIO((t-DIVE0)/(DIVE1-DIVE0))) : 11};
+  }
+  if(t < T_CROSS1-0.2){
+    const dv=distM(nView(Math.min(t,XF_OUT1)))*100;
+    const v=easeIO((t-XF_OUT1)/1.8);
+    const end={t:add(J,[0,0.55,0]), d:5.6, el:12, az:-50, fov:34};
+    const c=lerpCam(matched(dv), end, v);
+    c.d -= 0.12*clamp(t-50.6,0,3);
+    const cam=mkCam(c);
+    return {cam, tip:tipFor(J,0.0), typed:'', pressed:'j', dcm:0, focus:len(sub(add(J,[0,dv/2*(1-v),0]),cam.pos)), aper:lerp(3.6,11,v)};
+  }
+  const v=easeIO((t-(T_CROSS1-0.2))/1.9);
+  const A={t:add(J,[0,0.5,0]), d:5.6, el:14, az:-48, fov:34};
+  const B={t:[-0.25,0,0.5], d:22, el:60, az:-10, fov:42};
+  const c=lerpCam(A,B,v); c.d -= 0.25*clamp(t-59.5,0,5);
+  const cam=mkCam(c);
+  const f=fingerTyping(t);
+  return {cam, tip:tipFor(f.pt,f.gap), typed:typingText(t), pressed:f.key, dcm:f.gap, typing:true, focus:len(sub(f.pt,cam.pos)), aper:lerp(11,5,v), dim:1-0.55*sstep(61.9,62.6,t)};
+}
+window.DBG=null;
+function macroState(t){
+  if(window.DBG) return Object.assign({yaw:0,rip:0,ripR:0,gap:1}, window.DBG, macroGeom(window.DBG.n, window.DBG.gap===undefined?1:window.DBG.gap, !!window.DBG.out));
+  const nv=nView(t);
+  const gap = t<T_ZOUT0 ? 1 : Math.pow(2, nv - N_END);
+  const yaw = t<T_ZIN1? 0 : 0.07*Math.sin(Math.PI*clamp((t-T_ZIN1)/(T_ZOUT0-T_ZIN1),0,1));
+  let rip=0, ripR=0; if(t>41.2 && t<T_ZOUT0){ const u=(t-41.2)%1.6; ripR=0.05+u*0.5; rip=(1-u/1.6)*sstep(41.2,41.6,t)*sstep(T_ZOUT0,T_ZOUT0-0.4,t); }
+  return Object.assign({n:nv, gap, yaw, rip, ripR}, macroGeom(nv, gap, t>=T_ZOUT0));
+}
+// fingertip axis in the macro camera frame (camera at the matched pose)
+const ML=(function(){ const c=mkCam(matched(1)); return norm([dot(FD1,c.rt), FD1[1], dot(FD1,c.fw)]); })();
+function topFrame(Rt, Ht, zt, w2, Lneg){
+  const dir=norm(lerp3(ML,[1,0,0],w2));
+  const FU=norm(sub([0,1,0], mul(dir, dir[1]))); const fl=0.13*(1-w2);
+  const Minv=v=>sub(v, mul(FU, dot(FU,v)*fl/(1+fl)));
+  const a0=Minv([0,1,0]); const o=mul(Minv(a0), -Rt/len(a0));
+  const cen=sub([0,Ht,zt], o);
+  // clearance of the camera (origin) to the flattened capsule
+  const Mf=p=>add(p, mul(FU, dot(p,FU)*fl));
+  const A=Mf(sub(cen, mul(dir,Lneg))), B=Mf(add(cen, mul(dir,60)));
+  const ba=sub(B,A), pa=mul(A,-1); const h=clamp(dot(pa,ba)/dot(ba,ba),0,1);
+  const sd0=len(sub(pa, mul(ba,h)))-Rt;
+  return {dir, FU, fl, cen, sd0};
+}
+function macroGeom(n, gap, out){
+  const dcm=2.4*Math.pow(2,-n);
+  const Rt=Math.min(1.34/dcm, 31.25);
+  const m=sstep(1.5,5.74,n);
+  let zt, Ht, Hb, zc, CCl, w2, Lneg, gg=1, sw=1;
+  if(!out){ zt=3*(1-m); Ht=1; Hb=1; zc=0; CCl=0.016*m; w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n); }
+  else {
+    // zoom-out: the real gap closes (wedge where finger and glass meet), then the camera rises to the phone shot
+    gg=Math.pow(2, Math.min(n-N_END,0)); sw=sstep(2.2,7.5,n);
+    zt=3*(1-gg*sw); zc=zt*sw; CCl=0.016*sw;
+    w2=sstep(2.2,5.0,n); Lneg=60*sstep(4.0,5.2,n);
+    const target=lerp(-1, gg, sw);
+    // keep the camera outside the finger: lowest Ht with clearance >= 0.12
+    const sdAt=H=>{ const g=topFrame(Rt,H,zt,w2,Lneg); return g.sd0; };
+    let lo=-3, hi=Math.max(gg,0)+0.5;
+    for(let k=0;k<40;k++){ const mid=(lo+hi)/2; if(sdAt(mid)<0.06) lo=mid; else hi=mid; }
+    const hmin=hi;
+    // smooth max(target, hmin) so the camera path has no kink
+    const k=0.04, d=hmin-target; Ht = Math.max(target,hmin) + k*Math.log(1+Math.exp(-Math.abs(d)/k));
+    // glass follows so the real gap (2*gg view units) is kept at the contact point
+    Hb = 2*gg - Ht - CCl*(zt-zc)*(zt-zc);
+  }
+  const tf=topFrame(Rt,Ht,zt,w2,Lneg);
+  const dir=tf.dir, FU=tf.FU, fl=tf.fl, cen=tf.cen;
+  const cy=cen[1], C=Math.hypot(cen[2],cy); const al=Math.atan2(cy,cen[2])-Math.asin(clamp((cy-Ht)/C,-1,1));
+  const rv=cy-Ht; const ysT=Math.max(Math.tan(al),0.001); const tsT=Math.max(Math.sqrt(Math.max(C*C-rv*rv,0))*Math.cos(al),0.5);
+  // bottom: tangent ray of y=-Hb-CCl(z-zc)^2
+  let ysL, tsL;
+  if(CCl>1e-6){ const k=Math.sqrt(4*CCl*Math.max(Hb+CCl*zc*zc,0))-2*CCl*zc; ysL=Math.max(k,0.001); tsL=Math.min(Math.sqrt(Math.max(Hb+CCl*zc*zc,0)/CCl),60); } else { ysL=0.001; tsL=60; }
+  const yL=lerp(1/3, ysL, m);
+  // zoom centre on each surface = point under the measuring line (band view) / contact point (wedge)
+  let ancL = CCl>1e-6 ? (yL - Math.sqrt(Math.max(yL*yL-4*CCl*Hb,0)))/(2*CCl) : Hb/yL;
+  if(!isFinite(ancL)||ancL<=0) ancL=3;
+  let ancT=tsT;
+  if(out){ ancT=lerp(zt, tsT, gg); ancL=lerp(zt, Math.min(ancL,60), gg); }
+  const g2=sstep(1.6,4.6,n);
+  return {Rt, Ht, Hb, zc, zt, dir, FU, fl, cen, Lneg, Lpos:60, CCl, ysT, ysL, tsT, tsL, yL, ancT, ancL, edge:(!out && m>0.5)?1:0,
+    focusT: out? lerp(3.0, lerp(3.0,6.5,m), gg) : lerp(3.0,6.5,m), m, topGain:lerp(0.2,1,g2), emisGain:lerp(1.35,2.4,g2), ridgeK: out? sstep(2.4,4.2,n) : sstep(1.4,3.4,n), pix: out?0:1};
+}
+function visibility(t){
+  if(window.DBG) return {m:1,p:0,cr:0};
+  let m=0, p=0;
+  if(t<XF_IN0) p=1; else if(t<XF_IN1){ m=sstep(XF_IN0,XF_IN1,t); p=1; } else if(t<XF_OUT0) m=1; else if(t<XF_OUT1){ m=1-sstep(XF_OUT0,XF_OUT1,t); p=1; } else p=1;
+  const cr = (t>=T_CROSS0-0.2 && t<T_CROSS1+0.2) ? sstep(T_CROSS0-0.2,T_CROSS0+0.25,t)*(1-sstep(T_CROSS1-0.25,T_CROSS1+0.2,t)) : 0;
+  return {m,p,cr};
+}
+function subframes(t){
+  if(window.DBG) return 1;
+  if(t>DIVE0-0.1 && t<XF_IN1+0.15) return 6;
+  if(t>T_ZOUT0-0.1 && t<XF_OUT1+0.05) return 1;
+  if(t>=XF_OUT1+0.1 && t<51.3) return 3;
+  if(t>T_CROSS1-0.3 && t<TYPE_T0-0.1) return 3;
+  if(t>=TYPE_T0-0.1 && t<62.0) return 5;
+  return 1;
+}
+
+// ------------------------------------------------------------ render GL for one time
+function renderGL(t){
+  const vis=visibility(t);
+  const needM = vis.m>0.001, needP = vis.p>0.001 && vis.cr<0.999;
+  const ps=phoneState(t);
+  drawUI({t, typed:ps.typed, pressed:ps.pressed, typing:ps.typing});
+  uploadUI();
+  if(needM){
+    const ms=macroState(t); const J=KEYS['j'];
+    pass(PM, fbA.fb, U=>{ gl.uniform2f(U.uRes,MW,MH); gl.uniform1f(U.uN,ms.n); gl.uniform1f(U.uGap,ms.gap); gl.uniform1f(U.uT,t);
+      gl.uniform1f(U.uYaw,ms.yaw); gl.uniform1f(U.uAz,A_END*D2R); gl.uniform2f(U.uDrift,0,0); gl.uniform2f(U.uKeyUV,J.cx/UIW,J.cy/UIH);
+      gl.uniform1f(U.uRipple,ms.rip); gl.uniform1f(U.uRippleR,ms.ripR);
+      gl.uniform1f(U.uRt,ms.Rt); gl.uniform1f(U.uHt,ms.Ht); gl.uniform1f(U.uZt,ms.zt); gl.uniform3fv(U.uDirT,ms.dir);
+      gl.uniform1f(U.uLneg,ms.Lneg); gl.uniform1f(U.uLpos,ms.Lpos); gl.uniform1f(U.uCCl,ms.CCl);
+      gl.uniform1f(U.uYsT,ms.ysT); gl.uniform1f(U.uYsL,ms.ysL); gl.uniform1f(U.uTsT,ms.tsT); gl.uniform1f(U.uTsL,ms.tsL);
+      gl.uniform1f(U.uHb,ms.Hb); gl.uniform1f(U.uZc,ms.zc); gl.uniform2f(U.uAnc,ms.ancT,ms.ancL); gl.uniform1f(U.uEdge,ms.edge); gl.uniform1f(U.uPix,ms.pix===undefined?1:ms.pix); gl.uniform1f(U.uFocusT,ms.focusT); gl.uniform1f(U.uTopGain,ms.topGain); gl.uniform1f(U.uEmisGain,ms.emisGain); gl.uniform1f(U.uRidgeK,ms.ridgeK); gl.uniform3fv(U.uFU,ms.FU); gl.uniform1f(U.uFlat,ms.fl); gl.uniform3fv(U.uCen,ms.cen);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); }, MW, MH);
+  }
+  if(needP){
+    pass(PP, fbB.fb, U=>{ const c=ps.cam; gl.uniform2f(U.uRes,OW,OH);
+      gl.uniform3fv(U.uCamPos,c.pos); gl.uniform3fv(U.uCamFw,c.fw); gl.uniform3fv(U.uCamRt,c.rt); gl.uniform3fv(U.uCamUp,c.up); gl.uniform1f(U.uFocal,c.f);
+      gl.uniform1f(U.uFocus,ps.focus); gl.uniform1f(U.uAper,ps.aper);
+      gl.uniform3fv(U.uTip,ps.tip); gl.uniform3fv(U.uD1,FD1); gl.uniform3fv(U.uD2,FD2); gl.uniform3fv(U.uD3,FD3);
+      gl.uniform1f(U.uT,t); gl.uniform1f(U.uDim, ps.dim===undefined?1:ps.dim);
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,texUI); gl.uniform1i(U.uUI,0); });
+  }
+  const zb = (t>T_ZOUT0-0.05 && t<XF_OUT1+0.05) ? Math.pow(2, Math.abs(nView(t+0.25/30)-nView(t-0.25/30)))-1 : 0;
+  pass(PD, fbC.fb, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbA.tex); gl.uniform1i(U.uA,0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,fbB.tex); gl.uniform1i(U.uB,1);
+    gl.uniform1f(U.uUseA, needM?1:0); gl.uniform1f(U.uUseB, needP?1:0);
+    gl.uniform1f(U.uMix, needM&&needP ? vis.p*(1-vis.m)/(vis.p*(1-vis.m)+vis.m) : (needP?1:0)); });
+  pass(PQ, null, U=>{ gl.uniform2f(U.uRes,OW,OH); gl.uniform1f(U.uT,t); gl.uniform1f(U.uZoom, zb);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,fbC.tex); gl.uniform1i(U.uC,0); });
+  gl.activeTexture(gl.TEXTURE0);
+  gl.finish();
+  return {vis, ps, needGL: needM||needP};
+}
+
+// ------------------------------------------------------------ overlay helpers
+const out=document.getElementById('out'); const oc=out.getContext('2d');
+function shadowText(c, txt, x, y, blur){ c.save(); c.shadowColor='rgba(0,0,0,0.8)'; c.shadowBlur=blur||14; c.shadowOffsetY=2; c.fillText(txt,x,y); c.restore(); }
+function caption(lines, y, a, size){
+  if(a<=0.001) return; const c=oc; size=size||60; c.save(); c.globalAlpha=a; c.fillStyle='#fff'; c.font='700 '+size+'px '+FONT; c.textAlign='center'; c.textBaseline='middle';
+  const dy=(1-a)*12;
+  lines.forEach((l,i)=>shadowText(c,l,OW/2,y+dy+i*size*1.22,20)); c.restore();
+}
+const fadeWin=(t,a,b,f)=> sstep(a,a+f,t)*(1-sstep(b-f,b,t));
+function measure(x, y1, y2, num, subTxt, up, down, a, s){
+  if(a<=0.001) return; const c=oc; c.save(); c.globalAlpha=a; s=s||1;
+  c.strokeStyle='rgba(255,255,255,0.95)'; c.lineWidth=2.5*s; c.shadowColor='rgba(0,0,0,0.6)'; c.shadowBlur=6;
+  c.beginPath(); c.moveTo(x,y1); c.lineTo(x,y2); c.moveTo(x-10*s,y1); c.lineTo(x+10*s,y1); c.moveTo(x-10*s,y2); c.lineTo(x+10*s,y2); c.stroke();
+  const ym=(y1+y2)/2; const tx=x+28*s;
+  c.textAlign='left'; c.textBaseline='alphabetic';
+  let yy = ym - (down? 34 : 8)*s;
+  c.fillStyle='#fff'; c.font='700 '+Math.round(66*s)+'px '+FONT; shadowText(c,num,tx,yy,10);
+  yy += 44*s; c.font='500 '+Math.round(32*s)+'px '+FONT; shadowText(c,subTxt,tx,yy,8);
+  if(up){ yy += 44*s; c.fillStyle= down? '#ffc39b' : '#e9d7ff'; c.font='600 '+Math.round(34*s)+'px '+FONT; shadowText(c,(down?'▲ ':'')+up,tx,yy,8); }
+  if(down){ yy += 42*s; c.fillStyle='#a9c4ff'; c.font='600 '+Math.round(34*s)+'px '+FONT; shadowText(c,'▼ '+down,tx,yy,8); }
+  c.restore();
+}
+const halvTxt=n=>'halbiert '+Math.max(0,Math.floor(n+1e-6))+' Mal';
+function vignette(a){ const g=oc.createRadialGradient(OW/2,OH/2,OH*0.30,OW/2,OH/2,OH*0.75); g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,'+a+')'); oc.fillStyle=g; oc.fillRect(0,0,OW,OH); }
+
+// ------------------------------------------------------------ cross-section (schematic)
+function drawCross(t, a){
+  const c=oc; const tau=t-T_CROSS0; c.save(); c.globalAlpha=a;
+  const sc=lerp(1.05,1.0,ease((t-(T_CROSS0-0.2))/0.8)); c.translate(OW/2,OH/2); c.scale(sc,sc); c.translate(-OW/2,-OH/2);
+  const bg=c.createRadialGradient(540,1050,80,540,1050,1400); bg.addColorStop(0,'#101b2e'); bg.addColorStop(1,'#020306'); c.fillStyle=bg; c.fillRect(-60,-60,OW+120,OH+120);
+  const gT=1080, gB=1196, sY=1210, sH=14, pY=1246, pH=24;
+  const touch=sstep(0.1,1.3,tau); const gap=lerp(170,2,touch);
+  const field=sstep(1.6,2.5,tau); const detect=sstep(2.3,3.1,tau);
+  // OLED pixels
+  const rip = tau>4.2 ? (tau-4.2) : -1;
+  for(let x=4;x<OW;x+=13){ const k=Math.floor(x/13)%3; const col=k===0?[255,70,55]:k===1?[70,255,120]:[80,130,255];
+    let b=0.42; if(rip>=0){ const r=rip*650; b+=0.9*Math.exp(-Math.pow((Math.abs(x-540)-r)/55,2))*Math.exp(-rip*0.9); }
+    c.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${clamp(b,0,1)})`; c.shadowColor=c.fillStyle; c.shadowBlur=10*b; c.fillRect(x,pY,9,pH); }
+  c.shadowBlur=0; c.fillStyle='#0a0c12'; c.fillRect(-60,pY+pH+6,OW+120,34);
+  // touch electrodes
+  for(let x=-20;x<OW;x+=88){ const cx=x+34; const near=Math.exp(-Math.pow((cx-540)/150,2)); const it=0.30+0.70*detect*near*(0.85+0.15*Math.sin(t*12));
+    c.fillStyle=`rgba(70,230,215,${it})`; c.shadowColor='rgba(70,230,215,0.9)'; c.shadowBlur=26*it*detect*near; c.fillRect(x,sY,68,sH); }
+  c.shadowBlur=0;
+  // cover glass
+  const gg=c.createLinearGradient(0,gT,0,gB); gg.addColorStop(0,'rgba(170,210,255,0.26)'); gg.addColorStop(1,'rgba(120,170,240,0.10)');
+  c.fillStyle=gg; c.fillRect(-60,gT,OW+120,gB-gT);
+  c.fillStyle='rgba(230,245,255,0.8)'; c.fillRect(-60,gT,OW+120,2.5); c.fillStyle='rgba(200,225,255,0.25)'; c.fillRect(-60,gB-1,OW+120,1.5);
+  // finger (side view, coming from the upper right like in 3D)
+  const tipY=gT-gap; const R=175; const tc=[560, tipY-R];
+  const ang=Math.atan2(-1500, 900); const ax=[Math.cos(ang),Math.sin(ang)]; const nx=[-ax[1],ax[0]];
+  const far=[tc[0]+ax[0]*2400, tc[1]+ax[1]*2400];
+  c.save();
+  c.beginPath(); c.arc(tc[0],tc[1],R,ang+Math.PI/2,ang-Math.PI/2+2*Math.PI,false);
+  c.lineTo(far[0]-nx[0]*R*1.1, far[1]-nx[1]*R*1.1); c.lineTo(far[0]+nx[0]*R*1.1, far[1]+nx[1]*R*1.1); c.closePath();
+  const fg=c.createLinearGradient(tc[0]+nx[0]*R, tc[1]+nx[1]*R, tc[0]-nx[0]*R, tc[1]-nx[1]*R);
+  fg.addColorStop(0,'#6e3426'); fg.addColorStop(0.25,'#c27a62'); fg.addColorStop(0.6,'#e6a487'); fg.addColorStop(0.85,'#cf896e'); fg.addColorStop(1,'#80402f');
+  c.fillStyle=fg; c.shadowColor='rgba(255,140,100,0.22)'; c.shadowBlur=40; c.fill(); c.clip();
+  c.fillStyle='rgba(255,215,200,0.45)'; const nb=[tc[0]-nx[0]*R*0.88+ax[0]*40, tc[1]-nx[1]*R*0.88+ax[1]*40];
+  c.beginPath(); c.ellipse(nb[0]+ax[0]*110, nb[1]+ax[1]*110, 140, 22, ang, 0, Math.PI*2); c.fill();
+  c.strokeStyle='rgba(110,45,35,0.30)'; c.lineWidth=2;
+  for(let k=-7;k<=7;k++){ const a0=Math.PI/2+k*0.065; c.beginPath(); c.arc(tc[0],tc[1],R-5, a0-0.025, a0+0.025); c.stroke(); }
+  c.restore();
+  // field lines
+  if(field>0.01){
+    c.save(); c.globalAlpha=a*field; c.lineWidth=3.2; c.setLineDash([16,14]); c.lineDashOffset=-t*90;
+    c.strokeStyle='rgba(255,226,130,0.95)'; c.shadowColor='rgba(255,210,90,0.9)'; c.shadowBlur=14;
+    for(let k=-4;k<=4;k++){ const th=Math.PI/2 + k*0.22; const sx=tc[0]+Math.cos(th)*R, sy=tc[1]+Math.sin(th)*R;
+      const ex=540+k*95, ey=sY+3; c.beginPath(); c.moveTo(sx,sy); c.quadraticCurveTo((sx+ex)/2+k*30, (sy+ey)/2+10, ex, ey); c.stroke(); }
+    c.restore();
+    c.save(); c.globalAlpha=a*field; c.fillStyle='#ffe082'; c.font='600 34px '+FONT; c.textAlign='left'; shadowText(c,'elektrisches Feld', 750, 985, 8); c.restore();
+  }
+  c.save(); c.globalAlpha=a*sstep(0.5,1.3,tau); c.strokeStyle='rgba(169,196,255,0.7)'; c.lineWidth=2; c.fillStyle='#a9c4ff'; c.font='600 32px '+FONT; c.textAlign='left';
+  const lab=(x,y0,y1,txt,tx)=>{ c.beginPath(); c.moveTo(x,y0); c.lineTo(x,y1); c.stroke(); c.beginPath(); c.arc(x,y0,4,0,7); c.fill(); shadowText(c,txt,tx,y1+34,6); };
+  lab(120, 1150, 1340, 'Schutzglas', 50); lab(470, 1217, 1430, 'Touch-Sensor', 372); lab(880, 1258, 1340, 'OLED-Pixel', 790);
+  c.fillStyle='rgba(255,255,255,0.38)'; c.font='500 24px '+FONT; c.textAlign='center'; c.fillText('Schema – nicht maßstabsgetreu', 540, 1560);
+  c.restore();
+  c.restore();
+}
+
+// ------------------------------------------------------------ frame
+window.renderFrame=(t)=>{
+  const K=subframes(t); const shutter=(t>=TYPE_T0-0.1 && t<62)?0.35/30:((t>T_ZOUT0-0.1 && t<XF_OUT1+0.1)?0.65/30:0.5/30);
+  let info=null;
+  oc.globalAlpha=1; oc.fillStyle='#000'; oc.fillRect(0,0,OW,OH);
+  for(let i=0;i<K;i++){
+    const tau = K===1 ? t : t + ((i+0.5)/K - 0.5)*shutter;
+    info=renderGL(tau);
+    if(info.needGL){ oc.globalAlpha=1/(i+1); oc.drawImage(glc,0,0); }
+  }
+  oc.globalAlpha=1;
+  const vis=visibility(t); const ps=phoneState(t); const ms=macroState(t); const n=nReal(t);
+  if(vis.cr>0) drawCross(t, vis.cr);
+  vignette(0.42);
+  // intro
+  if(t<T_ZIN1){
+    caption(['Wie nah kommt dein Finger','wirklich an dein Display?'], 300, fadeWin(t,0.25,5.1,0.45));
+    const a=sstep(0.6,1.1,t)*(1-sstep(DIVE0-0.3,DIVE0+0.1,t));
+    if(a>0){ const J=keyWorld('j'); const p1=project(ps.cam,[J[0],ps.dcm,J[2]]), p2=project(ps.cam,J);
+      measure(p1[0], p1[1], p2[1], fmtDist(distM(n)), halvTxt(n), 'deine Fingerkuppe', 'die Taste J', a, 0.85); }
+  }
+  // macro measurement
+  if(t>6.2 && t<T_ZOUT0+0.1){
+    const a = sstep(6.35,6.75,t)*(1-sstep(T_ZOUT0-0.35,T_ZOUT0,t));
+    const gm=macroGeom(n,1,false); const SC=0.546875*OH;
+    const yT=gm.ysT, yL=gm.yL;
+    measure(OW/2, OH/2-yT*SC, OH/2+yL*SC, fmtDist(distM(n)), halvTxt(n), pick(UPL,n), pick(LOL,n), a, 1);
+  }
+  if(t>41 && t<T_ZOUT0+0.2){
+    caption(['Sie berühren sich nie.'], 1480, fadeWin(t,41.7,T_ZOUT0,0.4), 60);
+    caption(['Ihre Elektronen stoßen sich ab.'], 1562, fadeWin(t,43.0,T_ZOUT0,0.4), 44);
+  }
+  // back on the phone
+  if(t>=T_ZOUT1 && t<T_CROSS0+0.2){
+    const J=keyWorld('j'); const P=project(ps.cam,[J[0],0,J[2]]);
+    const a=sstep(50.0,50.4,t)*(1-sstep(T_CROSS0-0.3,T_CROSS0,t));
+    oc.save(); oc.globalAlpha=a; oc.strokeStyle='rgba(255,255,255,0.92)'; oc.lineWidth=2.5;
+    oc.beginPath(); oc.arc(P[0],P[1],5,0,7); oc.stroke();
+    oc.beginPath(); oc.moveTo(P[0]+5,P[1]+5); oc.lineTo(P[0]+60,P[1]+95); oc.lineTo(P[0]+86,P[1]+95); oc.stroke();
+    oc.fillStyle='#fff'; oc.font='700 42px '+FONT; oc.textAlign='left'; shadowText(oc,'immer noch 0,322 nm', P[0]-30, P[1]+148, 10);
+    oc.font='500 32px '+FONT; shadowText(oc,'Abstand', P[0]-30, P[1]+190, 10); oc.restore();
+    caption(['Du hast dein Handy','noch nie berührt.'], 300, fadeWin(t,49.6,T_CROSS0,0.35));
+  }
+  if(vis.cr>0){
+    caption(['Aber woher weiß dein Handy,','wo du tippst?'], 300, vis.cr*fadeWin(t,51.6,53.4,0.3), 56);
+    caption(['Unter dem Glas liegt','ein Sensor-Gitter.'], 300, vis.cr*fadeWin(t,53.4,55.3,0.3), 56);
+    caption(['Es misst, wie dein Finger','das elektrische Feld verändert.'], 300, vis.cr*fadeWin(t,55.3,T_CROSS1+0.2,0.3), 52);
+  }
+  if(t>61.8){
+    caption(['Du hast es nie berührt.'], 880, sstep(62.0,62.5,t), 66);
+    caption(['Es hat dich nur gespürt.'], 970, sstep(62.6,63.1,t), 66);
+  }
+  return n;
+};
+window.events=()=>{
+  const ev={ticks:[], taps:[]}; let last=0;
+  for(let t=0;t<T_MAC1+0.5;t+=1/240){ const k=Math.floor(nReal(t)+1e-9); if(k>last){ ev.ticks.push([+t.toFixed(4),k]); last=k; } }
+  for(let i=0;i<TYPE_TXT.length;i++) ev.taps.push(+(TYPE_T0+i*TYPE_DT).toFixed(4));
+  ev.T={ZIN0:T_ZIN0,ZIN1:T_ZIN1,MAC1:T_MAC1,ZOUT0:T_ZOUT0,ZOUT1:T_ZOUT1,CROSS0:T_CROSS0,CROSS1:T_CROSS1,TYPE0:TYPE_T0};
+  return ev;
+};
+</script>
+</body></html>
